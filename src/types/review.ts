@@ -230,3 +230,43 @@ export interface ReviewPreferences {
     maximumRating?: number;
     hideNegativeReviews: boolean;
 }
+
+export interface Rating {
+    id: string;
+    userId: string;
+    movieId?: number;
+    tvId?: number;
+    mediaType: 'movie' | 'tv';
+    rating: number; // 1-5 stars
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface Review {
+    id: string;
+    userId: string;
+    movieId?: number;
+    tvId?: number;
+    mediaType: 'movie' | 'tv';
+    content: string;
+    rating: number; // 1-5 stars
+    isEdited: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    user?: {
+        name: string;
+        image: string;
+    };
+}
+
+export interface RatingState {
+    userRating: Rating | null;
+    userReview: Review | null;
+    isLoading: boolean;
+    error: string | null;
+    setUserRating: (rating: Rating | null) => void;
+    setUserReview: (review: Review | null) => void;
+    setLoading: (loading: boolean) => void;
+    setError: (error: string | null) => void;
+    reset: () => void;
+}

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { lazy, Suspense } from "react";
-import CompilingOverlay from "@/components/common/CompilingOverlay";
 import { Skeleton } from "@/components/ui/skeleton";
+import Loading from "@/components/common/Loading";
 
 // Error boundary for lazy loaded components
 class LazyLoadErrorBoundary extends React.Component<
@@ -229,7 +229,7 @@ export const withLazyLoading = (
             options?.skeleton ? (
               <options.skeleton />
             ) : (
-              <CompilingOverlay message={loadingMessage} />
+              <Loading message={loadingMessage} showBackdrop={false} />
             )
           }
         >

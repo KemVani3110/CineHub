@@ -28,7 +28,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
     to: filters.releaseDate.to || ''
   });
 
-  // Accordion states
+  // Accordion states - ensure all sections are closed by default
   const [openSections, setOpenSections] = useState({
     sort: false,
     genres: false,
@@ -36,6 +36,17 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
     runtime: false,
     dateRange: false
   });
+
+  // Reset openSections when component mounts or when activeTab changes
+  useEffect(() => {
+    setOpenSections({
+      sort: false,
+      genres: false,
+      year: false,
+      runtime: false,
+      dateRange: false
+    });
+  }, [activeTab]);
 
   // Input states
   const [runtimeInput, setRuntimeInput] = useState(runtimeValue.toString());

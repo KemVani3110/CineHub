@@ -18,12 +18,9 @@ export async function GET(
   request: NextRequest,
   context: { params: { type: string; id: string } }
 ) {
-  console.log("Stream API called with params:", context.params);
-  
   try {
     // Get session first
     const session = await getServerSession(authOptions);
-    console.log("Session:", session);
     
     // Check authentication
     if (!session?.user?.id) {
@@ -36,7 +33,6 @@ export async function GET(
 
     // Get params from context
     const { type, id } = context.params;
-    console.log("Processing request for:", { type, id });
 
     // Validate media type
     if (!["movie", "tv"].includes(type)) {

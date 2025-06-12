@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 
 export type MediaType = 'movie' | 'tv';
@@ -115,6 +115,7 @@ export const useExploreStore = create<ExploreStore>()(
     }),
     {
       name: 'explore-storage',
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         activeTab: state.activeTab,
         movieFilters: state.movieFilters,

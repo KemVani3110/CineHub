@@ -11,9 +11,10 @@ interface WatchlistButtonProps {
   mediaType: 'movie' | 'tv';
   title: string;
   posterPath: string;
+  className?: string;
 }
 
-export function WatchlistButton({ id, mediaType, title, posterPath }: WatchlistButtonProps) {
+export function WatchlistButton({ id, mediaType, title, posterPath, className }: WatchlistButtonProps) {
   const { isInWatchlist, addToWatchlist, removeFromWatchlist, isLoading, resetWatchlist, fetchWatchlist } = useWatchlistStore();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -72,17 +73,17 @@ export function WatchlistButton({ id, mediaType, title, posterPath }: WatchlistB
       disabled={isLoading}
       variant="outline"
       size="default"
-      className="border-[#2e3c51] text-[#e0e6ed] hover:bg-[#1b263b] hover:border-[#4fd1c5] hover:text-[#4fd1c5] px-4 sm:px-6 py-2 sm:py-3 rounded-full cursor-pointer transition-all duration-300 hover:scale-105 flex-1 sm:flex-none"
+      className={className || "border-[#2e3c51] text-[#e0e6ed] hover:bg-[#1b263b] hover:border-[#4fd1c5] hover:text-[#4fd1c5] px-4 sm:px-6 py-2 sm:py-3 rounded-full cursor-pointer transition-all duration-300 hover:scale-105 flex-1 sm:flex-none"}
     >
       {isInWatchlist(id, mediaType) ? (
         <>
           <BookmarkCheck className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">In Watchlist</span>
+          <span className="text-sm sm:text-base">In Watchlist</span>
         </>
       ) : (
         <>
           <BookmarkPlus className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Add to Watchlist</span>
+          <span className="text-sm sm:text-base">Add to Watchlist</span>
         </>
       )}
     </Button>

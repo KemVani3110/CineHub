@@ -15,13 +15,13 @@ import BackToTop from '@/components/common/BackToTop';
 import { ExploreFilters } from '@/components/common/ExploreFilters';
 
 export default function ExplorePage() {
-  const { activeTab, filters, setActiveTab, setFilters, resetFilters, clearFilters } = useExploreStore();
-  const { data, genres, isLoading, loadMore, hasMore, isFetchingMore, refetch } = useExplore();
+  const { activeTab, filters, setActiveTab, resetFilters, clearFilters } = useExploreStore();
+  const { data, genres, isLoading, loadMore, hasMore, isFetchingMore } = useExplore();
   const [movieLoadingMore, setMovieLoadingMore] = useState(false);
   const [tvLoadingMore, setTVLoadingMore] = useState(false);
   const movieObserverTarget = useRef<HTMLDivElement>(null);
   const tvObserverTarget = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as 'movie' | 'tv');
