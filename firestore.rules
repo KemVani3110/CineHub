@@ -1,0 +1,188 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isModerator() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'moderator';
+    }
+    
+    function isAdminOrModerator() {
+      return isAdmin() || isModerator();
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidRating(rating) {
+      return rating >= 1 && rating <= 5;
+    }
+
+    function isValidMediaType(type) {
+      return type == 'movie' || type == 'tv';
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdminOrModerator());
+      allow create: if isAuthenticated() && isAdminOrModerator();
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdminOrModerator());
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    // User Preferences collection
+    match /user_preferences/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdminOrModerator());
+      allow write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Watchlist collection
+    match /watchlists/{watchlistId} {
+      // Allow read if user is authenticated and either owns the item or is admin/moderator
+      allow read: if isAuthenticated() && (
+        resource == null || // Allow read for non-existent documents (for queries)
+        isOwner(resource.data.userId) || 
+        isAdminOrModerator()
+      );
+      
+      // Allow create if user is authenticated and the userId matches their auth uid
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid &&
+        isValidMediaType(request.resource.data.mediaType);
+      
+      // Allow update if user is authenticated and owns the item
+      allow update: if isAuthenticated() && 
+        isOwner(resource.data.userId) &&
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow delete if user is authenticated and owns the item
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // Ratings collection
+    match /ratings/{ratingId} {
+      allow read: if true; // Public read access for ratings
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid &&
+        isValidRating(request.resource.data.rating) &&
+        isValidMediaType(request.resource.data.mediaType);
+      allow update: if isAuthenticated() && isOwner(resource.data.userId);
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // Comments collection
+    match /comments/{commentId} {
+      allow read: if true; // Public read access for comments
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid &&
+        isValidMediaType(request.resource.data.mediaType);
+      allow update: if isAuthenticated() && isOwner(resource.data.userId);
+      allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
+    }
+
+    // Watch History collection
+    match /watch_history/{historyId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid &&
+        isValidMediaType(request.resource.data.mediaType);
+      allow update: if isAuthenticated() && isOwner(resource.data.userId);
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // User Avatars collection
+    match /user_avatars/{avatarId} {
+      allow read: if true; // Public read access for avatars
+      allow create: if isAuthenticated() && request.resource.data.uploaded_by == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (isOwner(resource.data.uploaded_by) || isAdminOrModerator());
+    }
+
+    // Password Reset Tokens collection
+    match /password_reset_tokens/{tokenId} {
+      allow read: if isAuthenticated() && isAdminOrModerator();
+      allow create: if isAuthenticated() && isAdminOrModerator();
+      allow delete: if isAuthenticated() && isAdminOrModerator();
+    }
+
+    // Email Verification Tokens collection
+    match /email_verification_tokens/{tokenId} {
+      allow read: if isAuthenticated() && isAdminOrModerator();
+      allow create: if isAuthenticated() && isAdminOrModerator();
+      allow delete: if isAuthenticated() && isAdminOrModerator();
+    }
+
+    // Sessions collection
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
+    }
+
+    // Admin Activity Logs collection
+    match /admin_activity_logs/{logId} {
+      allow read: if isAuthenticated() && isAdminOrModerator();
+      allow create: if isAuthenticated() && isAdminOrModerator();
+      allow update, delete: if isAuthenticated() && isAdmin();
+    }
+
+    // User Activity Logs collection
+    match /user_activity_logs/{logId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && isAdminOrModerator();
+    }
+
+    // Search History collection
+    match /search_history/{searchId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // Comment Reports collection
+    match /comment_reports/{reportId} {
+      allow read: if isAuthenticated() && isAdminOrModerator();
+      allow create: if isAuthenticated() && request.resource.data.reported_by == request.auth.uid;
+      allow update: if isAuthenticated() && isAdminOrModerator();
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    // User Followers collection
+    match /user_followers/{followId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.follower_id == request.auth.uid &&
+        request.resource.data.follower_id != request.resource.data.following_id;
+      allow delete: if isAuthenticated() && 
+        (resource.data.follower_id == request.auth.uid || resource.data.following_id == request.auth.uid);
+    }
+
+    // Recommendations Cache collection
+    match /recommendations_cache/{cacheId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
+      allow create, update: if isAuthenticated() && isAdminOrModerator();
+      allow delete: if isAuthenticated() && isAdminOrModerator();
+    }
+
+    // Migrations collection
+    match /migrations/{migrationId} {
+      allow read, write: if isAuthenticated() && isAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

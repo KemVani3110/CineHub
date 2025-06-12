@@ -1,0 +1,368 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* CineHub Custom Colors */
+  --color-bg-main: var(--bg-main);
+  --color-bg-card: var(--bg-card);
+  --color-text-main: var(--text-main);
+  --color-text-sub: var(--text-sub);
+  --color-cinehub-accent: var(--cinehub-accent);
+  --color-cinehub-accent-hover: var(--cinehub-accent-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+}
+
+:root {
+  /* Border radius theo BRD - 8px */
+  --radius: 0.5rem;
+
+  /* CineHub Color Palette theo BRD */
+  --bg-main: #0d1b2a; /* Nền chính - Navy tối dịu mắt */
+  --bg-card: #1b263b; /* Nền phụ/card - Sáng hơn nền chính */
+  --text-main: #e0e6ed; /* Chữ chính - Trắng xanh dễ đọc */
+  --text-sub: #9aafc3; /* Chữ phụ/mô tả - Màu mờ */
+  --border: #2e3c51; /* Viền rõ ràng */
+  --cinehub-accent: #4fd1c5; /* Accent chính - Xanh ngọc nổi bật */
+  --cinehub-accent-hover: #38b2ac; /* Accent hover */
+  --success: #2ecc71; /* Xanh lá dịu, hiện đại */
+  --warning: #f4b400; /* Vàng nhạt không gắt */
+  --danger: #ef5350; /* Đỏ nhẹ không chói */
+
+  /* Mapping to Tailwind/shadcn variables */
+  --background: var(--bg-main);
+  --foreground: var(--text-main);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-main);
+  --popover: var(--bg-card);
+  --popover-foreground: var(--text-main);
+  --primary: var(--cinehub-accent);
+  --primary-foreground: var(--bg-main);
+  --secondary: var(--bg-card);
+  --secondary-foreground: var(--text-main);
+  --muted: var(--bg-card);
+  --muted-foreground: var(--text-sub);
+  --accent: var(--cinehub-accent);
+  --accent-foreground: var(--bg-main);
+  --destructive: var(--danger);
+  --input: var(--bg-card);
+  --ring: var(--cinehub-accent);
+
+  /* Chart colors for admin dashboard */
+  --chart-1: var(--cinehub-accent);
+  --chart-2: var(--success);
+  --chart-3: var(--warning);
+  --chart-4: var(--danger);
+  --chart-5: var(--text-sub);
+
+  /* Sidebar colors */
+  --sidebar: var(--bg-card);
+  --sidebar-foreground: var(--text-main);
+  --sidebar-primary: var(--cinehub-accent);
+  --sidebar-primary-foreground: var(--bg-main);
+  --sidebar-accent: var(--bg-main);
+  --sidebar-accent-foreground: var(--text-main);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--cinehub-accent);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    scrollbar-gutter: auto;
+  }
+
+  /* Custom Scrollbar Styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    display: block !important;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-card);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--cinehub-accent);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--cinehub-accent-hover);
+  }
+
+  /* Firefox Scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cinehub-accent) var(--bg-card);
+  }
+
+  /* Remove auto-hiding scrollbar styles */
+  * {
+    -ms-overflow-style: auto; /* IE and Edge */
+    scrollbar-width: thin; /* Firefox */
+  }
+
+  *::-webkit-scrollbar {
+    display: block !important; /* Chrome, Safari and Opera */
+  }
+
+  /* Remove hover-based scrollbar display */
+  @media (hover: hover) {
+    *:hover {
+      -ms-overflow-style: auto; /* IE and Edge */
+      scrollbar-width: thin; /* Firefox */
+    }
+
+    *:hover::-webkit-scrollbar {
+      display: block !important; /* Chrome, Safari and Opera */
+    }
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 400;
+  }
+
+  /* Typography theo BRD */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, sans-serif;
+    font-weight: 600;
+    @apply text-white;
+  }
+
+  .subheading {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    @apply text-gray-400;
+  }
+
+  /* Section titles */
+  .section-title {
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, sans-serif;
+    font-weight: 600;
+    @apply text-2xl md:text-3xl text-white;
+  }
+
+  /* Button styles theo BRD */
+  .btn-primary {
+    @apply bg-accent text-accent-foreground hover:bg-cinehub-accent-hover;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  /* Card styles với border radius 8px */
+  .card {
+    @apply bg-card border-border;
+    border-radius: 8px;
+  }
+
+  /* Movie card hover effects */
+  .movie-card {
+    @apply bg-card border-border transition-all duration-300 ease-in-out;
+    border-radius: 8px;
+  }
+
+  .movie-card:hover {
+    @apply scale-105 shadow-lg;
+    box-shadow: 0 10px 25px rgba(79, 209, 197, 0.15);
+  }
+}
+
+@layer utilities {
+  /* Custom CineHub utilities */
+  .text-accent {
+    color: var(--cinehub-accent);
+  }
+
+  .bg-main {
+    background-color: var(--bg-main);
+  }
+
+  .bg-card-custom {
+    background-color: var(--bg-card);
+  }
+
+  .text-sub {
+    color: var(--text-sub);
+  }
+
+  .border-custom {
+    border-color: var(--border);
+  }
+
+  /* Gradient backgrounds for special elements */
+  .gradient-accent {
+    background: linear-gradient(
+      135deg,
+      var(--cinehub-accent) 0%,
+      var(--cinehub-accent-hover) 100%
+    );
+  }
+
+  .gradient-card {
+    background: linear-gradient(
+      135deg,
+      var(--bg-card) 0%,
+      rgba(27, 38, 59, 0.8) 100%
+    );
+  }
+
+  .gradient-text {
+    background: linear-gradient(
+      135deg,
+      var(--cinehub-accent) 0%,
+      var(--primary) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Loading skeleton */
+  .skeleton {
+    @apply bg-card animate-pulse;
+    border-radius: 8px;
+  }
+
+  /* Mobile hamburger menu */
+  .hamburger-line {
+    @apply bg-foreground transition-all duration-300 ease-in-out;
+    transform-origin: center;
+  }
+
+  /* Success, Warning, Error states */
+  .success {
+    color: var(--success);
+  }
+
+  .warning {
+    color: var(--warning);
+  }
+
+  .danger {
+    color: var(--danger);
+  }
+
+  .bg-success {
+    background-color: var(--success);
+  }
+
+  .bg-warning {
+    background-color: var(--warning);
+  }
+
+  .bg-danger {
+    background-color: var(--danger);
+  }
+
+  /* Custom Scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(79, 209, 197, 0.5);
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(79, 209, 197, 0.7);
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-thin::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-thin {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: thin; /* Firefox */
+  }
+}
+
+.nav-item {
+  position: relative;
+}
+
+.nav-item::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(
+    135deg,
+    var(--cinehub-accent) 0%,
+    var(--primary) 100%
+  );
+  transition: width 0.3s ease;
+}
+
+.nav-item:hover::after,
+.nav-item.active::after {
+  width: 100%;
+}
