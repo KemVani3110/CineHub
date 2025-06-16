@@ -25,10 +25,6 @@ const TVShowList: React.FC<TVShowListProps> = ({ listType, title }) => {
 
   const isLoading = isLoadingFirstPage || isLoadingSecondPage;
 
-  // Debug logs
-  console.log("List Type:", listType);
-  console.log("Page 1 Data:", firstPageData);
-  console.log("Page 2 Data:", secondPageData);
 
   if (isLoading) {
     return (
@@ -67,12 +63,6 @@ const TVShowList: React.FC<TVShowListProps> = ({ listType, title }) => {
 
   // Take only the first 24 shows
   const shows = filteredShows.slice(0, 24);
-
-  console.log("Filtered shows:", {
-    total: filteredShows.length,
-    displayed: shows.length,
-    listType,
-  });
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">

@@ -75,8 +75,17 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
   ];
 
   const handleLogout = async () => {
-    await logout();
-    closeMobileMenu();
+    try {
+      await logout();
+      closeMobileMenu();
+      router.push("/login");
+    } catch (error) {
+      toast({
+        title: "Logout Failed",
+        description: "There was an error logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Check if user logged in through social providers

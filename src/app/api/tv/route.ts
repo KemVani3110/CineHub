@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
     console.log('TV API Route - Received params:', { listType, page });
 
     const url = `${TMDB_BASE_URL}/tv/${listType}?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
-    console.log('Fetching from URL:', url);
 
     const response = await fetch(url);
     
@@ -19,8 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log(`Successfully fetched TV shows data for ${listType}`);
-    
+  
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching TV shows:', error);

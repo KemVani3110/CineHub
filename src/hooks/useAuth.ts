@@ -22,20 +22,29 @@ export function useAuth() {
   const { fetchUserData } = useProfileStore();
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
-      setUser({
-        id: parseInt(session.user.id),
-        email: session.user.email || '',
-        name: session.user.name || '',
-        role: session.user.role || 'user',
-        avatar: session.user.image || undefined,
-      });
-      // Fetch user data immediately when session is authenticated
-      fetchUserData().catch(console.error);
-    } else if (status === 'unauthenticated') {
-      setUser(null);
-    }
-    setLoading(status === 'loading');
+    const initializeAuth = async () => {
+      if (status === 'authenticated' && session?.user) {
+        const userData = {
+          id: parseInt(session.user.id),
+          email: session.user.email || '',
+          name: session.user.name || '',
+          role: session.user.role || 'user',
+          avatar: session.user.image || undefined,
+        };
+        setUser(userData);
+        // Fetch user data immediately when session is authenticated
+        try {
+          await fetchUserData();
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else if (status === 'unauthenticated') {
+        setUser(null);
+      }
+      setLoading(status === 'loading');
+    };
+
+    initializeAuth();
   }, [session, status, fetchUserData]);
 
   const login = async (email: string, password: string) => {
@@ -142,6 +151,30 @@ export function useAuth() {
     }
   };
 
+  const getCurrentUser = async () => {
+    try {
+      setLoading(true);
+      const user = await authService.getCurrentUser();
+      if (user) {
+        setUser(user);
+        // Fetch user data immediately when user is authenticated
+        try {
+          await fetchUserData();
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        setUser(null);
+      }
+      return user;
+    } catch (error) {
+      setUser(null);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     user,
     loading,
@@ -149,5 +182,6 @@ export function useAuth() {
     register,
     logout,
     socialLogin,
+    getCurrentUser,
   };
 }

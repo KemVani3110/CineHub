@@ -24,11 +24,6 @@ const tmdbApi = axios.create({
 // Add request interceptor for logging
 tmdbApi.interceptors.request.use(
   (config) => {
-    console.log('TMDB API Request:', {
-      url: config.url,
-      method: config.method,
-      params: config.params,
-    });
     return config;
   },
   (error) => {
@@ -40,11 +35,6 @@ tmdbApi.interceptors.request.use(
 // Add response interceptor for logging
 tmdbApi.interceptors.response.use(
   (response) => {
-    console.log('TMDB API Response:', {
-      url: response.config.url,
-      status: response.status,
-      data: response.data,
-    });
     return response;
   },
   (error) => {

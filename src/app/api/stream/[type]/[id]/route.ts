@@ -24,7 +24,6 @@ export async function GET(
     
     // Check authentication
     if (!session?.user?.id) {
-      console.log("No session or user ID found");
       return NextResponse.json(
         { error: "Unauthorized - Please login first" },
         { status: 401 }
@@ -36,7 +35,6 @@ export async function GET(
 
     // Validate media type
     if (!["movie", "tv"].includes(type)) {
-      console.log("Invalid media type:", type);
       return NextResponse.json(
         { error: "Invalid media type" },
         { status: 400 }
@@ -55,8 +53,7 @@ export async function GET(
 
     // Get media details from TMDB
     const tmdbUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=${tmdbApiKey}`;
-    console.log("Fetching from TMDB:", tmdbUrl);
-    
+ 
     const tmdbResponse = await fetch(tmdbUrl);
     if (!tmdbResponse.ok) {
       throw new Error(`TMDB API error: ${tmdbResponse.statusText}`);

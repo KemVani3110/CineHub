@@ -29,8 +29,6 @@ export async function GET(request: Request) {
       [mediaType, mediaType === 'movie' ? movieId : tvId]
     );
 
-    console.log('Fetched reviews:', reviews); // Debug log
-
     return NextResponse.json({ reviews });
   } catch (error) {
     console.error('Error fetching reviews:', error);

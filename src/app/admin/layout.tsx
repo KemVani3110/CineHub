@@ -12,12 +12,10 @@ export default async function AdminLayout({
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    console.log("Admin Layout - No session, redirecting to login");
     redirect("/login");
   }
 
   if (session.user.role !== "admin") {
-    console.log("Admin Layout - User is not admin, redirecting to home");
     redirect("/home");
   }
 

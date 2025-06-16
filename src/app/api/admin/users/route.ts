@@ -8,16 +8,13 @@ export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      console.log("API - No session");
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     if (session.user.role !== 'admin') {
-      console.log("API - Not admin");
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    // console.log("API - Fetching users");
     const [rows] = await pool.execute(`
       SELECT 
         id, name, email, role, is_active as isActive, 
@@ -26,7 +23,6 @@ export async function GET() {
       ORDER BY created_at DESC
     `);
 
-    // console.log("API - Users fetched:", rows);
     return NextResponse.json({ users: rows });
   } catch (error) {
     console.error('Error fetching users:', error);
