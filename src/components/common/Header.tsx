@@ -18,6 +18,7 @@ import {
   Activity,
   BookmarkPlus,
   History,
+  Heart,
 } from "lucide-react";
 import {
   Sheet,
@@ -69,13 +70,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
     { name: "Home", path: "/home", icon: Home },
     { name: "Explore", path: "/explore", icon: Compass },
     { name: "Search", path: "/search", icon: Search },
-    { name: "Profile", path: "/profile", icon: User },
-    {
-      name: "Watchlist",
-      path: "/watchlist",
-      icon: BookmarkPlus,
-      requiresAuth: true,
-    },
+    { name: "Watchlist", path: "/watchlist", icon: BookmarkPlus, requiresAuth: true },
     { name: "History", path: "/history", icon: History, requiresAuth: true },
   ];
 
@@ -83,9 +78,6 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
     await logout();
     closeMobileMenu();
   };
-
-  // Debug log to check authUser
-  console.log("Auth User:", authUser);
 
   // Check if user logged in through social providers
   const isSocialLogin =
@@ -268,6 +260,15 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           Profile
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/favorite-actors"
+                          className="cursor-pointer"
+                        >
+                          <Heart className="mr-3 h-4 w-4" />
+                          Favorite Actors
+                        </Link>
+                      </DropdownMenuItem>
                       {authUser?.role === "admin" && (
                         <>
                           <DropdownMenuItem asChild>
@@ -445,6 +446,15 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           >
                             <User size={20} className="flex-shrink-0" />
                             <span>Profile</span>
+                          </Link>
+
+                          <Link
+                            href="/favorite-actors"
+                            onClick={closeMobileMenu}
+                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent/10"
+                          >
+                            <Heart size={20} className="flex-shrink-0" />
+                            <span>Favorite Actors</span>
                           </Link>
 
                           <Button

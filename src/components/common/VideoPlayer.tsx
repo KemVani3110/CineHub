@@ -155,12 +155,16 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration }: VideoPlaye
         videoRef.current.play().catch(() => {
           // If video can't play, just continue with simulation
         });
-        // Hide controls after a short delay when playing
-        setTimeout(() => {
-          if (isPlaying || isAutoPlaying) {
-            setShowControls(false);
-          }
-        }, 200);
+        // Hide controls immediately on mobile, or after a short delay on desktop
+        if (isMobile) {
+          setShowControls(false);
+        } else {
+          setTimeout(() => {
+            if (isPlaying || isAutoPlaying) {
+              setShowControls(false);
+            }
+          }, 200);
+        }
       }
       setPlaying(!isPlaying && !isAutoPlaying);
     }

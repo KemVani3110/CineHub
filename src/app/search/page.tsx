@@ -94,12 +94,9 @@ export default function SearchPage() {
   }, [query, type, currentPage, router]);
 
   useEffect(() => {
-    if (query && user) {
-      addToHistory(query);
-    }
     // Reset page when search changes
     setCurrentPage(1);
-  }, [query, user, addToHistory, type]);
+  }, [query, type]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -512,14 +509,14 @@ export default function SearchPage() {
 
             // Handle TV show results
             if (type === "tv" || (item.media_type === "tv" && type === "all")) {
-              const tvShow: TMDBTV = {
+              const tvShow = {
                 id: item.id,
                 name: item.name || "",
                 original_name: item.original_name || "",
                 overview: item.overview || "",
                 first_air_date: item.first_air_date || "",
-                poster_path: item.poster_path,
-                backdrop_path: item.backdrop_path,
+                poster_path: item.poster_path || null,
+                backdrop_path: item.backdrop_path || null,
                 genre_ids: item.genre_ids || [],
                 original_language: item.original_language || "",
                 popularity: item.popularity,

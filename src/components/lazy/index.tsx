@@ -145,6 +145,9 @@ export const MovieReviews = lazy(
   () => import("@/components/movie/MovieReviews")
 );
 
+// Actor components
+export const ActorDetail = lazy(() => import("@/components/actor/ActorDetail"));
+
 // Skeleton components for different content types
 const MovieCardSkeleton = () => (
   <div className="w-full space-y-3">
@@ -155,6 +158,14 @@ const MovieCardSkeleton = () => (
 );
 
 const TVShowCardSkeleton = () => (
+  <div className="w-full space-y-3">
+    <Skeleton className="w-full aspect-[2/3] rounded-lg" />
+    <Skeleton className="h-4 w-3/4" />
+    <Skeleton className="h-4 w-1/2" />
+  </div>
+);
+
+const ActorCardSkeleton = () => (
   <div className="w-full space-y-3">
     <Skeleton className="w-full aspect-[2/3] rounded-lg" />
     <Skeleton className="h-4 w-3/4" />
@@ -224,7 +235,7 @@ export const withLazyLoading = (
           </div>
         }
       >
-        <Suspense 
+        <Suspense
           fallback={
             options?.skeleton ? (
               <options.skeleton />
@@ -241,4 +252,9 @@ export const withLazyLoading = (
 };
 
 // Export skeleton components
-export { MovieCardSkeleton, TVShowCardSkeleton, SectionSkeleton };
+export {
+  MovieCardSkeleton,
+  TVShowCardSkeleton,
+  ActorCardSkeleton,
+  SectionSkeleton,
+};

@@ -35,9 +35,10 @@ export default function ExplorePage() {
   const getActiveFiltersCount = () => {
     let count = 0;
     if (filters.genres.length > 0) count++;
-    if (filters.year) count++;
-    if (filters.runtime.min) count++;
+    if (filters.year && filters.year !== new Date().getFullYear()) count++;
+    if (filters.runtime.min && filters.runtime.min > 0) count++;
     if (filters.releaseDate.from || filters.releaseDate.to) count++;
+    if (filters.sortBy !== 'popularity' || filters.sortOrder !== 'desc') count++;
     return count;
   };
 

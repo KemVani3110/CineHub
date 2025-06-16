@@ -15,6 +15,7 @@ import { getImageUrl } from "@/services/tmdb";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface TVShowCastProps {
   tvShow: TMDBTVDetails;
@@ -53,64 +54,72 @@ export default function TVShowCast({
     );
   }
 
-  const CastCard = ({ person }: { person: CastMember }) => (
-    <div className="group cursor-pointer">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-card to-bg-card/80 border border-border hover:border-cinehub-accent/30 transition-all duration-300">
-        {/* Profile Image */}
-        <div className="relative aspect-[3/4] overflow-hidden">
-          <Image
-            src={
-              person.profile_path
-                ? getImageUrl(person.profile_path, "w500")
-                : "/images/no-profile.jpg"
-            }
-            alt={person.name}
-            fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-bg-main/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+  const CastCard = ({ person }: { person: CastMember }) => {
+    const router = useRouter();
 
-          {/* Hover Effect Icon */}
-          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-            <div className="w-8 h-8 rounded-full bg-cinehub-accent/20 backdrop-blur-sm border border-cinehub-accent/30 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-cinehub-accent" />
+    const handleClick = () => {
+      router.push(`/actor/${person.id}`);
+    };
+
+    return (
+      <div className="group cursor-pointer" onClick={handleClick}>
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-card to-bg-card/80 border border-border hover:border-cinehub-accent/30 transition-all duration-300">
+          {/* Profile Image */}
+          <div className="relative aspect-[3/4] overflow-hidden">
+            <Image
+              src={
+                person.profile_path
+                  ? getImageUrl(person.profile_path, "w500")
+                  : "/images/no-profile.jpg"
+              }
+              alt={person.name}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-bg-main/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+            {/* Hover Effect Icon */}
+            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+              <div className="w-8 h-8 rounded-full bg-cinehub-accent/20 backdrop-blur-sm border border-cinehub-accent/30 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-cinehub-accent" />
+              </div>
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="p-4 space-y-2">
+            <h4 className="font-semibold text-text-main text-sm leading-tight group-hover:text-cinehub-accent transition-colors duration-300">
+              {person.name}
+            </h4>
+            <p className="text-text-sub text-xs leading-tight line-clamp-2">
+              {person.character || "Unknown Character"}
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              {person.popularity && (
+                <div className="flex items-center gap-1">
+                  <Star className="w-3 h-3 text-warning fill-current" />
+                  <span className="text-xs text-text-sub/80 font-medium">
+                    {person.popularity.toFixed(1)}
+                  </span>
+                </div>
+              )}
+              {person.episode_count && (
+                <div className="flex items-center gap-1">
+                  <Award className="w-3 h-3 text-cinehub-accent" />
+                  <span className="text-xs text-text-sub/80 font-medium">
+                    {person.episode_count} Episodes
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
-
-        {/* Info */}
-        <div className="p-4 space-y-2">
-          <h4 className="font-semibold text-text-main text-sm leading-tight group-hover:text-cinehub-accent transition-colors duration-300">
-            {person.name}
-          </h4>
-          <p className="text-text-sub text-xs leading-tight line-clamp-2">
-            {person.character || "Unknown Character"}
-          </p>
-          <div className="flex items-center gap-2 pt-1">
-            {person.popularity && (
-              <div className="flex items-center gap-1">
-                <Star className="w-3 h-3 text-warning fill-current" />
-                <span className="text-xs text-text-sub/80 font-medium">
-                  {person.popularity.toFixed(1)}
-                </span>
-              </div>
-            )}
-            {person.episode_count && (
-              <div className="flex items-center gap-1">
-                <Award className="w-3 h-3 text-cinehub-accent" />
-                <span className="text-xs text-text-sub/80 font-medium">
-                  {person.episode_count} Episodes
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-10">

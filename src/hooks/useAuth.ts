@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { authService } from '@/services/auth/authService';
 import { useToast } from '@/components/ui/use-toast';
+import { useProfileStore } from '@/store/profileStore';
 
 interface User {
   id: number;
@@ -18,6 +19,7 @@ export function useAuth() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { toast } = useToast();
+  const { fetchUserData } = useProfileStore();
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
@@ -28,11 +30,13 @@ export function useAuth() {
         role: session.user.role || 'user',
         avatar: session.user.image || undefined,
       });
+      // Fetch user data immediately when session is authenticated
+      fetchUserData().catch(console.error);
     } else if (status === 'unauthenticated') {
       setUser(null);
     }
     setLoading(status === 'loading');
-  }, [session, status]);
+  }, [session, status, fetchUserData]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -48,6 +52,8 @@ export function useAuth() {
       }
 
       setUser(response.user);
+      // Fetch user data immediately after successful login
+      await fetchUserData();
       return response;
     } catch (error) {
       toast({
@@ -86,6 +92,8 @@ export function useAuth() {
       }
 
       setUser(response.user);
+      // Fetch user data immediately after successful social login
+      await fetchUserData();
       return response;
     } catch (error) {
       toast({

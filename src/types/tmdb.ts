@@ -42,6 +42,7 @@ export interface TMDBMovie {
     vote_count: number;
     vote_average: number;
     video: boolean;
+    character?: string;
 }
 
 // Detailed TMDB Movie (from movie/{id} endpoint)
@@ -80,6 +81,7 @@ export interface TMDBTV {
     vote_count: number;
     vote_average: number;
     origin_country: string[];
+    character?: string;
 }
 
 // Detailed TMDB TV Show
@@ -202,14 +204,21 @@ export interface TMDBCastMember {
     id: number;
     name: string;
     character: string;
-    credit_id: string;
-    order: number;
-    adult: boolean;
-    gender?: number;
-    known_for_department: string;
-    original_name: string;
+    profile_path: string | null;
     popularity: number;
-    profile_path?: string;
+    media_type: "movie" | "tv";
+    episode_count?: number;
+    // Movie properties
+    title?: string;
+    release_date?: string;
+    // TV Show properties
+    first_air_date?: string;
+    // Common properties
+    poster_path?: string | null;
+    backdrop_path?: string | null;
+    overview?: string;
+    vote_average?: number;
+    vote_count?: number;
 }
 
 export interface TMDBCrewMember {
@@ -378,18 +387,32 @@ export interface TMDBDiscoverTVParams {
 export interface TMDBPerson {
     id: number;
     name: string;
+    profile_path: string | null;
+    biography: string;
+    birthday: string;
+    deathday: string | null;
+    place_of_birth: string;
     known_for_department: string;
     gender: number;
-    biography: string;
-    birthday?: string;
-    deathday?: string;
-    place_of_birth?: string;
-    profile_path?: string;
-    adult: boolean;
-    imdb_id?: string;
-    homepage?: string;
     popularity: number;
     also_known_as: string[];
+    combined_credits: {
+        cast: Array<{
+            id: number;
+            title?: string;
+            name?: string;
+            character: string;
+            media_type: 'movie' | 'tv';
+            poster_path: string | null;
+            backdrop_path: string | null;
+            overview: string;
+            release_date?: string;
+            first_air_date?: string;
+            vote_average: number;
+            vote_count: number;
+            popularity: number;
+        }>;
+    };
 }
 
 // TMDB Person Credits
@@ -582,4 +605,5 @@ export interface TMDBTVShow {
         vote_average: number;
         vote_count: number;
     };
+    character?: string;
 }

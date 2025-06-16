@@ -273,4 +273,22 @@ export const discoverTVShows = async (params: Record<string, any> = {}): Promise
       total_results: 0,
     };
   }
-}; 
+};
+
+export async function getActorDetails(id: string) {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/person/${id}?api_key=${TMDB_API_KEY}&append_to_response=combined_credits,external_ids`,
+      { next: { revalidate: 3600 } }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch actor details");
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching actor details:", error);
+    return null;
+  }
+} 
