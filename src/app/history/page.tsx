@@ -18,8 +18,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Trash2, X, Clock, Film, Tv, Search } from "lucide-react";
+import { Trash2, X, Clock, Film, Tv, Search, Grid, LayoutGrid } from "lucide-react";
 import Header from "@/components/common/Header";
+import useEmblaCarousel from 'embla-carousel-react';
+
 
 const ITEMS_PER_PAGE = 24;
 
@@ -30,6 +32,13 @@ export default function HistoryPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'carousel'>('grid');
+  const [emblaRef] = useEmblaCarousel({
+    align: 'start',
+    loop: true,
+    skipSnaps: false,
+    dragFree: true,
+  });
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -41,7 +50,7 @@ export default function HistoryPage() {
     }
   }, [user, isAuthLoading, router]);
 
-  const handleRemoveFromHistory = async (id: number) => {
+  const handleRemove = async (id: number) => {
     try {
       await removeFromWatchHistory(id);
       toast({
@@ -49,6 +58,7 @@ export default function HistoryPage() {
         description: "Item has been removed from your watch history",
       });
     } catch (error) {
+      console.error("Error removing from history:", error);
       toast({
         title: "Error",
         description: "Failed to remove from history",
@@ -57,15 +67,15 @@ export default function HistoryPage() {
     }
   };
 
-  const handleClearHistory = async () => {
+  const handleClear = async () => {
     try {
       await clearWatchHistory();
-      setCurrentPage(1);
       toast({
         title: "History cleared",
         description: "All items have been removed from your watch history",
       });
     } catch (error) {
+      console.error("Error clearing history:", error);
       toast({
         title: "Error",
         description: "Failed to clear history",
@@ -148,15 +158,25 @@ export default function HistoryPage() {
             </div>
             
             {history.length > 0 && (
-              <Button
-                variant="destructive"
-                size="lg"
-                onClick={handleClearHistory}
-                className="flex items-center gap-3 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105 cursor-pointer"
-              >
-                <Trash2 size={20} />
-                Clear All History
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setViewMode(viewMode === 'grid' ? 'carousel' : 'grid')}
+                  title={viewMode === 'grid' ? 'Switch to Carousel View' : 'Switch to Grid View'}
+                  className="hover:bg-primary hover:text-primary-foreground cursor-pointer transition-colors"
+                >
+                  {viewMode === 'grid' ? <LayoutGrid className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleClear}
+                  className="flex items-center gap-2 hover:bg-destructive/90 cursor-pointer transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Clear All History</span>
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -247,68 +267,107 @@ export default function HistoryPage() {
               </div>
             )}
 
-            {/* Content Grid - Giữ nguyên như ban đầu */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {currentItems.map((item) => (
-                <div key={item.id} className="group relative">
-                  {/* Giữ nguyên MovieCard và TVShowCard như ban đầu */}
-                  {item.mediaType === "movie" ? (
-                    <MovieCard
-                      movie={{
-                        id: item.movieId!,
-                        title: item.title,
-                        poster_path: item.posterPath,
-                        vote_average: item.vote_average || 0,
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {currentItems.map((item) => (
+                  <div key={item.id} className="group relative">
+                    {item.mediaType === "movie" ? (
+                      <MovieCard
+                        movie={{
+                          id: item.movieId!,
+                          title: item.title,
+                          poster_path: item.posterPath,
+                          vote_average: item.vote_average || 0,
+                        }}
+                      />
+                    ) : (
+                      <TVShowCard
+                        show={{
+                          id: item.tvId!,
+                          name: item.title,
+                          poster_path: item.posterPath,
+                          backdrop_path: null,
+                          overview: "",
+                          first_air_date: "",
+                          vote_average: item.vote_average || 0,
+                          vote_count: 0,
+                          genre_ids: []
+                        }}
+                      />
+                    )}
+                    
+                    {/* Remove Button */}
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer w-8 h-8 rounded-lg hover:bg-destructive/90 hover:scale-110"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (item.id) {
+                          handleRemove(item.id);
+                        }
                       }}
-                    />
-                  ) : (
-                    <TVShowCard
-                      show={{
-                        id: item.tvId!,
-                        name: item.title,
-                        poster_path: item.posterPath,
-                        backdrop_path: null,
-                        overview: "",
-                        first_air_date: "",
-                        vote_average: item.vote_average || 0,
-                        vote_count: 0,
-                        genre_ids: []
-                      }}
-                    />
-                  )}
-                  
-                  {/* Remove Button */}
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer w-8 h-8 rounded-lg hover:scale-110"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (item.id) {
-                        handleRemoveFromHistory(item.id);
-                      }
-                    }}
-                  >
-                    <X size={16} />
-                  </Button>
-                  
-                  {/* Media Type Badge */}
-                  <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex items-center gap-1 bg-main/90 backdrop-blur-sm px-2 py-1 rounded-md">
-                      {item.mediaType === 'movie' ? (
-                        <Film className="w-3 h-3 text-accent" />
-                      ) : (
-                        <Tv className="w-3 h-3 text-success" />
-                      )}
-                      <span className="text-xs text-white capitalize font-medium">
-                        {item.mediaType}
-                      </span>
-                    </div>
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="relative">
+                <div className="overflow-hidden" ref={emblaRef}>
+                  <div className="flex gap-4">
+                    {currentItems.map((item) => (
+                      <div key={item.id} className="flex-[0_0_200px] sm:flex-[0_0_250px] md:flex-[0_0_300px]">
+                        <div className="group relative">
+                          {item.mediaType === "movie" ? (
+                            <MovieCard
+                              movie={{
+                                id: item.movieId!,
+                                title: item.title,
+                                poster_path: item.posterPath,
+                                vote_average: item.vote_average || 0,
+                              }}
+                            />
+                          ) : (
+                            <TVShowCard
+                              show={{
+                                id: item.tvId!,
+                                name: item.title,
+                                poster_path: item.posterPath,
+                                backdrop_path: null,
+                                overview: "",
+                                first_air_date: "",
+                                vote_average: item.vote_average || 0,
+                                vote_count: 0,
+                                genre_ids: []
+                              }}
+                            />
+                          )}
+                          
+                          {/* Remove Button */}
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer w-8 h-8 rounded-lg hover:bg-destructive/90 hover:scale-110"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (item.id) {
+                                handleRemove(item.id);
+                              }
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (

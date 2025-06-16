@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useWatchlistStore } from "@/store/watchlistStore";
-import { Film, Tv } from "lucide-react";
+import { Film, Tv, Trash2, Grid, LayoutGrid, ArrowUp } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { MovieCard } from "@/components/common/MovieCard";
 import { TVShowCard } from "@/components/common/TVShowCard";
-import { Pagination } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
 import { fetchMovieDetails, fetchTVShowDetails } from "@/services/tmdb";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const ITEMS_PER_PAGE = 5;
+import useEmblaCarousel from 'embla-carousel-react';
+import BackToTop from "@/components/common/BackToTop";
 
 interface MediaDetails {
   id: number;
@@ -21,9 +21,21 @@ interface MediaDetails {
 export function WatchlistPage() {
   const { items, fetchWatchlist, removeFromWatchlist, isLoading } = useWatchlistStore();
   const { toast } = useToast();
-  const [currentPage, setCurrentPage] = useState(1);
   const [mediaDetails, setMediaDetails] = useState<MediaDetails[]>([]);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'carousel'>('grid');
+  const [movieEmblaRef] = useEmblaCarousel({
+    align: 'start',
+    loop: true,
+    skipSnaps: false,
+    dragFree: true,
+  });
+  const [tvEmblaRef] = useEmblaCarousel({
+    align: 'start',
+    loop: true,
+    skipSnaps: false,
+    dragFree: true,
+  });
 
   // Fetch watchlist and details
   useEffect(() => {
@@ -166,18 +178,6 @@ export function WatchlistPage() {
   const movies = items.filter(item => item.mediaType === 'movie');
   const tvShows = items.filter(item => item.mediaType === 'tv');
 
-  // Calculate pagination for movies
-  const totalMoviePages = Math.ceil(movies.length / ITEMS_PER_PAGE);
-  const startMovieIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endMovieIndex = startMovieIndex + ITEMS_PER_PAGE;
-  const currentMovies = movies.slice(startMovieIndex, endMovieIndex);
-
-  // Calculate pagination for TV shows
-  const totalTVPages = Math.ceil(tvShows.length / ITEMS_PER_PAGE);
-  const startTVIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endTVIndex = startTVIndex + ITEMS_PER_PAGE;
-  const currentTVShows = tvShows.slice(startTVIndex, endTVIndex);
-
   const getRating = (id: number, mediaType: 'movie' | 'tv') => {
     const details = mediaDetails.find(d => d.id === id && d.mediaType === mediaType);
     return details?.vote_average || 0;
@@ -185,83 +185,178 @@ export function WatchlistPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">My Watchlist</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">My Watchlist</h1>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setViewMode(viewMode === 'grid' ? 'carousel' : 'grid')}
+          title={viewMode === 'grid' ? 'Switch to Carousel View' : 'Switch to Grid View'}
+          className="hover:bg-[#4fd1c5] hover:text-white hover:border-[#4fd1c5] cursor-pointer transition-colors"
+        >
+          {viewMode === 'grid' ? <LayoutGrid className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+        </Button>
+      </div>
       
       {/* Movies Section */}
-      {currentMovies.length > 0 && (
-        <div className="mb-8">
+      {movies.length > 0 && (
+        <div className="mb-12">
           <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
             <Film className="h-6 w-6 text-primary" />
             Movies ({movies.length})
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-            {currentMovies.map((item) => (
-              <div key={`${item.mediaType}-${item.id}-${item.addedAt}`} className="transform scale-90 hover:scale-95 transition-transform duration-200">
-                <MovieCard
-                  movie={{
-                    id: item.id,
-                    title: item.title,
-                    poster_path: item.posterPath,
-                    vote_average: getRating(item.id, 'movie'),
-                    release_date: item.addedAt
-                  }}
-                />
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              {movies.map((item) => (
+                <div key={`${item.mediaType}-${item.id}-${item.addedAt}`} className="transform scale-90 hover:scale-95 transition-transform duration-200">
+                  <div className="group relative">
+                    <MovieCard
+                      movie={{
+                        id: item.id,
+                        title: item.title,
+                        poster_path: item.posterPath,
+                        vote_average: getRating(item.id, 'movie'),
+                        release_date: item.addedAt
+                      }}
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer w-8 h-8 rounded-lg hover:bg-destructive/90 hover:scale-110"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemove(item.id, 'movie', item.title);
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="overflow-hidden" ref={movieEmblaRef}>
+                <div className="flex gap-4">
+                  {movies.map((item) => (
+                    <div key={`${item.mediaType}-${item.id}-${item.addedAt}`} className="flex-[0_0_160px] sm:flex-[0_0_180px] md:flex-[0_0_200px]">
+                      <div className="group relative transform scale-90 hover:scale-95 transition-transform duration-200">
+                        <MovieCard
+                          movie={{
+                            id: item.id,
+                            title: item.title,
+                            poster_path: item.posterPath,
+                            vote_average: getRating(item.id, 'movie'),
+                            release_date: item.addedAt
+                          }}
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer w-8 h-8 rounded-lg hover:bg-destructive/90 hover:scale-110"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemove(item.id, 'movie', item.title);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-          {totalMoviePages > 1 && (
-            <div className="mt-8 flex justify-center">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalMoviePages}
-                onPageChange={setCurrentPage}
-              />
             </div>
           )}
         </div>
       )}
 
       {/* TV Shows Section */}
-      {currentTVShows.length > 0 && (
-        <div className="mb-8">
+      {tvShows.length > 0 && (
+        <div className="mb-12">
           <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
             <Tv className="h-6 w-6 text-primary" />
             TV Shows ({tvShows.length})
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-            {currentTVShows.map((item) => (
-              <div key={`${item.mediaType}-${item.id}-${item.addedAt}`} className="transform scale-90 hover:scale-95 transition-transform duration-200">
-                <TVShowCard
-                  show={{
-                    id: item.id,
-                    name: item.title,
-                    original_name: item.title,
-                    overview: "",
-                    first_air_date: item.addedAt,
-                    poster_path: item.posterPath,
-                    backdrop_path: undefined,
-                    genre_ids: [],
-                    original_language: "en",
-                    popularity: 0,
-                    vote_count: 0,
-                    vote_average: getRating(item.id, 'tv'),
-                    origin_country: []
-                  }}
-                />
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              {tvShows.map((item) => (
+                <div key={`${item.mediaType}-${item.id}-${item.addedAt}`} className="transform scale-90 hover:scale-95 transition-transform duration-200">
+                  <div className="group relative">
+                    <TVShowCard
+                      show={{
+                        id: item.id,
+                        name: item.title,
+                        poster_path: item.posterPath,
+                        backdrop_path: null,
+                        overview: "",
+                        first_air_date: item.addedAt,
+                        vote_average: getRating(item.id, 'tv'),
+                        vote_count: 0,
+                        genre_ids: []
+                      }}
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer w-8 h-8 rounded-lg hover:bg-destructive/90 hover:scale-110"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemove(item.id, 'tv', item.title);
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="overflow-hidden" ref={tvEmblaRef}>
+                <div className="flex gap-4">
+                  {tvShows.map((item) => (
+                    <div key={`${item.mediaType}-${item.id}-${item.addedAt}`} className="flex-[0_0_160px] sm:flex-[0_0_180px] md:flex-[0_0_200px]">
+                      <div className="group relative transform scale-90 hover:scale-95 transition-transform duration-200">
+                        <TVShowCard
+                          show={{
+                            id: item.id,
+                            name: item.title,
+                            poster_path: item.posterPath,
+                            backdrop_path: null,
+                            overview: "",
+                            first_air_date: item.addedAt,
+                            vote_average: getRating(item.id, 'tv'),
+                            vote_count: 0,
+                            genre_ids: []
+                          }}
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer w-8 h-8 rounded-lg hover:bg-destructive/90 hover:scale-110"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemove(item.id, 'tv', item.title);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-          {totalTVPages > 1 && (
-            <div className="mt-8 flex justify-center">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalTVPages}
-                onPageChange={setCurrentPage}
-              />
             </div>
           )}
         </div>
       )}
+
+      <BackToTop />
     </div>
   );
 } 

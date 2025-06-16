@@ -46,9 +46,13 @@ export const useHistory = () => {
         })
       );
       
-      // Check for duplicates based on id
+      // Check for duplicates based on mediaType and movieId/tvId
       const uniqueData = formattedData.filter((item, index, self) => 
-        index === self.findIndex((t) => t.id === item.id)
+        index === self.findIndex((t) => 
+          (t.mediaType === item.mediaType && 
+           ((t.mediaType === 'movie' && t.movieId === item.movieId) ||
+            (t.mediaType === 'tv' && t.tvId === item.tvId)))
+        )
       );
       
       setHistory(uniqueData);
