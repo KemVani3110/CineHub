@@ -163,7 +163,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                   <span className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text">
                     CineHub
                   </span>
-                  <span className="text-xs sm:text-sm text-muted-foreground -mt-1 hidden sm:block">
+                  <span className="text-xs sm:text-sm text-muted-foreground -mt-1">
                     Cinema Experience
                   </span>
                 </div>
