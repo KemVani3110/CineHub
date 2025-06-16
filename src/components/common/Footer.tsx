@@ -42,12 +42,12 @@ const Footer = ({ isSidebarOpen = false }: FooterProps) => {
   const currentYear = new Date().getFullYear();
 
   const quickLinks = [
-    { name: 'Home', href: '/', icon: Building },
-    { name: 'Browse Movies', href: '/movies', icon: Film },
-    { name: 'TV Shows', href: '/tv-shows', icon: Tv },
-    { name: 'Trending', href: '/trending', icon: TrendingUp },
-    { name: 'New Releases', href: '/new', icon: Calendar },
-    { name: 'Top Rated', href: '/top-rated', icon: Star },
+    { name: 'Home', href: '/home', icon: Building },
+    { name: 'Browse Movies', href: '/explore', icon: Film },
+    { name: 'TV Shows', href: '/explore', icon: Tv },
+    { name: 'Trending', href: '/explore', icon: TrendingUp },
+    { name: 'New Releases', href: '/explore', icon: Calendar },
+    { name: 'Top Rated', href: '/explore', icon: Star },
   ];
 
   const company = [
@@ -82,7 +82,7 @@ const Footer = ({ isSidebarOpen = false }: FooterProps) => {
     { name: 'Facebook', href: 'https://facebook.com/cinehub', icon: Facebook, color: 'hover:bg-blue-600' },
     { name: 'Instagram', href: 'https://instagram.com/cinehub', icon: Instagram, color: 'hover:bg-pink-500' },
     { name: 'YouTube', href: 'https://youtube.com/cinehub', icon: Youtube, color: 'hover:bg-red-500' },
-    { name: 'GitHub', href: 'https://github.com/cinehub', icon: Github, color: 'hover:bg-gray-700' },
+    { name: 'GitHub', href: 'https://github.com/KemVani3110', icon: Github, color: 'hover:bg-gray-700' },
     { name: 'LinkedIn', href: 'https://linkedin.com/company/cinehub', icon: Linkedin, color: 'hover:bg-blue-700' },
   ];
 

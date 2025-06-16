@@ -42,10 +42,15 @@ export default function RegisterForm() {
       return;
     }
 
-    if (formData.password.length < 6) {
+    // Password validation
+    const hasUpperCase = /[A-Z]/.test(formData.password);
+    const hasNumber = /[0-9]/.test(formData.password);
+    const isLongEnough = formData.password.length >= 8;
+
+    if (!isLongEnough || !hasUpperCase || !hasNumber) {
       toast({
         title: "Error",
-        description: "Password must be at least 6 characters long",
+        description: "Password must be at least 8 characters long, contain one uppercase letter, and one number",
         variant: "destructive",
       });
       return;
@@ -284,17 +289,49 @@ export default function RegisterForm() {
             <div className="flex items-center space-x-2 text-xs">
               <div
                 className={`w-2 h-2 rounded-full ${
-                  formData.password.length >= 6 ? "bg-success" : "bg-muted"
+                  formData.password.length >= 8 ? "bg-success" : "bg-muted"
                 }`}
               />
               <span
                 className={
-                  formData.password.length >= 6
+                  formData.password.length >= 8
                     ? "text-success"
                     : "text-muted-foreground"
                 }
               >
-                At least 6 characters
+                At least 8 characters
+              </span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  /[A-Z]/.test(formData.password) ? "bg-success" : "bg-muted"
+                }`}
+              />
+              <span
+                className={
+                  /[A-Z]/.test(formData.password)
+                    ? "text-success"
+                    : "text-muted-foreground"
+                }
+              >
+                One uppercase letter
+              </span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  /[0-9]/.test(formData.password) ? "bg-success" : "bg-muted"
+                }`}
+              />
+              <span
+                className={
+                  /[0-9]/.test(formData.password)
+                    ? "text-success"
+                    : "text-muted-foreground"
+                }
+              >
+                One number
               </span>
             </div>
           </div>

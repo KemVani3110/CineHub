@@ -45,6 +45,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { useHistoryStore } from "@/store/historyStore";
 import { useHeaderStore } from "@/store/headerStore";
+import NotificationBell from "./NotificationBell";
 
 interface HeaderProps {
   onSidebarChange?: (isOpen: boolean) => void;
@@ -142,15 +143,15 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
           isSidebarOpen ? "hidden" : "block"
         }`}
       >
-        <div className="container mx-auto px-4 lg:px-6 py-4">
+        <div className="container mx-auto px-4 lg:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 md:space-x-4">
               <Link
                 href="/home"
-                className="flex items-center space-x-3 hover:opacity-90 transition-opacity cursor-pointer"
+                className="flex items-center space-x-2 md:space-x-3 hover:opacity-90 transition-opacity cursor-pointer"
               >
-                <div className="relative w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14">
+                <div className="relative w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14">
                   <Image
                     src="/logo.png"
                     alt="CineHub Logo"
@@ -160,10 +161,10 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text">
+                  <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold gradient-text">
                     CineHub
                   </span>
-                  <span className="text-xs sm:text-sm text-muted-foreground -mt-1">
+                  <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground -mt-1">
                     Cinema Experience
                   </span>
                 </div>
@@ -171,7 +172,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center">
+            <nav className="hidden lg:flex items-center">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.path;
@@ -197,21 +198,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
               {authUser ? (
                 <>
                   {/* Notifications Button */}
-                  <div className="relative hidden sm:block">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-10 w-10 rounded-full hover:bg-accent/10 cursor-pointer"
-                    >
-                      <Bell size={20} />
-                    </Button>
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                    >
-                      3
-                    </Badge>
-                  </div>
+                  <NotificationBell />
 
                   {/* User Menu */}
                   <DropdownMenu>
@@ -220,7 +207,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                         variant="ghost"
                         className="hidden sm:flex p-1 rounded-full hover:!bg-transparent focus-visible:ring-0 cursor-pointer"
                       >
-                        <Avatar className="h-10 w-10 border-2 border-primary/20">
+                        <Avatar className="h-8 w-8 md:h-10 md:w-10 border-2 border-primary/20">
                           <AvatarImage
                             src={getUserAvatar()}
                             alt={authUser.name || authUser.email || "User"}
@@ -351,17 +338,9 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="md:hidden h-9 w-9 rounded-full hover:bg-accent/10 relative"
+                    className="lg:hidden h-9 w-9 rounded-full hover:bg-accent/10 relative"
                   >
                     <Menu size={22} />
-                    {authUser && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
-                      >
-                        3
-                      </Badge>
-                    )}
                   </Button>
                 </SheetTrigger>
                 <SheetContent
@@ -372,26 +351,44 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                     <SheetTitle>Navigation Menu</SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col h-full">
-                    {/* Header */}
-                    <div className="p-6 border-b border-border/50">
-                      <div className="flex items-center space-x-4">
-                        <div className="relative w-12 h-12">
-                          <Image
-                            src="/logo.png"
-                            alt="CineHub Logo"
-                            fill
-                            className="object-contain rounded-full"
-                          />
+                    {/* Header - Replaced with User Info */}
+                    <div className="p-4 border-b border-border/50">
+                      {authUser ? (
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage
+                              src={getUserAvatar()}
+                              alt={authUser.name || authUser.email || "User"}
+                              referrerPolicy="no-referrer"
+                            />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {getUserInitials(
+                                authUser.name || authUser.email || "User"
+                              )}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">
+                              {authUser.name || authUser.email}
+                            </p>
+                            {authUser.email && authUser.name && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {authUser.email}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <h2 className="text-xl font-bold gradient-text">
-                            CineHub
-                          </h2>
-                          <p className="text-sm text-muted-foreground">
-                            Cinema Experience
-                          </p>
+                      ) : (
+                        <div className="flex items-center space-x-3">
+                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">Guest User</p>
+                            <p className="text-xs text-muted-foreground">Sign in to access more features</p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Navigation */}
@@ -423,31 +420,6 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                       {/* User Section */}
                       {authUser ? (
                         <div className="space-y-2">
-                          <div className="flex items-center space-x-3 px-4 py-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage
-                                src={getUserAvatar()}
-                                alt={authUser.name || authUser.email || "User"}
-                                referrerPolicy="no-referrer"
-                              />
-                              <AvatarFallback className="bg-primary/10 text-primary">
-                                {getUserInitials(
-                                  authUser.name || authUser.email || "User"
-                                )}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">
-                                {authUser.name || authUser.email}
-                              </p>
-                              {authUser.email && authUser.name && (
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {authUser.email}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
                           <Link
                             href="/profile"
                             onClick={closeMobileMenu}
@@ -465,15 +437,6 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                             <Heart size={20} className="flex-shrink-0" />
                             <span>Favorite Actors</span>
                           </Link>
-
-                          <Button
-                            variant="ghost"
-                            onClick={handleLogout}
-                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                          >
-                            <LogOut size={20} className="flex-shrink-0" />
-                            <span>Logout</span>
-                          </Button>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -495,6 +458,25 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           </Link>
                         </div>
                       )}
+                    </div>
+
+                    {/* Footer with Logout and Version */}
+                    <div className="mt-auto border-t border-border/50 bg-muted/50">
+                      {authUser && (
+                        <Button
+                          variant="ghost"
+                          onClick={handleLogout}
+                          className="w-full flex items-center space-x-3 px-4 py-3 rounded-none text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 justify-start"
+                        >
+                          <LogOut size={20} className="flex-shrink-0" />
+                          <span>Logout</span>
+                        </Button>
+                      )}
+                      <div className="px-4 py-3 text-center">
+                        <p className="text-xs text-muted-foreground">
+                          CineHub v1.0.0
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </SheetContent>

@@ -64,7 +64,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   socialLogin: async (provider, token) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await authService.socialLogin(provider, token);
+      const response = await authService.socialLogin({
+        provider,
+        token,
+        user: {
+          email: '',
+          name: '',  
+          providerId: provider
+        }
+      });
       set({ user: response.user, isLoading: false });
     } catch (error) {
       set({ 
