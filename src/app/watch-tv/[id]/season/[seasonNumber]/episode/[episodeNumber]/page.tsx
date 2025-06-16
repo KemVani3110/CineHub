@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { EpisodesList } from "@/components/watch/EpisodesList";
-import { Comments } from "@/components/watch/Comments";
 import { WatchlistButton } from "@/components/common/WatchlistButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -388,17 +387,6 @@ export default function WatchTVEpisode() {
                     showId={Number(id)}
                     seasonNumber={Number(seasonNumber)}
                     currentEpisodeNumber={Number(episodeNumber)}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Comments Section */}
-              <Card className="bg-card-custom border-custom shadow-lg">
-                <CardContent className="p-6">
-                  <Comments
-                    mediaId={currentEpisode.id}
-                    mediaType="tv"
-                    mediaTitle={`${show.name} - S${seasonNumber}E${episodeNumber}: ${currentEpisode.name}`}
                   />
                 </CardContent>
               </Card>

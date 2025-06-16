@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import AdminDashboard  from "@/app/admin/dashboard/page";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | CineHub",

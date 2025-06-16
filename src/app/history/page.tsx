@@ -267,16 +267,12 @@ export default function HistoryPage() {
                         id: item.tvId!,
                         name: item.title,
                         poster_path: item.posterPath,
-                        original_name: item.title,
+                        backdrop_path: null,
                         overview: "",
                         first_air_date: "",
-                        backdrop_path: undefined,
-                        genre_ids: [],
-                        original_language: "",
-                        popularity: 0,
-                        vote_count: 0,
                         vote_average: item.vote_average || 0,
-                        origin_country: [],
+                        vote_count: 0,
+                        genre_ids: []
                       }}
                     />
                   )}
@@ -289,7 +285,9 @@ export default function HistoryPage() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      item.id && handleRemoveFromHistory(item.id);
+                      if (item.id) {
+                        handleRemoveFromHistory(item.id);
+                      }
                     }}
                   >
                     <X size={16} />
@@ -315,93 +313,11 @@ export default function HistoryPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center mt-12">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-                        className={`cursor-pointer ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-card-custom hover:text-accent'}`}
-                      />
-                    </PaginationItem>
-                    
-                    {/* First page */}
-                    {currentPage > 3 && (
-                      <>
-                        <PaginationItem>
-                          <PaginationLink 
-                            onClick={() => handlePageChange(1)}
-                            className="cursor-pointer hover:bg-card-custom hover:text-accent"
-                          >
-                            1
-                          </PaginationLink>
-                        </PaginationItem>
-                        {currentPage > 4 && (
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        )}
-                      </>
-                    )}
-                    
-                    {/* Pages around current page */}
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let page;
-                      if (totalPages <= 5) {
-                        page = i + 1;
-                      } else if (currentPage <= 3) {
-                        page = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        page = totalPages - 4 + i;
-                      } else {
-                        page = currentPage - 2 + i;
-                      }
-                      
-                      if (page < 1 || page > totalPages) return null;
-                      
-                      return (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => handlePageChange(page)}
-                            isActive={currentPage === page}
-                            className={`cursor-pointer ${
-                              currentPage === page 
-                                ? 'bg-accent text-white' 
-                                : 'hover:bg-card-custom hover:text-accent'
-                            }`}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    })}
-                    
-                    {/* Last page */}
-                    {currentPage < totalPages - 2 && (
-                      <>
-                        {currentPage < totalPages - 3 && (
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        )}
-                        <PaginationItem>
-                          <PaginationLink 
-                            onClick={() => handlePageChange(totalPages)}
-                            className="cursor-pointer hover:bg-card-custom hover:text-accent"
-                          >
-                            {totalPages}
-                          </PaginationLink>
-                        </PaginationItem>
-                      </>
-                    )}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                        className={`cursor-pointer ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-card-custom hover:text-accent'}`}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
               </div>
             )}
           </div>

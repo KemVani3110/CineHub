@@ -264,9 +264,13 @@ export interface RatingState {
     userReview: Review | null;
     isLoading: boolean;
     error: string | null;
+
     setUserRating: (rating: Rating | null) => void;
     setUserReview: (review: Review | null) => void;
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
+    updateRatingAndReview: (rating: Rating | null, review: Review | null) => void;
+    clearRatingAndReview: () => void;
     reset: () => void;
+    setLoadingAndError: (loading: boolean, error: string | null) => void;
 }

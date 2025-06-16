@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/types/api.ts
 
 export interface ApiResponse<T = any> {

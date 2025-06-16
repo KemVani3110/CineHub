@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Star, StarHalf, Trash2, Edit3, MessageSquare } from 'lucide-react';
@@ -9,13 +11,13 @@ import { useToast } from '@/components/ui/use-toast';
 import useRatingStore from '@/store/ratingStore';
 import { useRating } from '@/hooks/useRating';
 
-interface MovieRatingProps {
-  movieId: number;
+interface TVShowRatingProps {
+  tvShowId: number;
   tmdbRating: number;
   mediaType?: 'movie' | 'tv';
 }
 
-export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }: MovieRatingProps) {
+export default function TVShowRating({ tvShowId, tmdbRating, mediaType = 'tv' }: TVShowRatingProps) {
   const { data: session } = useSession();
   const { toast } = useToast();
   const { 
@@ -29,7 +31,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
     setUserRating,
     setUserReview
   } = useRatingStore();
-  const { fetchRating, submitRating, deleteRating, isLoading: isSubmitting, userRating: hookUserRating, userReview: hookUserReview } = useRating(movieId, undefined, mediaType);
+  const { fetchRating, submitRating, deleteRating, isLoading: isSubmitting, userRating: hookUserRating, userReview: hookUserReview } = useRating(undefined, tvShowId, mediaType);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewContent, setReviewContent] = useState('');
   const [isReviewing, setIsReviewing] = useState(false);
@@ -56,7 +58,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
     if (!session?.user) {
       toast({
         title: 'Authentication required',
-        description: 'Please sign in to rate movies',
+        description: `Please sign in to rate ${mediaType}s`,
         variant: 'destructive',
       });
       return;
@@ -106,7 +108,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
     if (!session?.user) {
       toast({
         title: 'Authentication required',
-        description: 'Please sign in to review movies',
+        description: `Please sign in to review ${mediaType}s`,
         variant: 'destructive',
       });
       return;
@@ -115,7 +117,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
     if (!currentRating) {
       toast({
         title: 'Rating required',
-        description: 'Please rate the movie before submitting a review',
+        description: `Please rate the ${mediaType} before submitting a review`,
         variant: 'destructive',
       });
       return;
@@ -172,11 +174,10 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
         description: 'Your rating and review have been removed',
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete rating. Please try again.';
-      setLoadingAndError(false, errorMessage);
+      setLoadingAndError(false, 'Failed to delete rating. Please try again.');
       toast({
         title: 'Error',
-        description: errorMessage,
+        description: 'Failed to delete rating. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -236,8 +237,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
 
   return (
     <div className="space-y-6">
-
-      {/* User Rating Card */}
+      {/* Rating Card */}
       <Card className="bg-[#0d1b2a] border-[#1b263b] shadow-lg">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold text-[#e0e6ed] flex items-center gap-2">
@@ -291,7 +291,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
                   onClick={() => setIsReviewing(true)}
                 >
                   <Edit3 className="w-4 h-4 mr-2" />
-                  {userReview ? 'Edit Review' : 'Write Review'}
+                  {currentReview ? 'Edit Review' : 'Write Review'}
                 </Button>
               )}
             </div>
@@ -302,7 +302,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
                 <Textarea
                   value={reviewContent}
                   onChange={(e) => setReviewContent(e.target.value)}
-                  placeholder="Share your thoughts about this movie..."
+                  placeholder={`Share your thoughts about this ${mediaType}...`}
                   className="min-h-[120px] bg-[#1b263b] border-[#2e3c51] text-[#e0e6ed] placeholder:text-[#9aafc3] focus:border-[#4fd1c5] focus:ring-[#4fd1c5]/20 resize-none"
                 />
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -319,7 +319,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
                     className="border-[#2e3c51] text-[#e0e6ed] hover:bg-[#1b263b] hover:border-[#4fd1c5] hover:text-[#4fd1c5] cursor-pointer transition-all duration-200 flex-1 sm:flex-none"
                     onClick={() => {
                       setIsReviewing(false);
-                      setReviewContent(userReview?.content || '');
+                      setReviewContent(currentReview?.content || '');
                     }}
                     disabled={isSubmitting}
                   >
@@ -329,12 +329,12 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
               </div>
             ) : (
               <>
-                {userReview ? (
+                {currentReview ? (
                   <div className="space-y-3">
                     <div className="p-4 rounded-lg bg-[#1b263b] border border-[#2e3c51] relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-[#4fd1c5]/5 to-transparent"></div>
                       <p className="text-[#e0e6ed] whitespace-pre-wrap leading-relaxed relative z-10">
-                        {userReview.content}
+                        {currentReview.content}
                       </p>
                     </div>
                     <div className="flex items-center text-xs text-[#9aafc3]">
@@ -373,4 +373,4 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
       )}
     </div>
   );
-}
+} 

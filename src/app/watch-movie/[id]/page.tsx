@@ -19,7 +19,6 @@ import {
 import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { MovieActions } from "@/components/watch/MovieActions";
 import { SimilarMovies } from "@/components/watch/SimilarMovies";
-import { Comments } from "@/components/watch/Comments";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WatchMoviePage() {
@@ -230,17 +229,6 @@ export default function WatchMoviePage() {
                     onShare={handleShare}
                     id={movie.id}
                     posterPath={movie.poster_path || ""}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Comments Section */}
-              <Card className="bg-card-custom border-custom">
-                <CardContent className="p-4 sm:p-6">
-                  <Comments
-                    mediaId={movie.id}
-                    mediaType="movie"
-                    mediaTitle={movie.title}
                   />
                 </CardContent>
               </Card>

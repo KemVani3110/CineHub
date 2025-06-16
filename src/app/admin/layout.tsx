@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { log } from "console";
 
 export default async function AdminLayout({
   children,
@@ -11,16 +12,16 @@ export default async function AdminLayout({
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    ("Admin Layout - No session, redirecting to login");
+    console.log("Admin Layout - No session, redirecting to login");
     redirect("/login");
   }
 
   if (session.user.role !== "admin") {
-    ("Admin Layout - User is not admin, redirecting to home");
+    console.log("Admin Layout - User is not admin, redirecting to home");
     redirect("/home");
   }
 
-  ("Admin Layout - Access granted");
+  console.log("Admin Layout - Access granted");
 
   return (
     <div className="flex h-screen bg-background">

@@ -7,10 +7,10 @@ export async function GET(request: NextRequest) {
     const listType = searchParams.get('listType') || 'popular';
     const page = searchParams.get('page') || '1';
 
-    ('TV API Route - Received params:', { listType, page });
+    console.log('TV API Route - Received params:', { listType, page });
 
     const url = `${TMDB_BASE_URL}/tv/${listType}?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
-    ('Fetching from URL:', url);
+    console.log('Fetching from URL:', url);
 
     const response = await fetch(url);
     
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    (`Successfully fetched TV shows data for ${listType}`);
+    console.log(`Successfully fetched TV shows data for ${listType}`);
     
     return NextResponse.json(data);
   } catch (error) {

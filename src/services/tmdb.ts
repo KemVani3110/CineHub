@@ -4,9 +4,9 @@ import { TMDBMovie, TMDBResponse, TMDBTVShow, TMDBDiscoverMovieParams, TMDBDisco
 export type TMDBMovieListType = 'popular' | 'top_rated' | 'now_playing' | 'upcoming';
 export type TMDBTVListType = 'popular' | 'top_rated' | 'on_the_air';
 
-const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
-const TMDB_BASE_URL = process.env.NEXT_PUBLIC_TMDB_BASE_URL;
-const TMDB_IMAGE_BASE_URL = process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL;
+export const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+export const TMDB_BASE_URL = process.env.NEXT_PUBLIC_TMDB_BASE_URL;
+export const TMDB_IMAGE_BASE_URL = process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL;
 
 // Create axios instance
 const tmdbApi = axios.create({

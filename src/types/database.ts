@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/types/database.ts
 
 import { UserRole, AuthProvider } from './auth';
