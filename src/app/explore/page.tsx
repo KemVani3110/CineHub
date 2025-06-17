@@ -17,19 +17,15 @@ import { ExploreFilters } from '@/components/common/ExploreFilters';
 export default function ExplorePage() {
   const { activeTab, filters, setActiveTab, resetFilters, clearFilters } = useExploreStore();
   const { data, genres, isLoading, loadMore, hasMore, isFetchingMore } = useExplore();
-  const [movieLoadingMore, setMovieLoadingMore] = useState(false);
-  const [tvLoadingMore, setTVLoadingMore] = useState(false);
-  const movieObserverTarget = useRef<HTMLDivElement>(null);
-  const tvObserverTarget = useRef<HTMLDivElement>(null);
-
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as 'movie' | 'tv');
     // Reset scroll position to top when changing tabs
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Reset loading states
-    setMovieLoadingMore(false);
-    setTVLoadingMore(false);
+    // Reset loading state
+    setLoadingMore(false);
   };
 
   const getActiveFiltersCount = () => {
@@ -43,53 +39,110 @@ export default function ExplorePage() {
   };
 
   const handleLoadMore = useCallback(async () => {
-    if (!hasMore || isFetchingMore) return;
+    console.log('handleLoadMore called', { hasMore, isFetchingMore, loadingMore });
+    if (!hasMore || isFetchingMore || loadingMore) return;
 
-    if (activeTab === 'movie' && !movieLoadingMore) {
-      setMovieLoadingMore(true);
-      try {
-        await loadMore();
-      } finally {
-        setMovieLoadingMore(false);
-      }
-    } else if (activeTab === 'tv' && !tvLoadingMore) {
-      setTVLoadingMore(true);
-      try {
-        await loadMore();
-      } finally {
-        setTVLoadingMore(false);
-      }
+    setLoadingMore(true);
+    try {
+      await loadMore();
+    } finally {
+      setLoadingMore(false);
     }
-  }, [activeTab, loadMore, movieLoadingMore, tvLoadingMore, hasMore, isFetchingMore]);
+  }, [loadMore, hasMore, isFetchingMore, loadingMore]);
 
   // Handle infinite scroll with Intersection Observer
   useEffect(() => {
+    console.log('Observer effect', { hasMore, isFetchingMore, loadingMore });
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+        console.log('Observer callback', { 
+          isIntersecting: entries[0].isIntersecting,
+          hasMore,
+          isFetchingMore,
+          loadingMore
+        });
+        if (entries[0].isIntersecting && hasMore && !isFetchingMore && !loadingMore) {
           handleLoadMore();
         }
       },
       { threshold: 0.1, rootMargin: '100px' }
     );
 
-    const currentObserverTarget = activeTab === 'movie' ? movieObserverTarget.current : tvObserverTarget.current;
-    if (currentObserverTarget) {
-      observer.observe(currentObserverTarget);
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
     }
 
     return () => {
       observer.disconnect();
     };
-  }, [activeTab, hasMore, isFetchingMore, handleLoadMore]);
+  }, [hasMore, isFetchingMore, loadingMore, handleLoadMore]);
 
   // Reset loading state when filters change
   useEffect(() => {
-    setMovieLoadingMore(false);
-    setTVLoadingMore(false);
+    setLoadingMore(false);
     // Reset scroll position to top when filters change
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [filters]);
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {[...Array(10)].map((_, i) => (
+            <Skeleton key={i} className="aspect-[2/3] rounded-lg" />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {data.map((item) => item && (
+            <div key={`${activeTab}-${item.id}`} className="transform scale-95 hover:scale-100 transition-transform duration-200">
+              {activeTab === 'movie' ? (
+                <MovieCard
+                  movie={{
+                    id: item.id,
+                    title: (item as TMDBMovie).title,
+                    name: (item as TMDBTVShow).name,
+                    poster_path: item.poster_path || undefined,
+                    vote_average: item.vote_average,
+                    release_date: (item as TMDBMovie).release_date,
+                    first_air_date: (item as TMDBTVShow).first_air_date,
+                  }}
+                />
+              ) : (
+                <TVShowCard
+                  show={{
+                    id: item.id,
+                    name: (item as TMDBTVShow).name,
+                    poster_path: item.poster_path || null,
+                    backdrop_path: item.backdrop_path || null,
+                    overview: item.overview,
+                    first_air_date: (item as TMDBTVShow).first_air_date,
+                    vote_average: item.vote_average,
+                    vote_count: item.vote_count,
+                    genre_ids: item.genre_ids,
+                    next_episode_to_air: (item as TMDBTVShow).next_episode_to_air
+                  }}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        {/* Loading indicator */}
+        <div ref={observerTarget} className="h-20 flex items-center justify-center">
+          {(loadingMore || isFetchingMore) && (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-muted-foreground">Loading more...</span>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
@@ -149,84 +202,11 @@ export default function ExplorePage() {
               </TabsList>
 
               <TabsContent value="movie" className="mt-0">
-                {isLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {[...Array(10)].map((_, i) => (
-                      <Skeleton key={i} className="aspect-[2/3] rounded-lg" />
-                    ))}
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {data.map((item) => item && (
-                        <div key={item.id} className="transform scale-95 hover:scale-100 transition-transform duration-200">
-                          <MovieCard
-                            movie={{
-                              id: item.id,
-                              title: (item as TMDBMovie).title,
-                              name: (item as TMDBTVShow).name,
-                              poster_path: item.poster_path || undefined,
-                              vote_average: item.vote_average,
-                              release_date: (item as TMDBMovie).release_date,
-                              first_air_date: (item as TMDBTVShow).first_air_date,
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    {/* Loading indicator */}
-                    <div ref={movieObserverTarget} className="h-20 flex items-center justify-center">
-                      {(movieLoadingMore || isFetchingMore) && (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          <span className="text-sm text-muted-foreground">Loading more...</span>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
+                {renderContent()}
               </TabsContent>
 
               <TabsContent value="tv" className="mt-0">
-                {isLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {[...Array(10)].map((_, i) => (
-                      <Skeleton key={i} className="aspect-[2/3] rounded-lg" />
-                    ))}
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {data.map((item) => item && (
-                        <div key={item.id} className="transform scale-95 hover:scale-100 transition-transform duration-200">
-                          <TVShowCard
-                            show={{
-                              id: item.id,
-                              name: (item as TMDBTVShow).name,
-                              poster_path: item.poster_path || null,
-                              backdrop_path: item.backdrop_path || null,
-                              overview: item.overview,
-                              first_air_date: (item as TMDBTVShow).first_air_date,
-                              vote_average: item.vote_average,
-                              vote_count: item.vote_count,
-                              genre_ids: item.genre_ids,
-                              next_episode_to_air: (item as TMDBTVShow).next_episode_to_air
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    {/* Loading indicator */}
-                    <div ref={tvObserverTarget} className="h-20 flex items-center justify-center">
-                      {(tvLoadingMore || isFetchingMore) && (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          <span className="text-sm text-muted-foreground">Loading more...</span>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
+                {renderContent()}
               </TabsContent>
             </Tabs>
           </div>

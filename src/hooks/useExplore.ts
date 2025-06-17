@@ -12,7 +12,6 @@ const getDiscoverParams = (
     page,
     sort_by: `${filters.sortBy}.${filters.sortOrder}`,
     'vote_average.gte': filters.rating,
-    'vote_count.gte': 100,
     include_adult: false,
     include_video: false,
     language: 'en-US',
@@ -94,12 +93,11 @@ export const useExplore = () => {
       }
       return undefined;
     },
-    staleTime: 0, // Don't cache
+    staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: activeTab === 'movie',
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: false,
-    gcTime: 0, // Don't keep in cache
   });
 
   const {
@@ -122,25 +120,28 @@ export const useExplore = () => {
       }
       return undefined;
     },
-    staleTime: 0, // Don't cache
+    staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: activeTab === 'tv',
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: false,
-    gcTime: 0, // Don't keep in cache
   });
 
   const results = activeTab === 'movie' 
     ? movieData?.pages.flatMap((page) => page.results) || []
     : tvData?.pages.flatMap((page) => page.results) || [];
 
+  // Deduplicate results based on ID
+  const uniqueResults = results.filter((item, index, self) => 
+    item && index === self.findIndex((t) => t && t.id === item.id)
+  );
+
   return {
-    data: results,
+    data: uniqueResults,
     genres,
     isLoading: activeTab === 'movie' ? isMovieLoading : isTVLoading,
     loadMore: activeTab === 'movie' ? fetchNextMoviePage : fetchNextTVPage,
     hasMore: activeTab === 'movie' ? hasNextMoviePage : hasNextTVPage,
     isFetchingMore: activeTab === 'movie' ? isFetchingNextMoviePage : isFetchingNextTVPage,
-    refetch: activeTab === 'movie' ? refetchMovies : refetchTV
   };
 }; 
