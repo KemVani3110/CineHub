@@ -29,11 +29,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import BackToTop from "@/components/common/BackToTop";
 import Loading from "@/components/common/Loading";
 import Link from "next/link";
+import { Recommendations } from "@/components/common/Recommendations";
 
 // Wrap components with lazy loading
 const LazyHeader = withLazyLoading(Header, "Loading header...");
 const LazyFooter = withLazyLoading(Footer, "Loading footer...");
 const LazyHeroSection = withLazyLoading(HeroSection, "Loading hero section...");
+const LazyRecommendations = withLazyLoading(
+  Recommendations,
+  "Loading recommendations..."
+);
 const LazyPopularMovies = withLazyLoading(
   PopularMovies,
   "Loading popular movies..."
@@ -243,6 +248,22 @@ export default function HomePage() {
           <div className="container mx-auto px-4 py-8">
             {/* Hero Section */}
             <LazyHeroSection />
+
+            {/* Recommendations Section */}
+            <section className="mb-16">
+              <SectionTitle
+                icon={Star}
+                subtitle="Personalized recommendations based on your watchlist and ratings"
+                gradient
+              >
+                Recommended for You
+              </SectionTitle>
+              <React.Suspense
+                fallback={<Loading message="Loading recommendations..." />}
+              >
+                <LazyRecommendations />
+              </React.Suspense>
+            </section>
 
             {/* Section Toggle */}
             <div className="flex flex-col sm:flex-row gap-6 mb-16 justify-center items-center">

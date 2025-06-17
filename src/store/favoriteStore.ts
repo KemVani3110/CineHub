@@ -13,8 +13,8 @@ interface FavoriteState {
   actors: FavoriteActor[];
   isLoading: boolean;
   error: string | null;
-  addFavoriteActor: (actor: Omit<FavoriteActor, "id" | "added_at">) => Promise<void>;
-  removeFavoriteActor: (actorId: number) => Promise<void>;
+  addFavoriteActor: (actor: Omit<FavoriteActor, "id" | "added_at">) => Promise<FavoriteActor | null>;
+  removeFavoriteActor: (actorId: number) => Promise<boolean | null>;
   fetchFavoriteActors: () => Promise<void>;
   isFavoriteActor: (actorId: number) => boolean;
   resetFavorites: () => void;
@@ -42,20 +42,24 @@ export const useFavoriteStore = create<FavoriteState>()(
             }),
           });
 
+          const data = await response.json();
+
           if (!response.ok) {
-            throw new Error("Failed to add to favorites");
+            throw new Error(data.error || "Failed to add to favorites");
           }
 
-          const newActor = await response.json();
           set((state) => ({
-            actors: [...state.actors, newActor],
+            actors: [...state.actors, data],
             isLoading: false,
           }));
+          return data;
         } catch (error) {
+          console.error("Error adding favorite:", error);
           set({
             error: error instanceof Error ? error.message : "An error occurred",
             isLoading: false,
           });
+          return null;
         }
       },
 
@@ -66,19 +70,24 @@ export const useFavoriteStore = create<FavoriteState>()(
             method: "DELETE",
           });
 
+          const data = await response.json();
+
           if (!response.ok) {
-            throw new Error("Failed to remove from favorites");
+            throw new Error(data.error || "Failed to remove from favorites");
           }
 
           set((state) => ({
             actors: state.actors.filter((actor) => actor.actor_id !== actorId),
             isLoading: false,
           }));
+          return true;
         } catch (error) {
+          console.error("Error removing favorite:", error);
           set({
             error: error instanceof Error ? error.message : "An error occurred",
             isLoading: false,
           });
+          return null;
         }
       },
 

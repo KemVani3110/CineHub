@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import { formatDate, calculateAge } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import BackToTop from "@/components/common/BackToTop";
 import { TMDBPerson, TMDBMovie, TMDBTVShow } from "@/types/tmdb";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ActorDetailProps {
   actor: TMDBPerson;
@@ -33,11 +34,22 @@ interface ActorDetailProps {
 
 export default function ActorDetail({ actor }: ActorDetailProps) {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const { addFavoriteActor, removeFavoriteActor, isFavoriteActor } =
+  const { toast } = useToast();
+  const { user, getCurrentUser } = useAuthStore();
+  const { addFavoriteActor, removeFavoriteActor, isFavoriteActor, fetchFavoriteActors } =
     useFavoriteStore();
   const [showFullBio, setShowFullBio] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+
+  useEffect(() => {
+    const init = async () => {
+      await getCurrentUser();
+      if (user) {
+        await fetchFavoriteActors();
+      }
+    };
+    init();
+  }, [user, getCurrentUser, fetchFavoriteActors]);
 
   const { data: actorData, isLoading } = useQuery({
     queryKey: ["actor", actor.id],
@@ -77,17 +89,51 @@ export default function ActorDetail({ actor }: ActorDetailProps) {
 
   const handleFavorite = async () => {
     if (!user) {
+      console.log("No user found, redirecting to login");
       router.push("/login");
       return;
     }
 
-    if (isFavoriteActor(actorData.id)) {
-      await removeFavoriteActor(actorData.id);
-    } else {
-      await addFavoriteActor({
-        actor_id: actorData.id,
+    try {
+      console.log("Handling favorite for actor:", {
+        id: actorData.id,
         name: actorData.name,
-        profile_path: actorData.profile_path || "",
+        profilePath: actorData.profile_path
+      });
+
+      if (isFavoriteActor(actorData.id)) {
+        console.log("Removing from favorites");
+        const success = await removeFavoriteActor(actorData.id);
+        if (!success) {
+          throw new Error("Failed to remove from favorites");
+        }
+        toast({
+          title: "Removed from favorites",
+          description: `${actorData.name} has been removed from your favorite actors.`,
+          variant: "default",
+        });
+      } else {
+        console.log("Adding to favorites");
+        const newActor = await addFavoriteActor({
+          actor_id: actorData.id,
+          name: actorData.name,
+          profile_path: actorData.profile_path || "",
+        });
+        if (!newActor) {
+          throw new Error("Failed to add to favorites");
+        }
+        toast({
+          title: "Added to favorites",
+          description: `${actorData.name} has been added to your favorite actors.`,
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error handling favorite:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorite status. Please try again.",
+        variant: "destructive",
       });
     }
   };

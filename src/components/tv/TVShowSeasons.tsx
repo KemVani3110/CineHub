@@ -216,7 +216,7 @@ const TVShowSeasons = ({ tvShow }: TVShowSeasonsProps) => {
                       ))}
                     </div>
                   ) : (
-                    <ScrollArea className="w-full">
+                    <ScrollArea className="w-full h-[600px]">
                       <div className="p-8">
                         <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                           {seasonDetails

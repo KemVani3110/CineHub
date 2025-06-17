@@ -13,7 +13,8 @@ export async function DELETE(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { mediaType, id } = params;
+    const mediaType = params.mediaType;
+    const id = params.id;
 
     await db.query(
       `DELETE FROM watchlist 

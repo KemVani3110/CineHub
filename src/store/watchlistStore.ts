@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 
 interface WatchlistItem {
   id: number;
@@ -13,11 +15,13 @@ interface WatchlistStore {
   items: WatchlistItem[];
   isLoading: boolean;
   error: string | null;
+  currentUserEmail: string | null;
   addToWatchlist: (item: Omit<WatchlistItem, 'addedAt'>) => Promise<void>;
   removeFromWatchlist: (id: number, mediaType: 'movie' | 'tv') => Promise<void>;
   fetchWatchlist: () => Promise<void>;
   isInWatchlist: (id: number, mediaType: 'movie' | 'tv') => boolean;
   resetWatchlist: () => void;
+  setCurrentUser: (email: string | null) => void;
 }
 
 export const useWatchlistStore = create<WatchlistStore>()(
@@ -26,6 +30,19 @@ export const useWatchlistStore = create<WatchlistStore>()(
       items: [],
       isLoading: false,
       error: null,
+      currentUserEmail: null,
+
+      setCurrentUser: (email) => {
+        const currentEmail = get().currentUserEmail;
+        if (currentEmail !== email) {
+          set({ 
+            items: [], 
+            currentUserEmail: email,
+            isLoading: false,
+            error: null 
+          });
+        }
+      },
 
       addToWatchlist: async (item) => {
         try {
@@ -53,24 +70,30 @@ export const useWatchlistStore = create<WatchlistStore>()(
       },
 
       removeFromWatchlist: async (id, mediaType) => {
+        // Optimistically update the UI
+        set((state) => ({
+          items: state.items.filter(
+            (item) => !(item.id === id && item.mediaType === mediaType)
+          ),
+        }));
+
         try {
-          set({ isLoading: true, error: null });
           const response = await fetch(`/api/watchlist/${mediaType}/${id}`, {
             method: 'DELETE',
           });
 
           if (!response.ok) {
+            // If the API call fails, revert the optimistic update
+            set((state) => ({
+              items: [...state.items, state.items.find(
+                (item) => item.id === id && item.mediaType === mediaType
+              )!],
+              error: 'Failed to remove from watchlist',
+            }));
             throw new Error('Failed to remove from watchlist');
           }
-
-          set((state) => ({
-            items: state.items.filter(
-              (item) => !(item.id === id && item.mediaType === mediaType)
-            ),
-            isLoading: false,
-          }));
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'An error occurred', isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'An error occurred' });
         }
       },
 
@@ -102,6 +125,25 @@ export const useWatchlistStore = create<WatchlistStore>()(
     }),
     {
       name: 'watchlist-storage',
+      storage: createJSONStorage(() => sessionStorage),
     }
   )
-); 
+);
+
+// Create a hook to handle user changes
+export const useWatchlistWithUser = () => {
+  const { data: session } = useSession();
+  const { fetchWatchlist, setCurrentUser } = useWatchlistStore();
+
+  // Reset and fetch watchlist when user changes
+  useEffect(() => {
+    const userEmail = session?.user?.email || null;
+    setCurrentUser(userEmail);
+    
+    if (userEmail) {
+      fetchWatchlist();
+    }
+  }, [session?.user?.email, fetchWatchlist, setCurrentUser]);
+
+  return useWatchlistStore();
+}; 
