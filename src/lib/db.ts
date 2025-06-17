@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise';
+import mysql, { RowDataPacket, ResultSetHeader, OkPacket } from 'mysql2/promise';
 
 // Create connection pool with optimized settings
 const pool = mysql.createPool({
@@ -14,10 +14,49 @@ const pool = mysql.createPool({
   idleTimeout: 60000,
 });
 
+// Test database connection
+pool.getConnection()
+  .then(async (connection) => {
+
+    try {
+      // Test query to check if local_movies table exists
+      const [tables] = await connection.query<RowDataPacket[]>(
+        "SHOW TABLES LIKE 'local_movies'"
+      );
+    } catch (error) {
+      console.error('Error checking local_movies table:', error);
+    } finally {
+      connection.release();
+    }
+  })
+  .catch(err => {
+    console.error('Error connecting to the database:', err);
+  });
+
 // Export both pool and query function
 export const db = {
-  query: pool.query.bind(pool),
-  execute: pool.execute.bind(pool),
+  query: async <T extends RowDataPacket[] | ResultSetHeader | OkPacket>(
+    sql: string,
+    values?: any[]
+  ): Promise<[T, mysql.FieldPacket[]]> => {
+    try {
+      return await pool.query<T>(sql, values);
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw error;
+    }
+  },
+  execute: async <T extends RowDataPacket[] | ResultSetHeader | OkPacket>(
+    sql: string,
+    values?: any[]
+  ): Promise<[T, mysql.FieldPacket[]]> => {
+    try {
+      return await pool.execute<T>(sql, values);
+    } catch (error) {
+      console.error('Database execute error:', error);
+      throw error;
+    }
+  },
   transaction: async (callback: (connection: mysql.Connection) => Promise<any>) => {
     const connection = await pool.getConnection();
     try {

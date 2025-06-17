@@ -46,18 +46,14 @@ export function useRecommendations() {
       setIsLoading(true);
       setError(null);
 
-      console.log('All watchlist items:', watchlistItems);
 
       // Sort watchlist items by addedAt date (newest first)
       const sortedWatchlistItems = [...watchlistItems].sort(
         (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
       );
 
-      console.log('Sorted watchlist items:', sortedWatchlistItems);
-
       // Take the 3 most recent items
       const recentWatchlistItems = sortedWatchlistItems.slice(0, 3);
-      console.log('Recent watchlist items:', recentWatchlistItems);
 
       // Get similar content for each recent watchlist item
       const similarContentPromises = recentWatchlistItems.map(async (item: WatchlistItem) => {
@@ -65,7 +61,6 @@ export function useRecommendations() {
           if (item.mediaType === 'movie') {
             const movieDetails = await fetchMovieDetails(item.id);
             const similarMovies = movieDetails.similar?.slice(0, 10) || [];
-            console.log(`Similar movies for ${item.title}:`, similarMovies.length);
             return similarMovies.map((movie: TMDBMovie) => ({
               movie,
               reason: `Similar to ${item.title} you recently added`
@@ -73,7 +68,6 @@ export function useRecommendations() {
           } else {
             const tvDetails = await fetchTVShowDetails(item.id);
             const similarTVShows = tvDetails.similar?.slice(0, 10) || [];
-            console.log(`Similar TV shows for ${item.title}:`, similarTVShows.length);
             return similarTVShows.map((tvShow: TMDBTV) => ({
               tvShow: {
                 ...tvShow,
@@ -93,9 +87,6 @@ export function useRecommendations() {
       
       // Flatten and deduplicate recommendations
       const allRecommendations = similarContentResults.flat();
-      console.log('Total recommendations before deduplication:', allRecommendations.length);
-      console.log('Recommendations before deduplication:', allRecommendations);
-
       // Separate movies and TV shows
       const movies = allRecommendations.filter(rec => rec.movie);
       const tvShows = allRecommendations.filter(rec => rec.tvShow);
@@ -123,10 +114,7 @@ export function useRecommendations() {
       // Combine and shuffle the recommendations
       const combinedRecommendations = [...topMovies, ...topTVShows]
         .sort(() => Math.random() - 0.5);
-
-      console.log('Final recommendations:', combinedRecommendations.length);
-      console.log('Final recommendations:', combinedRecommendations);
-      
+     
       setRecommendations(combinedRecommendations);
     } catch (error) {
       console.error('Error in fetchRecommendations:', error);

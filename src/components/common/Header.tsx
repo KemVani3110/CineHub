@@ -19,6 +19,7 @@ import {
   BookmarkPlus,
   History,
   Heart,
+  Film,
 } from "lucide-react";
 import {
   Sheet,
@@ -46,6 +47,8 @@ import { useRouter } from "next/navigation";
 import { useHistoryStore } from "@/store/historyStore";
 import { useHeaderStore } from "@/store/headerStore";
 import NotificationBell from "./NotificationBell";
+import { useAdminMovieStore } from "@/store/adminMovieStore";
+import { useEffect } from "react";
 
 interface HeaderProps {
   onSidebarChange?: (isOpen: boolean) => void;
@@ -66,13 +69,42 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
   const { getRecentHistory } = useHistoryStore();
   const recentHistory = getRecentHistory(5);
   const { data: session } = useSession();
+  const { fetchMovies } = useAdminMovieStore();
 
   const navItems = [
     { name: "Home", path: "/home", icon: Home },
     { name: "Explore", path: "/explore", icon: Compass },
     { name: "Search", path: "/search", icon: Search },
-    { name: "Watchlist", path: "/watchlist", icon: BookmarkPlus, requiresAuth: true },
+    {
+      name: "Watchlist",
+      path: "/watchlist",
+      icon: BookmarkPlus,
+      requiresAuth: true,
+    },
     { name: "History", path: "/history", icon: History, requiresAuth: true },
+  ];
+
+  const adminMenuItems = [
+    {
+      name: "Dashboard",
+      path: "/admin/dashboard",
+      icon: PanelLeft,
+    },
+    {
+      name: "Movies",
+      path: "/admin/movies",
+      icon: Film,
+    },
+    {
+      name: "Users",
+      path: "/admin/users",
+      icon: Users,
+    },
+    {
+      name: "Activity Logs",
+      path: "/admin/activity-logs",
+      icon: Activity,
+    },
   ];
 
   const handleLogout = async () => {
@@ -135,6 +167,13 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
 
     return socialAvatar || null;
   };
+
+  // Add useEffect to fetch movies when admin menu is opened
+  useEffect(() => {
+    if (authUser?.role === "admin") {
+      fetchMovies();
+    }
+  }, [authUser?.role, fetchMovies]);
 
   return (
     <>
@@ -267,33 +306,14 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                       </DropdownMenuItem>
                       {authUser?.role === "admin" && (
                         <>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href="/admin/dashboard"
-                              className="cursor-pointer"
-                            >
-                              <PanelLeft className="mr-3 h-4 w-4" />
-                              Admin Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href="/admin/users"
-                              className="cursor-pointer"
-                            >
-                              <Users className="mr-3 h-4 w-4" />
-                              User Management
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href="/admin/activity-logs"
-                              className="cursor-pointer"
-                            >
-                              <Activity className="mr-3 h-4 w-4" />
-                              Activity Logs
-                            </Link>
-                          </DropdownMenuItem>
+                          {adminMenuItems.map((item) => (
+                            <DropdownMenuItem key={item.path} asChild>
+                              <Link href={item.path} className="cursor-pointer">
+                                <item.icon className="mr-3 h-4 w-4" />
+                                {item.name}
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
                         </>
                       )}
                       <DropdownMenuSeparator />
@@ -385,7 +405,9 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           </div>
                           <div>
                             <p className="font-medium">Guest User</p>
-                            <p className="text-xs text-muted-foreground">Sign in to access more features</p>
+                            <p className="text-xs text-muted-foreground">
+                              Sign in to access more features
+                            </p>
                           </div>
                         </div>
                       )}
@@ -456,6 +478,22 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                             <User size={20} className="flex-shrink-0" />
                             <span>Register</span>
                           </Link>
+                        </div>
+                      )}
+
+                      {authUser?.role === "admin" && (
+                        <div className="space-y-2">
+                          {adminMenuItems.map((item) => (
+                            <Link
+                              key={item.path}
+                              href={item.path}
+                              onClick={closeMobileMenu}
+                              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent/10"
+                            >
+                              <item.icon size={20} className="flex-shrink-0" />
+                              <span>{item.name}</span>
+                            </Link>
+                          ))}
                         </div>
                       )}
                     </div>

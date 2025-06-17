@@ -28,20 +28,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    console.log("Favorites API - Session:", session);
-    console.log("Favorites API - Session user:", session?.user);
     
     if (!session?.user) {
-      console.log("Favorites API - No session or user found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    console.log("Favorites API - Request body:", body);
     const { actorId, name, profilePath } = body;
 
     if (!actorId || !name) {
-      console.log("Favorites API - Missing required fields:", { actorId, name });
       return NextResponse.json(
         { error: "Actor ID and name are required" },
         { status: 400 }
@@ -55,7 +50,6 @@ export async function POST(request: Request) {
     );
 
     if (Array.isArray(existing) && existing.length > 0) {
-      console.log("Favorites API - Actor already in favorites");
       return NextResponse.json(
         { error: "Actor already in favorites" },
         { status: 400 }
@@ -73,7 +67,6 @@ export async function POST(request: Request) {
       [(result as any).insertId]
     );
 
-    console.log("Favorites API - New favorite added:", newFavorite[0]);
     return NextResponse.json(newFavorite[0]);
   } catch (error) {
     console.error("Error adding to favorites:", error);

@@ -18,6 +18,7 @@ import {
   FileText,
   CircleUser,
   Menu,
+  Film,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -47,6 +48,12 @@ const navItems = [
     title: "Dashboard",
     href: "/admin/dashboard",
     icon: LayoutDashboard,
+    badge: null,
+  },
+  {
+    title: "Movies",
+    href: "/admin/movies",
+    icon: Film,
     badge: null,
   },
   {

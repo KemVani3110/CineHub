@@ -89,20 +89,12 @@ export default function ActorDetail({ actor }: ActorDetailProps) {
 
   const handleFavorite = async () => {
     if (!user) {
-      console.log("No user found, redirecting to login");
       router.push("/login");
       return;
     }
 
     try {
-      console.log("Handling favorite for actor:", {
-        id: actorData.id,
-        name: actorData.name,
-        profilePath: actorData.profile_path
-      });
-
       if (isFavoriteActor(actorData.id)) {
-        console.log("Removing from favorites");
         const success = await removeFavoriteActor(actorData.id);
         if (!success) {
           throw new Error("Failed to remove from favorites");
@@ -113,7 +105,6 @@ export default function ActorDetail({ actor }: ActorDetailProps) {
           variant: "default",
         });
       } else {
-        console.log("Adding to favorites");
         const newActor = await addFavoriteActor({
           actor_id: actorData.id,
           name: actorData.name,

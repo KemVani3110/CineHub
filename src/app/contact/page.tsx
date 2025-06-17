@@ -46,7 +46,6 @@ const ContactPage = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
   };
 
   const handleChange = (

@@ -7,8 +7,6 @@ export async function GET(request: NextRequest) {
     const listType = searchParams.get('listType') || 'popular';
     const page = searchParams.get('page') || '1';
 
-    console.log('TV API Route - Received params:', { listType, page });
-
     const url = `${TMDB_BASE_URL}/tv/${listType}?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
 
     const response = await fetch(url);

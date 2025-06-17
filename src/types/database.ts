@@ -23,6 +23,23 @@ export interface UserTable {
     locked_until?: Date;
 }
 
+// Local movies table
+export interface LocalMoviesTable {
+    id: number;
+    title: string;
+    short_description: string;
+    full_description: string;
+    release_date: Date;
+    duration_minutes: number;
+    genres: string; // JSON array of genre strings
+    status: 'coming_soon' | 'now_showing' | 'stopped';
+    poster_url: string;
+    trailer_url: string;
+    created_by: number;
+    created_at: Date;
+    updated_at: Date;
+}
+
 // User preferences table
 export interface UserPreferencesTable {
     id: number;
