@@ -22,7 +22,7 @@ export enum UserRole {
 }
 
 export enum AuthProvider {
-    EMAIL = 'email',
+    LOCAL = 'local',
     GOOGLE = 'google',
     FACEBOOK = 'facebook'
 }

@@ -10,6 +10,7 @@ interface User extends RowDataPacket {
   email: string;
   avatar: string;
   role: string;
+  provider: string;
   created_at: Date;
   last_login_at: Date | null;
 }
@@ -25,7 +26,7 @@ export async function GET() {
     }
 
     const [users] = await db.query<User[]>(
-      "SELECT id, name, email, avatar, role, created_at, last_login_at FROM users WHERE id = ?",
+      "SELECT id, name, email, avatar, role, provider, created_at, last_login_at FROM users WHERE id = ?",
       [session.user.id]
     );
 
@@ -80,7 +81,7 @@ export async function PUT(req: Request) {
 
     // Get updated user data
     const [users] = await db.query<User[]>(
-      "SELECT id, name, email, avatar, role, created_at, last_login_at FROM users WHERE id = ?",
+      "SELECT id, name, email, avatar, role, provider, created_at, last_login_at FROM users WHERE id = ?",
       [session.user.id]
     );
 

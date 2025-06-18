@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { authService } from '@/services/auth/authService';
 import { useToast } from '@/components/ui/use-toast';
+import { AuthProvider } from '@/types/auth';
 
 interface User {
   id: number;
@@ -8,6 +9,7 @@ interface User {
   email: string;
   avatar: string;
   role: string;
+  provider: AuthProvider;
   created_at: string;
   last_login_at: string;
 }

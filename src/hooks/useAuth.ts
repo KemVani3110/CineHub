@@ -60,14 +60,23 @@ export function useAuth() {
         throw new Error(result.error);
       }
 
+      toast({
+        title: 'Login Successful',
+        description: 'Welcome back!',
+        variant: 'default',
+      });
+
       setUser(response.user);
-      // Fetch user data immediately after successful login
       await fetchUserData();
       return response;
     } catch (error) {
       toast({
         title: 'Login Failed',
-        description: error instanceof Error ? error.message : 'An error occurred during login',
+        description: error instanceof Error 
+          ? error.message === 'Invalid credentials'
+            ? 'Invalid email or password'
+            : error.message
+          : 'An error occurred during login. Please try again.',
         variant: 'destructive',
       });
       throw error;
@@ -100,14 +109,23 @@ export function useAuth() {
         throw new Error(result.error);
       }
 
+      toast({
+        title: 'Login Successful',
+        description: 'Welcome to CineHub!',
+        variant: 'default',
+      });
+
       setUser(response.user);
-      // Fetch user data immediately after successful social login
       await fetchUserData();
       return response;
     } catch (error) {
       toast({
-        title: 'Social Login Failed',
-        description: error instanceof Error ? error.message : 'An error occurred during social login',
+        title: 'Login Failed',
+        description: error instanceof Error 
+          ? error.message === 'Invalid credentials'
+            ? 'Unable to authenticate your account. Please try again.'
+            : error.message
+          : 'An error occurred during social login. Please try again.',
         variant: 'destructive',
       });
       throw error;
@@ -120,11 +138,20 @@ export function useAuth() {
     try {
       setLoading(true);
       const response = await authService.register({ name, email, password });
+      toast({
+        title: 'Registration Successful',
+        description: 'Please check your email to verify your account.',
+        variant: 'default',
+      });
       return response;
     } catch (error) {
       toast({
         title: 'Registration Failed',
-        description: error instanceof Error ? error.message : 'An error occurred during registration',
+        description: error instanceof Error 
+          ? error.message === 'Email already exists'
+            ? 'This email is already in use. Please use a different email.'
+            : error.message
+          : 'An error occurred during registration. Please try again.',
         variant: 'destructive',
       });
       throw error;
@@ -139,11 +166,16 @@ export function useAuth() {
       await authService.logout();
       await signOut({ redirect: false });
       setUser(null);
+      toast({
+        title: 'Logout Successful',
+        description: 'See you again!',
+        variant: 'default',
+      });
       router.push('/login');
     } catch (error) {
       toast({
         title: 'Logout Failed',
-        description: error instanceof Error ? error.message : 'An error occurred during logout',
+        description: 'An error occurred during logout. Please try again.',
         variant: 'destructive',
       });
     } finally {

@@ -20,7 +20,6 @@ import {
   Shield,
   Camera,
   Mail,
-
 } from "lucide-react";
 import Link from "next/link";
 import { useProfileStore } from "@/store/profileStore";
@@ -28,6 +27,7 @@ import Loading from "@/components/common/Loading";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Settings from "@/components/profile/Settings";
+import { AuthProvider } from "@/types/auth";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -216,7 +216,21 @@ export default function ProfilePage() {
 
       {/* Settings Content */}
       <div className="container mx-auto px-4 lg:px-6 py-8">
-        <Settings />
+        {user?.provider === AuthProvider.LOCAL ? (
+          <Settings />
+        ) : (
+          <Card className="bg-[var(--bg-card)]/95 backdrop-blur-xl border-[var(--border)]/50">
+            <CardContent className="p-6">
+              <div className="text-center space-y-4">
+                <h3 className="text-xl font-semibold text-[var(--text-main)]">Settings Not Available</h3>
+                <p className="text-[var(--text-sub)]">
+                  Settings are only available for users who registered with email and password.
+                  You are currently logged in with {user?.provider === AuthProvider.GOOGLE ? 'Google' : 'Facebook'}.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/*  Avatar Selection Dialog */}

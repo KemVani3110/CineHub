@@ -75,6 +75,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
     { name: "Home", path: "/home", icon: Home },
     { name: "Explore", path: "/explore", icon: Compass },
     { name: "Search", path: "/search", icon: Search },
+    { name: "CineHub's Films", path: "/movie/internal", icon: Film },
     {
       name: "Watchlist",
       path: "/watchlist",
