@@ -52,8 +52,8 @@ export function useRecommendations() {
         (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
       );
 
-      // Take the 3 most recent items
-      const recentWatchlistItems = sortedWatchlistItems.slice(0, 3);
+      // Take the 10 most recent items
+      const recentWatchlistItems = sortedWatchlistItems.slice(0, 10);
 
       // Get similar content for each recent watchlist item
       const similarContentPromises = recentWatchlistItems.map(async (item: WatchlistItem) => {
