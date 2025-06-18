@@ -1,6 +1,4 @@
 import { create } from 'zustand';
-import { authService } from '@/services/auth/authService';
-import { useToast } from '@/components/ui/use-toast';
 import { AuthProvider } from '@/types/auth';
 
 interface User {
