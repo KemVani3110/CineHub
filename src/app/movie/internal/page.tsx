@@ -1,6 +1,6 @@
 'use client';
 import { Suspense } from 'react';
-import { InternalMovieCard } from '@/components/movie/InternalMovieCard';
+import { InternalMovieCard } from '@/components/lazy';
 import { useQuery } from '@tanstack/react-query';
 import Loading from '@/components/common/Loading';
 

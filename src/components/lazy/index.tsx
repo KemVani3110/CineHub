@@ -53,6 +53,11 @@ export const TVShowCard = lazy(() =>
     default: mod.TVShowCard,
   }))
 );
+export const InternalMovieCard = lazy(() =>
+  import("@/components/movie/InternalMovieCard").then((mod) => ({
+    default: mod.InternalMovieCard,
+  }))
+);
 
 // Auth components
 export const LoginForm = lazy(() => import("@/components/auth/LoginForm"));
