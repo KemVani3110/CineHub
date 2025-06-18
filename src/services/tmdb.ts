@@ -215,6 +215,18 @@ export const searchTVShows = async (query: string, page: number = 1) => {
   }
 };
 
+export const searchPeople = async (query: string, page: number = 1) => {
+  try {
+    const { data } = await tmdbApi.get('/search/person', {
+      params: { query, page },
+    });
+    return data;
+  } catch (error) {
+    console.error('Error searching people:', error);
+    return { results: [], page: 1, total_pages: 1, total_results: 0 };
+  }
+};
+
 export const discoverMovies = async (params: Record<string, any> = {}): Promise<TMDBResponse<TMDBMovie>> => {
   try {
     const response = await tmdbApi.get('/discover/movie', { params });

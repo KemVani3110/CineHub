@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSearchStore } from '@/store/searchStore';
-import { searchMulti, searchMovies, searchTVShows } from '@/services/tmdb';
+import { searchMulti, searchMovies, searchTVShows, searchPeople } from '@/services/tmdb';
 import { useDebounce } from '@/hooks/useDebounce';
 
 export const useSearch = (page: number = 1) => {
@@ -17,6 +17,8 @@ export const useSearch = (page: number = 1) => {
           return searchMovies(debouncedQuery, page);
         case 'tv':
           return searchTVShows(debouncedQuery, page);
+        case 'actor':
+          return searchPeople(debouncedQuery, page);
         default:
           return searchMulti(debouncedQuery, page);
       }

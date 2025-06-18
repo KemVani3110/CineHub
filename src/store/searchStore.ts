@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type SearchType = 'all' | 'movie' | 'tv';
+export type SearchType = 'all' | 'movie' | 'tv' | 'actor';
 
 interface SearchState {
   query: string;
@@ -11,6 +11,7 @@ interface SearchState {
   setType: (type: SearchType) => void;
   addToHistory: (query: string) => void;
   clearHistory: () => void;
+  resetStore: () => void;
 }
 
 const MIN_SEARCH_LENGTH = 2;
@@ -33,6 +34,7 @@ export const useSearchStore = create<SearchState>()(
           return { searchHistory: newHistory };
         }),
       clearHistory: () => set({ searchHistory: [] }),
+      resetStore: () => set({ query: '', type: 'all', searchHistory: [] }),
     }),
     {
       name: 'search-storage',

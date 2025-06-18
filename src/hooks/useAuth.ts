@@ -4,6 +4,7 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import { authService } from '@/services/auth/authService';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfileStore } from '@/store/profileStore';
+import { useSearchStore } from '@/store/searchStore';
 
 interface User {
   id: number;
@@ -166,6 +167,11 @@ export function useAuth() {
       await authService.logout();
       await signOut({ redirect: false });
       setUser(null);
+      
+      // Clear search history when logging out
+      const { resetStore } = useSearchStore.getState();
+      resetStore();
+      
       toast({
         title: 'Logout Successful',
         description: 'See you again!',
