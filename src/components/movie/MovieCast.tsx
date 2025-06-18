@@ -210,8 +210,8 @@ export default function MovieCast({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
-            {displayCast.map((person) => (
-              <CastCard key={person.id} person={person} />
+            {displayCast.map((person, index) => (
+              <CastCard key={`${person.id}-${index}`} person={person} />
             ))}
           </div>
         </CardContent>
@@ -256,8 +256,8 @@ export default function MovieCast({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {displayCrew.map((person) => (
-              <CrewCard key={person.credit_id} person={person} />
+            {displayCrew.map((person, index) => (
+              <CrewCard key={`${person.credit_id}-${person.id}-${index}`} person={person} />
             ))}
           </div>
         </CardContent>
@@ -302,9 +302,9 @@ export default function MovieCast({
                       </div>
 
                       <div className="space-y-3">
-                        {departmentCrew.slice(0, 5).map((person) => (
+                        {departmentCrew.slice(0, 5).map((person, index) => (
                           <div
-                            key={person.credit_id}
+                            key={`${person.credit_id}-${person.id}-${index}`}
                             className="flex justify-between items-center text-sm py-2 px-3 rounded-lg bg-bg-main/30 hover:bg-bg-main/50 transition-colors duration-200 cursor-pointer"
                           >
                             <span className="text-text-main font-medium">
