@@ -121,7 +121,7 @@ export default function EditMoviePage({
   };
 
   return (
-    <div className="min-h-screen bg-main p-4 md:p-8">
+    <div className="bg-main">
       <div className="max-w-4xl mx-auto">
         {/* Header Section */}
         <div className="mb-8">
