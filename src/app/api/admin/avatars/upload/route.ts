@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user is admin or moderator
-    if (!["admin", "moderator"].includes(session.user.role)) {
+    if (!session.user.role || !["admin", "moderator"].includes(session.user.role)) {
       return NextResponse.json(
         { message: "Forbidden" },
         { status: 403 }
@@ -74,12 +74,12 @@ export async function POST(request: Request) {
         file.type,
         session.user.id,
       ]
-    );
+    ) as [any, any];
 
     const [avatar] = await db.query(
       `SELECT * FROM user_avatars WHERE id = ?`,
-      [result.insertId]
-    );
+      [(result as any).insertId]
+    ) as [any[], any];
 
     return NextResponse.json({
       message: "Avatar uploaded successfully",

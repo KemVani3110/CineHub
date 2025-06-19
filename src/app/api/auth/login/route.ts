@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const [users] = await db.query(
       'SELECT * FROM users WHERE email = ?',
       [email]
-    );
+    ) as [any[], any];
 
     const user = users[0];
 

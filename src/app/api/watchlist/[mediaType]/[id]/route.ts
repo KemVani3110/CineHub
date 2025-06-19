@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { mediaType: string; id: string } }
+  { params }: { params: Promise<{ mediaType: string; id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,8 +13,13 @@ export async function DELETE(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const mediaType = params.mediaType;
-    const id = params.id;
+    const { mediaType, id } = await params;
+    if (!mediaType || !id || typeof mediaType !== 'string' || typeof id !== 'string') {
+      return NextResponse.json(
+        { message: "Media type and ID are required" },
+        { status: 400 }
+      );
+    }
 
     await db.query(
       `DELETE FROM watchlist 

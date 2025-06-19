@@ -4,11 +4,17 @@ import { RowDataPacket } from 'mysql2';
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const id = context.params.id;
-  
   try {
+    const { id } = await context.params;
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { message: "Movie ID is required" },
+        { status: 400 }
+      );
+    }
+
     const [movies] = await db.query<RowDataPacket[]>(
       `SELECT 
         id,

@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,14 +20,21 @@ export async function DELETE(
     }
 
     // Check if user is admin or moderator
-    if (!["admin", "moderator"].includes(session.user.role)) {
+    if (!session.user.role || !["admin", "moderator"].includes(session.user.role)) {
       return NextResponse.json(
         { message: "Forbidden" },
         { status: 403 }
       );
     }
 
-    const avatarId = parseInt(params.id);
+    const { id } = await params;
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { message: "Avatar ID is required" },
+        { status: 400 }
+      );
+    }
+    const avatarId = parseInt(id);
     if (isNaN(avatarId)) {
       return NextResponse.json(
         { message: "Invalid avatar ID" },
@@ -39,7 +46,7 @@ export async function DELETE(
     const [avatars] = await db.query(
       `SELECT * FROM user_avatars WHERE id = ?`,
       [avatarId]
-    );
+    ) as [any[], any];
 
     if (!avatars.length) {
       return NextResponse.json(

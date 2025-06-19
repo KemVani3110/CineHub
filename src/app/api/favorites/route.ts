@@ -60,14 +60,14 @@ export async function POST(request: Request) {
     const [result] = await db.query(
       "INSERT INTO favorites (user_id, actor_id, name, profile_path) VALUES (?, ?, ?, ?)",
       [session.user.id, actorId, name, profilePath]
-    );
+    ) as [any, any];
 
     const [newFavorite] = await db.query(
       "SELECT * FROM favorites WHERE id = ?",
       [(result as any).insertId]
-    );
+    ) as [any[], any];
 
-    return NextResponse.json(newFavorite[0]);
+    return NextResponse.json(newFavorite[0] as any);
   } catch (error) {
     console.error("Error adding to favorites:", error);
     return NextResponse.json(

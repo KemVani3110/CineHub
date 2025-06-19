@@ -9,20 +9,28 @@ if (!TMDB_API_KEY || !TMDB_BASE_URL) {
 
 export async function GET(
   request: Request,
-  { params }: { params: { listType: string } }
+  { params }: { params: Promise<{ listType: string }> }
 ) {
   try {
+    const { listType } = await params;
+    if (!listType || typeof listType !== 'string') {
+      return NextResponse.json(
+        { message: "List type is required" },
+        { status: 400 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const page = searchParams.get('page') || '1';
 
     console.log('Fetching movies:', {
-      listType: params.listType,
+      listType,
       page,
-      url: `${TMDB_BASE_URL}/movie/${params.listType}`
+      url: `${TMDB_BASE_URL}/movie/${listType}`
     });
 
     const response = await fetch(
-      `${TMDB_BASE_URL}/movie/${params.listType}?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`,
+      `${TMDB_BASE_URL}/movie/${listType}?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`,
       {
         headers: {
           'Accept': 'application/json',

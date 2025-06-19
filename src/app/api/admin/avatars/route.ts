@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     // Check if user is admin or moderator
-    if (!["admin", "moderator"].includes(session.user.role)) {
+    if (!session.user.role || !["admin", "moderator"].includes(session.user.role)) {
       return NextResponse.json(
         { message: "Forbidden" },
         { status: 403 }

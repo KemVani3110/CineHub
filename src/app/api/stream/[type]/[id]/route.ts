@@ -15,10 +15,18 @@ const pool = mysql.createPool({
 });
 
 export async function GET(
-  request: NextRequest,
-  context: { params: { type: string; id: string } }
+  request: Request,
+  context: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
+    const { type, id } = await context.params;
+    if (!type || !id || typeof type !== 'string' || typeof id !== 'string') {
+      return NextResponse.json(
+        { message: "Type and ID are required" },
+        { status: 400 }
+      );
+    }
+
     // Get session first
     const session = await getServerSession(authOptions);
     
@@ -29,9 +37,6 @@ export async function GET(
         { status: 401 }
       );
     }
-
-    // Get params from context
-    const { type, id } = context.params;
 
     // Validate media type
     if (!["movie", "tv"].includes(type)) {

@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
-import { LocalMoviesTable } from '@/types/database';
 
 const movieSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -19,18 +18,38 @@ const movieSchema = z.object({
 });
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Check if user is admin or moderator
+    if (!session.user.role || !["admin", "moderator"].includes(session.user.role)) {
+      return NextResponse.json(
+        { message: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { message: "Movie ID is required" },
+        { status: 400 }
+      );
     }
 
     const [movies] = await db.query<RowDataPacket[]>(
       'SELECT * FROM local_movies WHERE id = ?',
-      [params.id]
+      [id]
     );
 
     if (!movies.length) {
@@ -76,13 +95,33 @@ export async function GET(
 }
 
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Check if user is admin or moderator
+    if (!session.user.role || !["admin", "moderator"].includes(session.user.role)) {
+      return NextResponse.json(
+        { message: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { message: "Movie ID is required" },
+        { status: 400 }
+      );
     }
 
     const body = await request.json();
@@ -104,7 +143,7 @@ export async function PUT(
         validatedData.status,
         validatedData.poster_url,
         validatedData.trailer_url,
-        params.id
+        id
       ]
     );
 
@@ -143,18 +182,38 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Check if user is admin or moderator
+    if (!session.user.role || !["admin", "moderator"].includes(session.user.role)) {
+      return NextResponse.json(
+        { message: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { message: "Movie ID is required" },
+        { status: 400 }
+      );
     }
 
     const [result] = await db.query<ResultSetHeader>(
       'DELETE FROM local_movies WHERE id = ?',
-      [params.id]
+      [id]
     );
 
     if (result.affectedRows === 0) {
@@ -170,7 +229,7 @@ export async function DELETE(
         session.user.id,
         'delete',
         null,
-        `Deleted movie with ID: ${params.id}`,
+        `Deleted movie with ID: ${id}`,
         JSON.stringify({ action: 'deleted' })
       ]
     );

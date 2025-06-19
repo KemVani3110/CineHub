@@ -4,9 +4,9 @@ import ActorDetail from "@/components/actor/ActorDetail";
 import { notFound } from "next/navigation";
 
 interface ActorPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({

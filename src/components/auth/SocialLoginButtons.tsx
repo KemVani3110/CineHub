@@ -15,7 +15,7 @@ import { Icons } from "@/components/ui/icons";
 
 
 interface SocialLoginButtonsProps {
-  onLogin?: () => void;
+  onLogin?: (provider: string) => void;
 }
 
 export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
@@ -43,7 +43,7 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
         providerId: result.user.uid,
       });
 
-      onLogin?.();
+      onLogin?.("google");
 
       if (response.user.role === "admin") {
         window.location.href = "/admin/dashboard";
@@ -83,7 +83,7 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
         providerId: result.user.uid,
       });
 
-      onLogin?.();
+      onLogin?.("facebook");
 
       if (response.user.role === "admin") {
         window.location.href = "/admin/dashboard";
