@@ -136,7 +136,7 @@ export default function EditMoviePage({
         {isLoading("movie") ? (
           <div className="flex justify-center items-center min-h-[500px]">
             <div className="bg-card-custom rounded-lg p-12 shadow-2xl border border-custom">
-              <Loading />
+              <Loading message="Loading movie details..." />
             </div>
           </div>
         ) : (

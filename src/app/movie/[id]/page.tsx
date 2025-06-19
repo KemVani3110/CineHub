@@ -32,7 +32,7 @@ export default function MovieDetail() {
   const [movie, setMovie] = useState<TMDBMovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [tabLoading, setTabLoading] = useState(false);
+  const [tabLoading] = useState(false);
 
   useEffect(() => {
     const loadMovie = async () => {
@@ -49,13 +49,8 @@ export default function MovieDetail() {
     loadMovie();
   }, [id]);
 
-  const handleTabChange = (value: string) => {
-    setTabLoading(true);
+  const handleTabChange = (value: string): void => {
     setActiveTab(value);
-    // Simulate loading delay for tab content
-    setTimeout(() => {
-      setTabLoading(false);
-    }, 500);
   };
 
   if (loading) {
@@ -213,7 +208,10 @@ export default function MovieDetail() {
 
               {/* Rating Section */}
               <div className="bg-slate-900/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-700/50">
-                <MovieRating movieId={movie.id} tmdbRating={movie.vote_average} />
+                <MovieRating
+                  movieId={movie.id}
+                  tmdbRating={movie.vote_average}
+                />
               </div>
 
               {/* Action Buttons */}
@@ -336,11 +334,13 @@ export default function MovieDetail() {
 function MovieDetailSkeleton() {
   return (
     <div className="min-h-screen bg-slate-950">
+      {/* Hero Section with Backdrop Skeleton */}
       <div className="relative min-h-screen overflow-hidden">
+        {/* Background Skeleton */}
         <div className="absolute inset-0 bg-slate-900" />
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 min-h-screen flex items-center">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 min-h-screen flex items-start pt-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 w-full max-w-7xl">
-            {/* Poster Skeleton - FIX: Better responsive dimensions */}
+            {/* Poster Skeleton */}
             <div className="lg:col-span-4 xl:col-span-3 flex justify-center lg:justify-start">
               <div className="w-full max-w-sm aspect-[2/3]">
                 <Skeleton className="w-full h-full rounded-xl" />

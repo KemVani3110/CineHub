@@ -103,8 +103,8 @@ export default function AvatarManagementPage() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--bg-main)] via-[var(--bg-card)] to-[var(--bg-main)]">
-        <Loading message="Loading avatars..." />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loading message="Loading avatars..." showBackdrop={false} />
       </div>
     );
   }
