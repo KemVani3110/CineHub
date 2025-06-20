@@ -140,6 +140,23 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
+          // Check if this is already authenticated from our API
+          if (credentials.password?.startsWith('ALREADY_AUTHENTICATED_')) {
+            const user = await getUserByEmail(credentials.email);
+
+            if (!user || !user.is_active) {
+              return null;
+            }
+
+            return {
+              id: user.id.toString(),
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              image: user.avatar,
+            };
+          }
+
           // Check if this is a social login attempt (Firebase token)
           if (credentials.password?.startsWith('eyJ')) {
             try {

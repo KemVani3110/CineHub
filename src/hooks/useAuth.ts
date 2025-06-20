@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { authService } from '@/services/auth/authService';
@@ -27,54 +27,54 @@ export function useAuth() {
   const { toast } = useToast();
   const { fetchUserData } = useProfileStore();
 
-  useEffect(() => {
-    const initializeAuth = async () => {
-      if (isProduction) {
-        // For production, listen to Firebase auth state
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-          if (firebaseUser) {
-            try {
-              const userData = await authService.getCurrentUser();
-              if (userData) {
-                setUser(userData);
-                await fetchUserData();
-              }
-            } catch (error) {
-              console.error('Error fetching user data:', error);
-            }
-          } else {
-            setUser(null);
-          }
-          setLoading(false);
-        });
-
-        return () => unsubscribe();
-      } else {
-        // For development, use NextAuth session
-        if (status === 'authenticated' && session?.user) {
-          const userData = {
-            id: parseInt(session.user.id),
-            email: session.user.email || '',
-            name: session.user.name || '',
-            role: session.user.role || 'user',
-            avatar: session.user.image || undefined,
-          };
-          setUser(userData);
-          // Fetch user data immediately when session is authenticated
+  const initializeAuth = useCallback(async () => {
+    if (isProduction) {
+      // For production, listen to Firebase auth state
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
           try {
-            await fetchUserData();
+            const userData = await authService.getCurrentUser();
+            if (userData) {
+              setUser(userData);
+              await fetchUserData();
+            }
           } catch (error) {
             console.error('Error fetching user data:', error);
           }
-        } else if (status === 'unauthenticated') {
+        } else {
           setUser(null);
         }
-        setLoading(status === 'loading');
-      }
-    };
+        setLoading(false);
+      });
 
-    initializeAuth();
+      return () => unsubscribe();
+    } else {
+      // For development, use NextAuth session
+      if (status === 'authenticated' && session?.user) {
+        const userData = {
+          id: parseInt(session.user.id),
+          email: session.user.email || '',
+          name: session.user.name || '',
+          role: session.user.role || 'user',
+          avatar: session.user.image || undefined,
+        };
+        setUser(userData);
+        // Fetch user data immediately when session is authenticated
+        try {
+          await fetchUserData();
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else if (status === 'unauthenticated') {
+        setUser(null);
+      }
+      setLoading(status === 'loading');
+    }
   }, [session, status, fetchUserData]);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -94,10 +94,13 @@ export function useAuth() {
         await fetchUserData();
         return response;
       } else {
-        // For development, use NextAuth with MySQL
+        // For development, use MySQL API then create NextAuth session
         const response = await authService.login({ email, password });
+
+        // Create NextAuth session by calling signIn with credentials
         const result = await signIn('credentials', {
           email,
+          password: 'ALREADY_AUTHENTICATED_' + response.token, // Special flag + token
           redirect: false,
         });
 
@@ -119,7 +122,7 @@ export function useAuth() {
       toast({
         title: 'Login Failed',
         description: error instanceof Error 
-          ? error.message === 'Invalid credentials'
+          ? error.message === 'Invalid credentials' || error.message === 'Invalid email or password'
             ? 'Invalid email or password'
             : error.message
           : 'An error occurred during login. Please try again.',
@@ -262,7 +265,9 @@ export function useAuth() {
         description: 'See you again!',
         variant: 'default',
       });
-      router.push('/login');
+      
+      // Use window.location for immediate redirect
+      window.location.href = '/login';
     } catch (error) {
       toast({
         title: 'Logout Failed',

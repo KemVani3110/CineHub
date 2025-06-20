@@ -9,10 +9,11 @@ import {
   GoogleAuthProvider,
   FacebookAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
 } from "firebase/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { Icons } from "@/components/ui/icons";
-
 
 interface SocialLoginButtonsProps {
   onLogin?: (provider: string) => void;
@@ -25,11 +26,31 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
   const [isFacebookLoading, setIsFacebookLoading] = useState(false);
   const { socialLogin } = useAuth();
 
+  // Check if we're on mobile (popup may be blocked)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   const handleGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      let result;
+      
+      if (isMobile) {
+        // Use redirect for mobile devices
+        await signInWithRedirect(auth, provider);
+        return; // The page will redirect and reload
+      } else {
+        // Use popup for desktop
+        result = await signInWithPopup(auth, provider);
+      }
+
+      if (!result) {
+        throw new Error("Login was cancelled or failed");
+      }
+
       const token = await result.user.getIdToken();
 
       if (!token) {
@@ -45,19 +66,29 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
 
       onLogin?.("google");
 
-      if (response.user.role === "admin") {
-        window.location.href = "/admin/dashboard";
-      } else {
-        window.location.href = "/home";
-      }
-    } catch (error) {
+      // Immediate redirect without waiting
+      const targetPath = response.user.role === "admin" ? "/admin/dashboard" : "/home";
+      window.location.href = targetPath;
+
+    } catch (error: any) {
       console.error("Google login error:", error);
+      
+      // Handle specific Firebase errors
+      let errorMessage = "Failed to authenticate with Google";
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = "Login was cancelled. Please try again.";
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = "Popup was blocked. Please allow popups and try again.";
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = "Another login attempt is in progress.";
+      } else if (error.message && error.message !== "Login was cancelled or failed") {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Authentication Failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to authenticate with Google",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -69,7 +100,24 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
     try {
       setIsFacebookLoading(true);
       const provider = new FacebookAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      provider.addScope('email');
+      provider.addScope('public_profile');
+      
+      let result;
+      
+      if (isMobile) {
+        // Use redirect for mobile devices
+        await signInWithRedirect(auth, provider);
+        return; // The page will redirect and reload
+      } else {
+        // Use popup for desktop
+        result = await signInWithPopup(auth, provider);
+      }
+
+      if (!result) {
+        throw new Error("Login was cancelled or failed");
+      }
+
       const token = await result.user.getIdToken();
 
       if (!token) {
@@ -85,19 +133,29 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
 
       onLogin?.("facebook");
 
-      if (response.user.role === "admin") {
-        window.location.href = "/admin/dashboard";
-      } else {
-        window.location.href = "/home";
-      }
-    } catch (error) {
+      // Immediate redirect without waiting
+      const targetPath = response.user.role === "admin" ? "/admin/dashboard" : "/home";
+      window.location.href = targetPath;
+
+    } catch (error: any) {
       console.error("Facebook login error:", error);
+      
+      // Handle specific Firebase errors
+      let errorMessage = "Failed to authenticate with Facebook";
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = "Login was cancelled. Please try again.";
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = "Popup was blocked. Please allow popups and try again.";
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = "Another login attempt is in progress.";
+      } else if (error.message && error.message !== "Login was cancelled or failed") {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Authentication Failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to authenticate with Facebook",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -125,7 +183,7 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
         <Button
           variant="outline"
           type="button"
-          disabled={isGoogleLoading}
+          disabled={isGoogleLoading || isFacebookLoading}
           onClick={handleGoogleLogin}
           className="group relative overflow-hidden h-12 bg-card border-border hover:bg-accent hover:border-primary/50 transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg cursor-pointer"
         >
@@ -173,7 +231,7 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
         <Button
           variant="outline"
           type="button"
-          disabled={isFacebookLoading}
+          disabled={isGoogleLoading || isFacebookLoading}
           onClick={handleFacebookLogin}
           className="group relative overflow-hidden h-12 bg-card border-border hover:bg-accent hover:border-primary/50 transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg cursor-pointer"
         >
@@ -195,6 +253,16 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
             </div>
           )}
         </Button>
+      </div>
+      
+      {/* Info text for popup blockers */}
+      <div className="text-center">
+        <p className="text-xs text-muted-foreground">
+          {isMobile 
+            ? "You'll be redirected to complete authentication"
+            : "Please allow popups if blocked by your browser"
+          }
+        </p>
       </div>
     </div>
   );

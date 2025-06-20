@@ -138,7 +138,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   fetchUserData: async () => {
     try {
-      const response = await fetch("/api/profile");
+      const response = await fetch("/api/auth/me");
       if (!response.ok) {
         throw new Error("Failed to fetch user data");
       }
