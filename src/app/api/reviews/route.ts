@@ -16,8 +16,15 @@ export async function GET(request: Request) {
 
     const [reviews] = await db.query(
       `SELECT 
-        c.*, 
-        u.name, 
+        c.id,
+        c.user_id,
+        c.movie_id,
+        c.tv_id,
+        c.media_type,
+        c.content,
+        c.rating,
+        c.is_edited,
+        u.name,
         u.avatar as image,
         DATE_FORMAT(c.created_at, '%Y-%m-%dT%H:%i:%s.000Z') as created_at,
         DATE_FORMAT(c.updated_at, '%Y-%m-%dT%H:%i:%s.000Z') as updated_at
@@ -29,7 +36,25 @@ export async function GET(request: Request) {
       [mediaType, mediaType === 'movie' ? movieId : tvId]
     );
 
-    return NextResponse.json({ reviews });
+    // Transform the data to match the expected format
+    const transformedReviews = Array.isArray(reviews) ? reviews.map((review: any) => ({
+      id: review.id.toString(),
+      userId: review.user_id.toString(),
+      movieId: review.movie_id || undefined,
+      tvId: review.tv_id || undefined,
+      mediaType: review.media_type,
+      content: review.content,
+      rating: review.rating,
+      isEdited: review.is_edited === 1,
+      createdAt: new Date(review.created_at),
+      updatedAt: new Date(review.updated_at),
+      user: {
+        name: review.name || 'Anonymous',
+        image: review.image || ''
+      }
+    })) : [];
+
+    return NextResponse.json({ reviews: transformedReviews });
   } catch (error) {
     console.error('Error fetching reviews:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

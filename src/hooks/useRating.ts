@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import useRatingStore from '@/store/ratingStore';
 import { Rating } from '@/types/review';
@@ -24,8 +24,12 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
     setLoadingAndError,
     clearRatingAndReview,
     userRating,
-    userReview
+    userReview,
+    isLoading
   } = useRatingStore();
+  
+  // Keep track of the current media ID to detect changes
+  const currentMediaId = useRef<string>('');
 
   const fetchRating = useCallback(async () => {
     if (!session?.user) {
@@ -45,7 +49,7 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
       }
 
       const data: RatingResponse | null = await response.json();
-      
+         
       if (data) {
         const rating: Rating = {
           id: data.id.toString(),
@@ -73,11 +77,14 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
             createdAt: new Date(data.created_at),
             updatedAt: new Date(data.updated_at),
           };
+
           setUserReview(review);
         } else {
+      
           setUserReview(null);
         }
       } else {
+        
         clearRatingAndReview();
       }
     } catch (error) {
@@ -184,20 +191,51 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
     }
   }, [session?.user, movieId, tvId, mediaType, setLoadingAndError, clearRatingAndReview]);
 
+  // Check if media ID has changed and clear state if needed
+  useEffect(() => {
+    const newMediaId = `${mediaType}-${movieId || tvId}`;
+    if (currentMediaId.current && currentMediaId.current !== newMediaId) {
+      // Media has changed, clear the previous rating/review
+    
+      clearRatingAndReview();
+    }
+    currentMediaId.current = newMediaId;
+  }, [movieId, tvId, mediaType, clearRatingAndReview]);
+
+  // Clear rating store when component unmounts or media changes
+  useEffect(() => {
+    return () => {
+      // Clear the store when the component unmounts
+     
+      clearRatingAndReview();
+    };
+  }, [clearRatingAndReview]);
+
   // Fetch rating when component mounts or when dependencies change
   useEffect(() => {
+  
     if (session?.user) {
       fetchRating();
     } else {
+      
       clearRatingAndReview();
     }
   }, [session?.user, fetchRating, clearRatingAndReview]);
+
+  // Clear store when user changes
+  useEffect(() => {
+    const currentUserId = session?.user?.id;
+    if (currentUserId && userRating && userRating.userId !== currentUserId.toString()) {
+      
+      clearRatingAndReview();
+    }
+  }, [session?.user?.id, userRating, clearRatingAndReview]);
 
   return {
     fetchRating,
     submitRating,
     deleteRating,
-    isLoading: false,
+    isLoading,
     userRating,
     userReview
   };

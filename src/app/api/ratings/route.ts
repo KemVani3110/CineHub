@@ -33,6 +33,27 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Movie ID or TV ID is required' }, { status: 400 });
     }
 
+    // Convert to numbers for database query
+    const movieIdNum = movieId ? parseInt(movieId, 10) : null;
+    const tvIdNum = tvId ? parseInt(tvId, 10) : null;
+
+    // First, check if comments exist separately
+    const [commentsRows] = await db.query<RatingWithReview[]>(
+      `SELECT * FROM comments 
+       WHERE user_id = ? AND media_type = ? 
+       AND ${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ?`,
+      [session.user.id, mediaType, mediaType === 'movie' ? movieIdNum : tvIdNum]
+    );
+
+    // Check all ratings for this user/movie
+    const [allRatings] = await db.query<RatingWithReview[]>(
+      `SELECT * FROM ratings 
+       WHERE user_id = ? AND media_type = ? 
+       AND ${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ?`,
+      [session.user.id, mediaType, mediaType === 'movie' ? movieIdNum : tvIdNum]
+    );
+
+
     const [rows] = await db.query<RatingWithReview[]>(
       `SELECT r.*, c.content as review, c.id as review_id 
        FROM ratings r 
@@ -40,12 +61,38 @@ export async function GET(request: Request) {
        AND r.movie_id = c.movie_id 
        AND r.tv_id = c.tv_id 
        AND r.media_type = c.media_type 
+       AND c.created_at >= r.created_at 
+       AND c.created_at <= DATE_ADD(r.created_at, INTERVAL 1 MINUTE)
        WHERE r.user_id = ? AND r.media_type = ? 
-       AND r.${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ?`,
-      [session.user.id, mediaType, mediaType === 'movie' ? movieId : tvId]
+       AND r.${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ? 
+       ORDER BY r.updated_at DESC 
+       LIMIT 1`,
+      [session.user.id, mediaType, mediaType === 'movie' ? movieIdNum : tvIdNum]
     );
 
-    return NextResponse.json(rows[0] || null);
+    // If no review found with JOIN, try to get the latest comment separately
+    const finalResult = rows[0];
+    if (finalResult && !finalResult.review) {
+      const [latestComment] = await db.query<RatingWithReview[]>(
+        `SELECT c.content as review, c.id as review_id 
+         FROM comments c 
+         WHERE c.user_id = ? AND c.media_type = ? 
+         AND c.${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ? 
+         ORDER BY c.created_at DESC 
+         LIMIT 1`,
+        [session.user.id, mediaType, mediaType === 'movie' ? movieIdNum : tvIdNum]
+      );
+
+      if (latestComment[0]) {
+        finalResult.review = latestComment[0].review;
+        finalResult.review_id = latestComment[0].review_id;
+
+      }
+    }
+
+
+
+    return NextResponse.json(finalResult || null);
   } catch (error) {
     console.error('Error fetching rating:', error);
     return NextResponse.json(
@@ -73,12 +120,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid rating value' }, { status: 400 });
     }
 
+    // Convert to numbers for database operations
+    const movieIdNum = movieId ? parseInt(movieId, 10) : null;
+    const tvIdNum = tvId ? parseInt(tvId, 10) : null;
+
+
+
     // Insert or update rating
     const [result] = await db.query<OkPacket>(
       `INSERT INTO ratings (user_id, movie_id, tv_id, media_type, rating) 
        VALUES (?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE rating = ?`,
-      [session.user.id, movieId || null, tvId || null, mediaType, rating, rating]
+      [session.user.id, movieIdNum, tvIdNum, mediaType, rating, rating]
     );
 
     if (result.affectedRows === 0) {
@@ -87,12 +140,32 @@ export async function POST(request: Request) {
 
     // Handle review if provided
     if (review) {
-      await db.query<OkPacket>(
-        `INSERT INTO comments (user_id, movie_id, tv_id, media_type, content, rating) 
-         VALUES (?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE content = ?, rating = ?`,
-        [session.user.id, movieId || null, tvId || null, mediaType, review, rating, review, rating]
+      // First check if a comment already exists
+      const [existingComments] = await db.query<RatingWithReview[]>(
+        `SELECT * FROM comments 
+         WHERE user_id = ? AND media_type = ? 
+         AND ${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ?`,
+        [session.user.id, mediaType, mediaType === 'movie' ? movieIdNum : tvIdNum]
       );
+
+      if (existingComments.length > 0) {
+        // Update existing comment
+        const [reviewResult] = await db.query<OkPacket>(
+          `UPDATE comments 
+           SET content = ?, rating = ?, updated_at = CURRENT_TIMESTAMP 
+           WHERE id = ?`,
+          [review, rating, existingComments[0].id]
+        );
+
+      } else {
+        // Insert new comment
+        const [reviewResult] = await db.query<OkPacket>(
+          `INSERT INTO comments (user_id, movie_id, tv_id, media_type, content, rating) 
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [session.user.id, movieIdNum, tvIdNum, mediaType, review, rating]
+        );
+
+      }
     }
 
     // Get the complete rating data with review
@@ -108,18 +181,32 @@ export async function POST(request: Request) {
        AND r.${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ? 
        ORDER BY r.updated_at DESC 
        LIMIT 1`,
-      [session.user.id, mediaType, mediaType === 'movie' ? movieId : tvId]
+      [session.user.id, mediaType, mediaType === 'movie' ? movieIdNum : tvIdNum]
     );
 
     const ratingData = rows[0];
     if (!ratingData) {
-      console.error('No rating data found after insertion:', {
-        userId: session.user.id,
-        mediaType,
-        movieId,
-        tvId,
-      });
+
       return NextResponse.json({ error: 'Failed to retrieve rating data' }, { status: 500 });
+    }
+
+    // If no review found with JOIN, try to get the latest comment separately (same logic as GET)
+    if (!ratingData.review && review) {
+      const [latestComment] = await db.query<RatingWithReview[]>(
+        `SELECT c.content as review, c.id as review_id 
+         FROM comments c 
+         WHERE c.user_id = ? AND c.media_type = ? 
+         AND c.${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ? 
+         ORDER BY c.created_at DESC 
+         LIMIT 1`,
+        [session.user.id, mediaType, mediaType === 'movie' ? movieIdNum : tvIdNum]
+      );
+
+      if (latestComment[0]) {
+        ratingData.review = latestComment[0].review;
+        ratingData.review_id = latestComment[0].review_id;
+
+      }
     }
 
     return NextResponse.json(ratingData);
