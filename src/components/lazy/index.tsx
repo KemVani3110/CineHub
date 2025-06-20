@@ -155,33 +155,42 @@ export const ActorDetail = lazy(() => import("@/components/actor/ActorDetail"));
 
 // Skeleton components for different content types
 const MovieCardSkeleton = () => (
-  <div className="w-full space-y-3">
-    <Skeleton className="w-full aspect-[2/3] rounded-lg" />
-    <Skeleton className="h-4 w-3/4" />
-    <Skeleton className="h-4 w-1/2" />
+  <div className="space-y-4 animate-pulse">
+    <div className="skeleton aspect-[2/3] w-full rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card" />
+    <div className="space-y-3">
+      <div className="skeleton h-5 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+      <div className="skeleton h-4 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+      <div className="skeleton h-3 w-2/3 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+    </div>
   </div>
 );
 
 const TVShowCardSkeleton = () => (
-  <div className="w-full space-y-3">
-    <Skeleton className="w-full aspect-[2/3] rounded-lg" />
-    <Skeleton className="h-4 w-3/4" />
-    <Skeleton className="h-4 w-1/2" />
+  <div className="space-y-4 animate-pulse">
+    <div className="skeleton aspect-[2/3] w-full rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card" />
+    <div className="space-y-3">
+      <div className="skeleton h-5 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+      <div className="skeleton h-4 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+      <div className="skeleton h-3 w-2/3 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+    </div>
   </div>
 );
 
 const ActorCardSkeleton = () => (
-  <div className="w-full space-y-3">
-    <Skeleton className="w-full aspect-[2/3] rounded-lg" />
-    <Skeleton className="h-4 w-3/4" />
-    <Skeleton className="h-4 w-1/2" />
+  <div className="space-y-4 animate-pulse">
+    <div className="skeleton aspect-[2/3] w-full rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card" />
+    <div className="space-y-3">
+      <div className="skeleton h-5 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+      <div className="skeleton h-4 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+      <div className="skeleton h-3 w-2/3 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+    </div>
   </div>
 );
 
 const SectionSkeleton = () => (
-  <div className="space-y-4">
-    <Skeleton className="h-8 w-48" />
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+  <div className="space-y-6">
+    <div className="skeleton h-8 w-48 rounded-lg bg-gradient-to-r from-bg-card to-border animate-pulse" />
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {[...Array(5)].map((_, i) => (
         <MovieCardSkeleton key={i} />
       ))}

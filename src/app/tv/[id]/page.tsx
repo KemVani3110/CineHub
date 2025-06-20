@@ -33,7 +33,7 @@ export default function TVShowDetail() {
   const [tvShow, setTVShow] = useState<TMDBTVDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [tabLoading, setTabLoading] = useState(false);
+  const [tabLoading] = useState(false);
 
   useEffect(() => {
     const loadTVShow = async () => {
@@ -51,12 +51,7 @@ export default function TVShowDetail() {
   }, [id]);
 
   const handleTabChange = (value: string) => {
-    setTabLoading(true);
     setActiveTab(value);
-    // Simulate loading delay for tab content
-    setTimeout(() => {
-      setTabLoading(false);
-    }, 500);
   };
 
   if (loading) {
@@ -253,7 +248,7 @@ export default function TVShowDetail() {
 
       {/* Content Section */}
       <div className="relative z-10 bg-gradient-to-b from-slate-950 to-slate-900">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-2">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-16">
           {/* Tabs Section */}
           <Tabs
             value={activeTab}
@@ -343,62 +338,177 @@ export default function TVShowDetail() {
 
 function TVShowDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-950 text-white">
+      {/* Hero Section with Backdrop Skeleton */}
       <div className="relative min-h-screen overflow-hidden">
-        <div className="absolute inset-0 bg-slate-900" />
+        {/* Background Skeleton with animated gradient */}
+        <div className="absolute inset-0">
+          <div className="w-full h-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/95 to-slate-950/85" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
+        </div>
+
+        {/* Content Container */}
         <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 min-h-screen flex items-center">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 w-full max-w-7xl">
-            {/* Poster Skeleton */}
-            <div className="lg:col-span-4 xl:col-span-3 flex justify-center lg:justify-start">
-              <div className="w-full max-w-sm aspect-[2/3]">
-                <Skeleton className="w-full h-full rounded-xl" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 w-full max-w-7xl py-20">
+            {/* TV Show Poster Skeleton */}
+            <div className="lg:col-span-4 xl:col-span-3 flex justify-center lg:justify-start order-1 lg:order-1">
+              <div className="relative group w-full max-w-sm mx-auto lg:mx-0">
+                {/* Gradient border effect skeleton */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-slate-700 to-slate-600 rounded-2xl blur opacity-25 animate-pulse"></div>
+                
+                {/* Poster skeleton with exact aspect ratio */}
+                <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border border-slate-700/50 bg-slate-800">
+                  <Skeleton className="w-full h-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-700 animate-pulse" />
+                  {/* Add TV icon overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-6xl text-slate-600 animate-pulse">📺</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Content Skeleton */}
-            <div className="lg:col-span-8 xl:col-span-9 space-y-8">
+            {/* TV Show Information Skeleton */}
+            <div className="lg:col-span-8 xl:col-span-9 space-y-8 text-center lg:text-left order-2 lg:order-2">
+              {/* Title and Basic Info Skeleton */}
               <div className="space-y-4">
-                <Skeleton className="h-12 sm:h-16 w-full max-w-2xl" />
-                <Skeleton className="h-6 sm:h-8 w-3/4 max-w-lg" />
-                <div className="flex gap-4">
-                  <Skeleton className="h-6 w-20" />
-                  <Skeleton className="h-6 w-20" />
-                  <Skeleton className="h-6 w-20" />
+                <div className="space-y-3">
+                  {/* Main title skeleton - multiple lines for long titles */}
+                  <div className="space-y-2">
+                    <Skeleton className="h-8 sm:h-12 md:h-16 lg:h-20 w-full max-w-4xl bg-gradient-to-r from-slate-800 to-slate-700 animate-pulse" />
+                    <Skeleton className="h-6 sm:h-8 md:h-10 lg:h-12 w-3/4 max-w-3xl bg-gradient-to-r from-slate-700 to-slate-800 animate-pulse" />
+                  </div>
+                  
+                  {/* Tagline skeleton */}
+                  <Skeleton className="h-4 sm:h-6 md:h-8 w-2/3 max-w-2xl bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                </div>
+
+                {/* TV Show Meta Info Skeleton */}
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6">
+                  {/* Year skeleton */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-600 animate-pulse" />
+                    <Skeleton className="h-5 sm:h-6 w-12 bg-slate-700 animate-pulse" />
+                  </div>
+                  
+                  {/* Episode runtime skeleton */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-600 animate-pulse" />
+                    <Skeleton className="h-5 sm:h-6 w-16 bg-slate-700 animate-pulse" />
+                  </div>
+                  
+                  {/* Rating skeleton */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-600 animate-pulse" />
+                    <Skeleton className="h-5 sm:h-6 w-14 bg-slate-700 animate-pulse" />
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              {/* Genre Tags Skeleton */}
+              <div className="flex flex-wrap gap-2 sm:gap-3 justify-center lg:justify-start">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-24" />
+                  <Skeleton 
+                    key={i} 
+                    className="h-8 sm:h-9 w-20 sm:w-24 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  />
                 ))}
+                <Skeleton className="h-8 sm:h-9 w-16 rounded-full bg-slate-800 animate-pulse" />
               </div>
 
-              <Skeleton className="h-32 w-full rounded-2xl" />
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Skeleton className="h-12 w-full sm:w-48" />
-                <div className="flex gap-4">
-                  <Skeleton className="h-12 w-24" />
-                  <Skeleton className="h-12 w-24" />
+              {/* Rating Section Skeleton */}
+              <div className="bg-slate-900/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-700/50">
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-32 bg-slate-700 animate-pulse" />
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-full bg-slate-600 animate-pulse" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-full max-w-xs bg-slate-700 animate-pulse" />
+                      <Skeleton className="h-3 w-3/4 max-w-sm bg-slate-800 animate-pulse" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <Skeleton className="h-40 w-full rounded-2xl" />
+              {/* Action Buttons Skeleton */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 md:gap-7">
+                {/* Watch button skeleton */}
+                <Skeleton 
+                  className="h-14 w-full sm:w-[210px] rounded-full bg-gradient-to-r from-slate-600 to-slate-700 animate-pulse"
+                  style={{ animationDelay: '0.2s' }}
+                />
+                
+                {/* Share button skeleton */}
+                <Skeleton 
+                  className="h-14 w-full sm:w-[210px] rounded-full bg-slate-800 border-2 border-slate-700 animate-pulse"
+                  style={{ animationDelay: '0.4s' }}
+                />
+                
+                {/* Watchlist button skeleton */}
+                <Skeleton 
+                  className="h-14 w-full sm:w-[210px] rounded-full bg-slate-800 border-2 border-slate-700 animate-pulse"
+                  style={{ animationDelay: '0.6s' }}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs Skeleton */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
-        <div className="mb-8">
-          <div className="flex gap-2 bg-slate-900/80 rounded-2xl p-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 flex-1" />
-            ))}
+      {/* Content Section Skeleton */}
+      <div className="relative z-10 bg-gradient-to-b from-slate-950 to-slate-900">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-16">
+          {/* Tabs Section Skeleton */}
+          <div className="mb-8">
+            <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-2 flex gap-2">
+              {[
+                { label: "Overview", width: "w-20" },
+                { label: "Cast & Crew", width: "w-24" },
+                { label: "Seasons", width: "w-20" },
+                { label: "Reviews", width: "w-20" },
+                { label: "Photos & Videos", width: "w-28" },
+                { label: "Similar Shows", width: "w-28" },
+              ].map((tab, i) => (
+                <Skeleton 
+                  key={i} 
+                  className={`h-10 sm:h-12 ${tab.width} rounded-xl bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse`}
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Tab Content Skeleton */}
+          <div className="bg-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-4 sm:p-6 md:p-8">
+            <div className="space-y-6">
+              {/* Content header skeleton */}
+              <div className="space-y-3">
+                <Skeleton className="h-8 w-48 bg-slate-700 animate-pulse" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full bg-slate-800 animate-pulse" />
+                  <Skeleton className="h-4 w-5/6 bg-slate-800 animate-pulse" />
+                  <Skeleton className="h-4 w-4/5 bg-slate-800 animate-pulse" />
+                  <Skeleton className="h-4 w-3/4 bg-slate-800 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Content grid skeleton for seasons/episodes */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton 
+                      className="h-32 w-full rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 animate-pulse"
+                      style={{ animationDelay: `${i * 0.1}s` }}
+                    />
+                    <Skeleton className="h-4 w-3/4 bg-slate-700 animate-pulse" />
+                    <Skeleton className="h-3 w-1/2 bg-slate-800 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-        <Skeleton className="h-96 w-full rounded-2xl" />
       </div>
     </div>
   );

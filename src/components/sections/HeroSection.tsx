@@ -131,42 +131,40 @@ const HeroSection = () => {
   if (!currentItem || !items?.length) {
     return (
       <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] overflow-hidden rounded-xl sm:rounded-2xl mb-8 sm:mb-12">
-        <div className="absolute inset-0 bg-[#1B263B]">
-          <Skeleton className="w-full h-full" />
-        </div>
+        <div className="skeleton w-full h-full bg-gradient-to-br from-bg-card via-border to-bg-card animate-pulse" />
         <div className="absolute inset-0 bg-gradient-to-t from-bg-main/90 via-bg-main/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-bg-main/70 via-transparent to-bg-main/40" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg-main/60" />
 
         {/* Navigation Buttons Skeleton */}
         <div className="absolute top-3 sm:top-4 lg:top-6 left-3 sm:left-4 lg:left-6 flex gap-2 sm:gap-3 z-20">
-          <Skeleton className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
-          <Skeleton className="w-6 h-6 sm:w-8 sm:h-8 rounded-full" />
+          <div className="skeleton w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-bg-card via-border to-bg-card" />
+          <div className="skeleton w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-bg-card via-border to-bg-card" />
         </div>
 
         {/* Tab Buttons Skeleton */}
         <div className="absolute top-3 sm:top-4 lg:top-6 right-3 sm:right-4 lg:right-6 flex gap-2 sm:gap-3 z-20">
-          <Skeleton className="w-16 h-8 sm:w-20 sm:h-10 rounded-full" />
-          <Skeleton className="w-16 h-8 sm:w-20 sm:h-10 rounded-full" />
+          <div className="skeleton w-16 h-8 sm:w-20 sm:h-10 rounded-full bg-gradient-to-r from-bg-card to-border" />
+          <div className="skeleton w-16 h-8 sm:w-20 sm:h-10 rounded-full bg-gradient-to-r from-bg-card to-border" />
         </div>
 
         {/* Content Skeleton */}
         <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
-          <div className="max-w-3xl">
-            <Skeleton className="h-8 sm:h-12 w-3/4 mb-3 sm:mb-4" />
-            <div className="flex flex-wrap gap-2 sm:gap-4 mb-3 sm:mb-4">
-              <Skeleton className="h-6 sm:h-8 w-16 sm:w-20 rounded-full" />
-              <Skeleton className="h-6 sm:h-8 w-20 sm:w-24 rounded-full" />
-              <Skeleton className="h-6 sm:h-8 w-20 sm:w-24 rounded-full" />
+          <div className="max-w-3xl space-y-4 animate-pulse">
+            <div className="skeleton h-8 sm:h-12 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+            <div className="flex flex-wrap gap-2 sm:gap-4">
+              <div className="skeleton h-6 sm:h-8 w-16 sm:w-20 rounded-full bg-gradient-to-r from-bg-card to-border" />
+              <div className="skeleton h-6 sm:h-8 w-20 sm:w-24 rounded-full bg-gradient-to-r from-bg-card to-border" />
+              <div className="skeleton h-6 sm:h-8 w-20 sm:w-24 rounded-full bg-gradient-to-r from-bg-card to-border" />
             </div>
-            <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
-              <Skeleton className="h-6 sm:h-8 w-16 sm:w-20 rounded-full" />
-              <Skeleton className="h-6 sm:h-8 w-20 sm:w-24 rounded-full" />
+            <div className="flex flex-wrap gap-2">
+              <div className="skeleton h-6 sm:h-8 w-16 sm:w-20 rounded-full bg-gradient-to-r from-bg-card to-border" />
+              <div className="skeleton h-6 sm:h-8 w-20 sm:w-24 rounded-full bg-gradient-to-r from-bg-card to-border" />
             </div>
-            <Skeleton className="h-16 sm:h-20 w-full mb-4 sm:mb-6" />
+            <div className="skeleton h-16 sm:h-20 w-full rounded-lg bg-gradient-to-r from-bg-card to-border" />
             <div className="flex flex-col sm:flex-row gap-3">
-              <Skeleton className="h-10 sm:h-12 w-full sm:w-32 rounded-full" />
-              <Skeleton className="h-10 sm:h-12 w-full sm:w-32 rounded-full" />
+              <div className="skeleton h-10 sm:h-12 w-full sm:w-32 rounded-full bg-gradient-to-r from-bg-card to-border" />
+              <div className="skeleton h-10 sm:h-12 w-full sm:w-32 rounded-full bg-gradient-to-r from-bg-card to-border" />
             </div>
           </div>
         </div>

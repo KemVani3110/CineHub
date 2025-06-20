@@ -10,7 +10,8 @@ import { TMDBGenre } from '@/types/tmdb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Calendar, Clock, Filter, Star } from 'lucide-react';
+import { DateRangePicker } from '@/components/ui/date-picker';
 
 interface ExploreFiltersProps {
   genres: TMDBGenre[];
@@ -182,97 +183,123 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
   }, []);
 
   return (
-    <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 border border-border/40">
-      <div className="space-y-4">
+    <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-lg rounded-2xl border border-slate-700/50 shadow-2xl max-h-[85vh] flex flex-col sticky top-4">
+      <div className="p-6 space-y-6 overflow-y-auto flex-1 scrollbar-thin scroll-smooth">
         {/* Sort Section */}
-        <div className="border-b border-border/40 pb-4">
+        <div className="space-y-3">
           <button
             onClick={() => toggleSection('sort')}
-            className="flex items-center justify-between w-full mb-2 cursor-pointer hover:text-primary transition-colors"
+            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
-            <span className="text-sm font-medium">Sort By</span>
+            <div className="flex items-center gap-3">
+              <Star className="w-4 h-4 text-yellow-400" />
+              <span className="font-medium text-slate-200">Sort By</span>
+            </div>
             <ChevronDown className={cn(
-              "w-4 h-4 transition-transform",
-              openSections.sort ? "transform rotate-180" : ""
+              "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
+              openSections.sort ? "transform rotate-180 text-blue-400" : ""
             )} />
           </button>
+          
           {openSections.sort && (
-            <Select
-              value={`${filters.sortBy}-${filters.sortOrder}`}
-              onValueChange={handleSortChange}
-            >
-              <SelectTrigger className="cursor-pointer hover:bg-accent/50 transition-colors">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="popularity-desc" className="cursor-pointer hover:bg-accent/50 transition-colors">Popularity (High to Low)</SelectItem>
-                <SelectItem value="popularity-asc" className="cursor-pointer hover:bg-accent/50 transition-colors">Popularity (Low to High)</SelectItem>
-                <SelectItem value="rating-desc" className="cursor-pointer hover:bg-accent/50 transition-colors">Rating (High to Low)</SelectItem>
-                <SelectItem value="rating-asc" className="cursor-pointer hover:bg-accent/50 transition-colors">Rating (Low to High)</SelectItem>
-                <SelectItem value="date-desc" className="cursor-pointer hover:bg-accent/50 transition-colors">Release Date (Newest)</SelectItem>
-                <SelectItem value="date-asc" className="cursor-pointer hover:bg-accent/50 transition-colors">Release Date (Oldest)</SelectItem>
-                <SelectItem value="title-asc" className="cursor-pointer hover:bg-accent/50 transition-colors">Title (A-Z)</SelectItem>
-                <SelectItem value="title-desc" className="cursor-pointer hover:bg-accent/50 transition-colors">Title (Z-A)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="pl-4 animate-in slide-in-from-top-2 duration-300">
+              <Select
+                value={`${filters.sortBy}-${filters.sortOrder}`}
+                onValueChange={handleSortChange}
+              >
+                <SelectTrigger className="bg-slate-800/70 border-slate-600/50 text-slate-200 hover:bg-slate-700/70 hover:border-slate-500/50 transition-all duration-200">
+                  <SelectValue placeholder="Choose sorting method" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="popularity-desc" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700">🔥 Most Popular</SelectItem>
+                  <SelectItem value="popularity-asc" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700">📈 Least Popular</SelectItem>
+                  <SelectItem value="rating-desc" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700">⭐ Highest Rated</SelectItem>
+                  <SelectItem value="rating-asc" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700">📉 Lowest Rated</SelectItem>
+                  <SelectItem value="date-desc" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700">🆕 Newest First</SelectItem>
+                  <SelectItem value="date-asc" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700">📅 Oldest First</SelectItem>
+                  <SelectItem value="title-asc" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700">🔤 A to Z</SelectItem>
+                  <SelectItem value="title-desc" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700">🔤 Z to A</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
 
         {/* Genres Section */}
-        <div className="border-b border-border/40 pb-4">
+        <div className="space-y-3">
           <button
             onClick={() => toggleSection('genres')}
-            className="flex items-center justify-between w-full mb-2 cursor-pointer hover:text-primary transition-colors"
+            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
-            <span className="text-sm font-medium">Genres</span>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
+              <span className="font-medium text-slate-200">Genres</span>
+              {selectedGenres.length > 0 && (
+                <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">
+                  {selectedGenres.length}
+                </span>
+              )}
+            </div>
             <ChevronDown className={cn(
-              "w-4 h-4 transition-transform",
-              openSections.genres ? "transform rotate-180" : ""
+              "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
+              openSections.genres ? "transform rotate-180 text-purple-400" : ""
             )} />
           </button>
+          
           {openSections.genres && (
-            <div className="flex flex-wrap gap-2">
-              {genres.length === 0 ? (
-                <div className="w-full space-y-2">
-                  {[...Array(6)].map((_, i) => (
-                    <Skeleton key={i} className="h-6 w-20" />
-                  ))}
-                </div>
-              ) : (
-                genres.map((genre) => (
-                  <Badge
-                    key={genre.id}
-                    variant={selectedGenres.includes(genre.id) ? "default" : "outline"}
-                    className={cn(
-                      "cursor-pointer transition-all duration-200",
-                      selectedGenres.includes(genre.id)
-                        ? "hover:bg-primary/90"
-                        : "hover:bg-accent/50 hover:text-accent-foreground"
-                    )}
-                    onClick={() => handleGenreToggle(genre.id)}
-                  >
-                    {genre.name}
-                  </Badge>
-                ))
-              )}
+            <div className="pl-4 animate-in slide-in-from-top-2 duration-300">
+              <div className="flex flex-wrap gap-2">
+                {genres.length === 0 ? (
+                  <div className="w-full space-y-2">
+                    {[...Array(6)].map((_, i) => (
+                      <Skeleton key={i} className="h-8 w-20 bg-slate-700/50" />
+                    ))}
+                  </div>
+                ) : (
+                  genres.map((genre) => (
+                    <Badge
+                      key={genre.id}
+                      variant={selectedGenres.includes(genre.id) ? "default" : "outline"}
+                      className={cn(
+                        "px-3 py-1.5 cursor-pointer transition-all duration-200 border",
+                        selectedGenres.includes(genre.id)
+                          ? "bg-gradient-to-r from-blue-500 to-purple-600 border-blue-400/50 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25"
+                          : "bg-slate-800/70 border-slate-600/50 text-slate-300 hover:bg-slate-700/70 hover:border-slate-500/50 hover:text-white"
+                      )}
+                      onClick={() => handleGenreToggle(genre.id)}
+                    >
+                      {genre.name}
+                    </Badge>
+                  ))
+                )}
+              </div>
             </div>
           )}
         </div>
 
         {/* Year Section */}
-        <div className="border-b border-border/40 pb-4">
+        <div className="space-y-3">
           <button
             onClick={() => toggleSection('year')}
-            className="flex items-center justify-between w-full mb-2 cursor-pointer hover:text-primary transition-colors"
+            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
-            <span className="text-sm font-medium">Year</span>
+            <div className="flex items-center gap-3">
+              <Calendar className="w-4 h-4 text-green-400" />
+              <span className="font-medium text-slate-200">Year</span>
+              {yearValue && (
+                <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
+                  {yearValue}
+                </span>
+              )}
+            </div>
             <ChevronDown className={cn(
-              "w-4 h-4 transition-transform",
-              openSections.year ? "transform rotate-180" : ""
+              "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
+              openSections.year ? "transform rotate-180 text-green-400" : ""
             )} />
           </button>
+          
           {openSections.year && (
-            <>
+            <div className="pl-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
               <div className="flex items-center gap-4">
                 <Slider
                   value={[yearValue]}
@@ -280,48 +307,57 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
                   min={1900}
                   max={new Date().getFullYear()}
                   step={1}
-                  className="flex-1 cursor-pointer"
+                  className="flex-1"
                 />
                 <div className="relative">
                   <Input
-                    type="year"
+                    type="number"
                     value={yearInput}
                     onChange={handleYearInputChange}
                     min={1900}
                     max={new Date().getFullYear()}
                     className={cn(
-                      "w-20 cursor-text hover:bg-accent/50 transition-colors",
-                      yearError && "border-destructive focus-visible:ring-destructive"
+                      "w-20 bg-slate-800/70 border-slate-600/50 text-slate-200 hover:bg-slate-700/70 hover:border-slate-500/50 focus:border-green-400/50 transition-all duration-200",
+                      yearError && "border-red-400/50 focus:border-red-400/50"
                     )}
                   />
                   {yearError && (
-                    <div className="absolute -bottom-6 left-0 text-xs text-destructive">
+                    <div className="absolute -bottom-6 left-0 text-xs text-red-400">
                       {yearError}
                     </div>
                   )}
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                {yearValue || 'Any'}
+              <div className="text-sm text-slate-400">
+                Selected: <span className="text-green-400 font-medium">{yearValue}</span>
               </div>
-            </>
+            </div>
           )}
         </div>
 
         {/* Runtime Section */}
-        <div className="border-b border-border/40 pb-4">
+        <div className="space-y-3">
           <button
             onClick={() => toggleSection('runtime')}
-            className="flex items-center justify-between w-full mb-2 cursor-pointer hover:text-primary transition-colors"
+            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
-            <span className="text-sm font-medium">Runtime (minutes)</span>
+            <div className="flex items-center gap-3">
+              <Clock className="w-4 h-4 text-orange-400" />
+              <span className="font-medium text-slate-200">Runtime</span>
+              {runtimeValue > 0 && (
+                <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full border border-orange-500/30">
+                  {runtimeValue}m
+                </span>
+              )}
+            </div>
             <ChevronDown className={cn(
-              "w-4 h-4 transition-transform",
-              openSections.runtime ? "transform rotate-180" : ""
+              "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
+              openSections.runtime ? "transform rotate-180 text-orange-400" : ""
             )} />
           </button>
+          
           {openSections.runtime && (
-            <>
+            <div className="pl-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
               <div className="flex items-center gap-4">
                 <Slider
                   value={[runtimeValue]}
@@ -329,61 +365,70 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
                   min={0}
                   max={240}
                   step={5}
-                  className="flex-1 cursor-pointer"
+                  className="flex-1"
                 />
                 <div className="relative">
                   <Input
-                    type="minute"
+                    type="number"
                     value={runtimeInput}
                     onChange={handleRuntimeInputChange}
                     min={0}
                     max={240}
                     className={cn(
-                      "w-20 cursor-text hover:bg-accent/50 transition-colors",
-                      runtimeError && "border-destructive focus-visible:ring-destructive"
+                      "w-20 bg-slate-800/70 border-slate-600/50 text-slate-200 hover:bg-slate-700/70 hover:border-slate-500/50 focus:border-orange-400/50 transition-all duration-200",
+                      runtimeError && "border-red-400/50 focus:border-red-400/50"
                     )}
                   />
                   {runtimeError && (
-                    <div className="absolute -bottom-6 left-0 text-xs text-destructive">
+                    <div className="absolute -bottom-6 left-0 text-xs text-red-400">
                       {runtimeError}
                     </div>
                   )}
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                {runtimeValue ? `${runtimeValue} min` : 'Any'}
+              <div className="text-sm text-slate-400">
+                Duration: <span className="text-orange-400 font-medium">
+                  {runtimeValue ? `${runtimeValue} minutes` : 'Any length'}
+                </span>
               </div>
-            </>
+            </div>
           )}
         </div>
 
         {/* Release Date Range Section */}
-        <div>
+        <div className="space-y-3">
           <button
             onClick={() => toggleSection('dateRange')}
-            className="flex items-center justify-between w-full mb-2 cursor-pointer hover:text-primary transition-colors"
+            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
-            <span className="text-sm font-medium">Release Date Range</span>
+            <div className="flex items-center gap-3">
+              <Calendar className="w-4 h-4 text-cyan-400" />
+              <span className="font-medium text-slate-200">Date Range</span>
+              {(dateRange.from || dateRange.to) && (
+                <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded-full border border-cyan-500/30">
+                  Set
+                </span>
+              )}
+            </div>
             <ChevronDown className={cn(
-              "w-4 h-4 transition-transform",
-              openSections.dateRange ? "transform rotate-180" : ""
+              "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
+              openSections.dateRange ? "transform rotate-180 text-cyan-400" : ""
             )} />
           </button>
+          
           {openSections.dateRange && (
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                type="date"
-                value={dateRange.from}
-                onChange={(e) => handleDateRangeChange('from', e.target.value)}
-                max={dateRange.to || undefined}
-                className="cursor-pointer hover:bg-accent/50 transition-colors"
-              />
-              <Input
-                type="date"
-                value={dateRange.to}
-                onChange={(e) => handleDateRangeChange('to', e.target.value)}
-                min={dateRange.from || undefined}
-                className="cursor-pointer hover:bg-accent/50 transition-colors"
+            <div className="pl-4 animate-in slide-in-from-top-2 duration-300">
+              <DateRangePicker
+                value={{
+                  from: dateRange.from || undefined,
+                  to: dateRange.to || undefined
+                }}
+                onChange={(newRange) => {
+                  setDateRange({
+                    from: newRange.from || '',
+                    to: newRange.to || ''
+                  });
+                }}
               />
             </div>
           )}

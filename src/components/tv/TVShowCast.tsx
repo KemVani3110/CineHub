@@ -179,20 +179,20 @@ function CastSkeleton() {
         <CardContent className="p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3">
-              <Skeleton className="w-10 h-10 rounded-xl bg-slate-700/50" />
+              <div className="skeleton w-10 h-10 rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card animate-pulse" />
               <div className="space-y-2">
-                <Skeleton className="h-8 w-32 bg-slate-700/50" />
-                <Skeleton className="h-4 w-48 bg-slate-700/30" />
+                <div className="skeleton h-8 w-32 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+                <div className="skeleton h-4 w-48 rounded-lg bg-gradient-to-r from-bg-card to-border" />
               </div>
             </div>
-            <Skeleton className="h-10 w-32 bg-slate-700/30" />
+            <div className="skeleton h-10 w-32 rounded-lg bg-gradient-to-r from-bg-card to-border" />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="space-y-4">
-                <Skeleton className="aspect-[3/4] w-full rounded-xl bg-slate-700/50" />
-                <Skeleton className="h-4 w-3/4 bg-slate-700/30" />
-                <Skeleton className="h-3 w-1/2 bg-slate-700/20" />
+              <div key={i} className="space-y-4 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
+                <div className="skeleton aspect-[3/4] w-full rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card" />
+                <div className="skeleton h-4 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+                <div className="skeleton h-3 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />
               </div>
             ))}
           </div>

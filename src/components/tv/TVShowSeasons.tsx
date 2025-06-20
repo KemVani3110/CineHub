@@ -204,13 +204,14 @@ const TVShowSeasons = ({ tvShow }: TVShowSeasonsProps) => {
                       {Array.from({ length: 3 }).map((_, i) => (
                         <div
                           key={i}
-                          className="flex gap-5 p-4 bg-[#1b263b]/50 rounded-xl backdrop-blur-sm"
+                          className="flex gap-5 p-4 bg-[#1b263b]/50 rounded-xl backdrop-blur-sm animate-pulse"
+                          style={{ animationDelay: `${i * 0.1}s` }}
                         >
-                          <Skeleton className="w-36 h-24 rounded-xl" />
+                          <div className="skeleton w-36 h-24 rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card" />
                           <div className="flex-1 space-y-3">
-                            <Skeleton className="h-6 w-3/4 rounded-lg" />
-                            <Skeleton className="h-4 w-1/2 rounded-lg" />
-                            <Skeleton className="h-16 w-full rounded-lg" />
+                            <div className="skeleton h-6 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+                            <div className="skeleton h-4 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+                            <div className="skeleton h-16 w-full rounded-lg bg-gradient-to-r from-bg-card to-border" />
                           </div>
                         </div>
                       ))}

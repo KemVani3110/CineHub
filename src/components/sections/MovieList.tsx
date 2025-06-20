@@ -31,13 +31,12 @@ const MovieList = ({ listType }: MovieListProps) => {
           <div key={index} className="group relative cursor-pointer">
             <div className="relative overflow-hidden rounded-2xl">
               <div className="relative aspect-[2/3] w-full">
-                <div className="absolute inset-0 bg-[#1B263B]">
-                  <Skeleton className="w-full h-full" />
-                </div>
+                <div className="skeleton aspect-[2/3] w-full rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card animate-pulse" />
               </div>
-              <div className="mt-3 px-2">
-                <Skeleton className="h-4 w-3/4 mb-2" />
-                <Skeleton className="h-3 w-1/2" />
+              <div className="mt-3 px-2 space-y-3">
+                <div className="skeleton h-5 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+                <div className="skeleton h-4 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+                <div className="skeleton h-3 w-2/3 rounded-lg bg-gradient-to-r from-bg-card to-border" />
               </div>
             </div>
           </div>
