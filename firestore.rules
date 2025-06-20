@@ -33,11 +33,22 @@ service cloud.firestore {
       return type == 'movie' || type == 'tv';
     }
 
+    function isValidUserData(data) {
+      return data.keys().hasAll(['email', 'name', 'role']) &&
+             data.email is string &&
+             data.name is string &&
+             data.role in ['user', 'admin', 'moderator'];
+    }
+
     // Users collection
     match /users/{userId} {
       allow read: if isAuthenticated() && (isOwner(userId) || isAdminOrModerator());
-      allow create: if isAuthenticated() && isAdminOrModerator();
-      allow update: if isAuthenticated() && (isOwner(userId) || isAdminOrModerator());
+      // Allow user to create their own profile during registration
+      allow create: if isAuthenticated() && 
+        (isOwner(userId) || isAdminOrModerator()) &&
+        isValidUserData(request.resource.data);
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdminOrModerator()) &&
+        isValidUserData(request.resource.data);
       allow delete: if isAuthenticated() && isAdmin();
     }
 
@@ -108,21 +119,21 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && (isOwner(resource.data.uploaded_by) || isAdminOrModerator());
     }
 
-    // Password Reset Tokens collection
+    // Password Reset Tokens collection (không cần thiết cho Firebase Auth)
     match /password_reset_tokens/{tokenId} {
       allow read: if isAuthenticated() && isAdminOrModerator();
       allow create: if isAuthenticated() && isAdminOrModerator();
       allow delete: if isAuthenticated() && isAdminOrModerator();
     }
 
-    // Email Verification Tokens collection
+    // Email Verification Tokens collection (không cần thiết cho Firebase Auth)
     match /email_verification_tokens/{tokenId} {
       allow read: if isAuthenticated() && isAdminOrModerator();
       allow create: if isAuthenticated() && isAdminOrModerator();
       allow delete: if isAuthenticated() && isAdminOrModerator();
     }
 
-    // Sessions collection
+    // Sessions collection (không cần thiết cho Firebase Auth)
     match /sessions/{sessionId} {
       allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
@@ -178,6 +189,25 @@ service cloud.firestore {
     // Migrations collection
     match /migrations/{migrationId} {
       allow read, write: if isAuthenticated() && isAdmin();
+    }
+
+    // Favorites collection (thêm mới)
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid &&
+        isValidMediaType(request.resource.data.mediaType);
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // Reviews collection (thêm mới)
+    match /reviews/{reviewId} {
+      allow read: if true; // Public read access for reviews
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid &&
+        isValidMediaType(request.resource.data.mediaType);
+      allow update: if isAuthenticated() && isOwner(resource.data.userId);
+      allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdminOrModerator());
     }
 
     // Default deny

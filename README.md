@@ -1,64 +1,49 @@
 # CineHub 🎬
 
-CineHub is a modern web application for movie and TV show enthusiasts, built with Next.js and TypeScript. It provides a comprehensive platform for discovering, tracking, and discussing movies and TV shows.
+A modern movie discovery and management platform built with Next.js, TypeScript, and multiple database options.
 
+## ✨ Features
 
-![CineHub](public/logo.png)
+- **Movie Discovery**: Browse movies with TMDB API integration
+- **User Authentication**: Support for both local (MySQL) and cloud (Firestore) authentication
+- **Watchlist Management**: Save and organize your favorite movies
+- **Rating System**: Rate and review movies
+- **Admin Dashboard**: Complete admin panel for user and content management
+- **Responsive Design**: Beautiful UI that works on all devices
+- **Dark Mode**: Full dark mode support
+- **Search & Filter**: Advanced search and filtering capabilities
 
-## Features ✨
+## 🚀 Tech Stack
 
-- 🎥 Browse movies and TV shows with TMDB integration
-- 🔍 Advanced search functionality with filters
-- ⭐ Rate and review content
-- 📝 Create and manage watchlists
-- ❤️ Save favorite movies and shows
-- 👥 User authentication with Firebase
-- 💬 Community discussions and comments
-- 📱 Responsive design for all devices
-- 🔄 Real-time updates
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI
+- **Authentication**: NextAuth.js + Firebase Auth (production)
+- **Database**: MySQL (local) + Firestore (production)
+- **State Management**: Zustand
+- **API Integration**: TMDB API
+- **Form Handling**: React Hook Form
+- **Validation**: Zod
+- **Animation**: Framer Motion
 
-## Tech Stack 🛠
+## 🏗️ Deployment Options
 
-- **Framework**: [Next.js 18](https://nextjs.org/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
-- **UI Components**: [Radix UI](https://www.radix-ui.com/)
-- **Authentication**: [NextAuth.js](https://next-auth.js.org/), [Firebase Auth](https://firebase.google.com/docs/auth)
-- **Database**: [MySQL](https://www.mysql.com/), [Firebase](https://firebase.google.com/)
-- **API Integration**: [TMDB API](https://www.themoviedb.org/documentation/api)
-- **Form Handling**: [React Hook Form](https://react-hook-form.com/)
-- **Validation**: [Zod](https://github.com/colinhacks/zod)
-- **Animation**: [Framer Motion](https://www.framer.com/motion/)
+### Local Development (MySQL + NextAuth)
+Perfect for local development with full database control.
 
-## Project Structure 📁
+### Production (Vercel + Firestore + Firebase Auth)
+Optimized for Vercel deployment with serverless architecture.
 
-```
-cinehub/
-├── src/
-│   ├── app/          # Next.js app directory
-│   ├── components/   # React components
-│   ├── hooks/        # Custom React hooks
-│   ├── lib/          # Utility functions
-│   ├── services/     # API services
-│   ├── store/        # State management
-│   ├── styles/       # Global styles
-│   └── types/        # TypeScript types
-├── public/           # Static files
-└── doc/             # Documentation
-```
-
-## Getting Started 🚀
-
-### Prerequisites
+## 📋 Prerequisites
 
 - Node.js (v18 or higher)
 - npm or yarn
-- MySQL database
-- Firebase account
+- **For Local**: MySQL database
+- **For Production**: Firebase project
 - TMDB API key
 
-### Installation
+## 🛠️ Installation
 
 1. Clone the repository:
 ```bash
@@ -74,17 +59,23 @@ yarn install
 ```
 
 3. Create a `.env.local` file in the root directory:
+
+### For Local Development:
 ```env
-# Database
+# Database (MySQL)
 DATABASE_URL=your_mysql_connection_string
 
-# Firebase
-FIREBASE_API_KEY=your_firebase_api_key
-FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-FIREBASE_PROJECT_ID=your_firebase_project_id
-FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-FIREBASE_APP_ID=your_firebase_app_id
+# Firebase (for file storage and some features)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+
+# Firebase Admin (for server-side operations)
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
+FIREBASE_PRIVATE_KEY=your_firebase_private_key
 
 # TMDB API
 TMDB_API_KEY=your_tmdb_api_key
@@ -93,51 +84,159 @@ TMDB_API_URL=https://api.themoviedb.org/3
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your_nextauth_secret
+
+# Environment
+NODE_ENV=development
 ```
 
-4. Start the development server:
+### For Production (Vercel):
+```env
+# Firebase (primary database)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+
+# Firebase Admin
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
+FIREBASE_PRIVATE_KEY=your_firebase_private_key
+
+# TMDB API
+TMDB_API_KEY=your_tmdb_api_key
+TMDB_API_URL=https://api.themoviedb.org/3
+
+# NextAuth (fallback)
+NEXTAUTH_URL=https://your-vercel-domain.vercel.app
+NEXTAUTH_SECRET=your_nextauth_secret
+
+# Environment
+NODE_ENV=production
+VERCEL_ENV=production
+```
+
+4. **For Local Development**: Set up MySQL database and run migrations
+5. **For Production**: Configure Firebase project with Firestore and Authentication
+
+## 🔥 Firebase Setup for Production
+
+1. **Create Firebase Project**:
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project
+   - Enable Firestore Database
+   - Enable Authentication (Google, Facebook)
+
+2. **Configure Authentication**:
+   ```bash
+   # Enable authentication providers:
+   - Google (configure OAuth consent screen)
+   - Facebook (add Facebook app credentials)
+   - Email/Password
+   ```
+
+3. **Set up Firestore Security Rules**:
+   The project includes pre-configured Firestore rules in `firestore.rules`
+
+4. **Get Firebase Config**:
+   - Project Settings → General → Your apps
+   - Add web app and copy config values
+   - Project Settings → Service Accounts → Generate private key
+
+## 🚀 Development
+
+Start the development server:
 ```bash
 npm run dev
 # or
 yarn dev
 ```
 
-Visit `http://localhost:3000` to see the application.
+The application will be available at `http://localhost:3000`
 
-## Available Scripts 📜
+## 📦 Deployment to Vercel
+
+1. **Connect to Vercel**:
+   ```bash
+   npm install -g vercel
+   vercel login
+   vercel
+   ```
+
+2. **Configure Environment Variables**:
+   - Add all production environment variables in Vercel dashboard
+   - Make sure `NODE_ENV=production` and `VERCEL_ENV=production`
+
+3. **Deploy**:
+   ```bash
+   vercel --prod
+   ```
+
+The app will automatically:
+- Use Firestore for user data in production
+- Use Firebase Auth for authentication
+- Handle social login (Google/Facebook) seamlessly
+- Maintain API compatibility between local and production
+
+## 🏗️ Architecture
+
+### Dual Authentication System
+- **Local**: MySQL + NextAuth.js (full control, faster development)
+- **Production**: Firestore + Firebase Auth (serverless, scalable)
+
+### Environment Detection
+The app automatically detects environment and uses appropriate services:
+```typescript
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+```
+
+### Database Schema
+- **Local**: Traditional MySQL tables
+- **Production**: Firestore collections (same structure, NoSQL format)
+
+## 📚 Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
-## Key Features Implementation
+## 🧩 Project Structure
 
-### Authentication
-- Firebase Authentication integration
-- NextAuth.js for session management
-- Protected routes and API endpoints
-- Social login support
+```
+cinehub/
+├── src/
+│   ├── app/          # Next.js app directory
+│   ├── components/   # React components
+│   ├── hooks/        # Custom React hooks
+│   ├── lib/          # Utility functions and configurations
+│   ├── services/     # API services (dual MySQL/Firestore)
+│   ├── store/        # State management (Zustand)
+│   ├── styles/       # Global styles
+│   └── types/        # TypeScript type definitions
+├── public/           # Static files
+├── firestore.rules   # Firestore security rules
+└── doc/             # Documentation
+```
 
-### Movie Management
-- TMDB API integration for movie data
-- Real-time updates with Firebase
-- Caching and performance optimization
-- Search and filtering capabilities
+## 🔧 Key Features Implementation
 
-### User Features
-- Watchlist management
-- Favorite movies tracking
-- Rating and review system
-- User profile management
+### Dual Authentication
+- **Development**: MySQL + bcrypt + NextAuth.js
+- **Production**: Firestore + Firebase Auth
+- Seamless switching based on environment
 
-### UI/UX
-- Responsive design
-- Dark mode support
-- Loading states and animations
-- Error handling and notifications
+### Social Login
+- Google and Facebook integration
+- Automatic user creation in appropriate database
+- Profile sync and management
 
-## Documentation 📚
+### Database Abstraction
+- Services automatically choose correct database
+- Consistent API across environments
+- Type-safe operations
+
+## 📖 Documentation
 
 Detailed documentation is available in the `doc` directory:
 
@@ -146,7 +245,7 @@ Detailed documentation is available in the `doc` directory:
 - [Deployment Guide](doc/deployment.md)
 - [Architecture Guide](doc/architecture.md)
 
-## Contributing 🤝
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -154,49 +253,17 @@ Detailed documentation is available in the `doc` directory:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## Best Practices
-
-- Follow TypeScript best practices
-- Use proper error handling
-- Implement proper loading states
-- Follow accessibility guidelines
-- Write clean and maintainable code
-- Add proper documentation
-- Follow Git commit conventions
-
-## Performance Optimization
-
-- Implement proper caching strategies
-- Optimize images and assets
-- Use proper code splitting
-- Implement lazy loading
-- Optimize database queries
-- Use proper indexing
-
-## Security Considerations
-
-- Implement proper authentication
-- Use environment variables
-- Implement rate limiting
-- Use proper validation
-- Follow security best practices
-- Regular security updates
-
-## License 📄
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments 🙏
+## 🙏 Acknowledgments
 
-- [The Movie Database (TMDB)](https://www.themoviedb.org/) for providing the movie and TV show data
-- [Next.js](https://nextjs.org/) for the amazing framework
-- [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
-- All other open-source libraries and tools used in this project
-
-## Contact 📧
-
-For any questions or suggestions, please open an issue in the repository or contact the maintainers.
+- [The Movie Database (TMDB)](https://www.themoviedb.org/) for movie data
+- [Next.js](https://nextjs.org/) for the framework
+- [Firebase](https://firebase.google.com/) for cloud services
+- [Vercel](https://vercel.com/) for hosting
 
 ---
 
-Made with ❤️ by [Your Name/Team]
+**Note**: This project supports both local development with MySQL and production deployment with Firestore. The authentication system automatically adapts to the environment, providing the best development experience locally and optimal performance in production.

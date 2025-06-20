@@ -5,6 +5,8 @@ import { authService } from '@/services/auth/authService';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfileStore } from '@/store/profileStore';
 import { useSearchStore } from '@/store/searchStore';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface User {
   id: number;
@@ -13,6 +15,9 @@ interface User {
   role: string;
   avatar?: string;
 }
+
+// Environment detection
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -24,25 +29,48 @@ export function useAuth() {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      if (status === 'authenticated' && session?.user) {
-        const userData = {
-          id: parseInt(session.user.id),
-          email: session.user.email || '',
-          name: session.user.name || '',
-          role: session.user.role || 'user',
-          avatar: session.user.image || undefined,
-        };
-        setUser(userData);
-        // Fetch user data immediately when session is authenticated
-        try {
-          await fetchUserData();
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+      if (isProduction) {
+        // For production, listen to Firebase auth state
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            try {
+              const userData = await authService.getCurrentUser();
+              if (userData) {
+                setUser(userData);
+                await fetchUserData();
+              }
+            } catch (error) {
+              console.error('Error fetching user data:', error);
+            }
+          } else {
+            setUser(null);
+          }
+          setLoading(false);
+        });
+
+        return () => unsubscribe();
+      } else {
+        // For development, use NextAuth session
+        if (status === 'authenticated' && session?.user) {
+          const userData = {
+            id: parseInt(session.user.id),
+            email: session.user.email || '',
+            name: session.user.name || '',
+            role: session.user.role || 'user',
+            avatar: session.user.image || undefined,
+          };
+          setUser(userData);
+          // Fetch user data immediately when session is authenticated
+          try {
+            await fetchUserData();
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+          }
+        } else if (status === 'unauthenticated') {
+          setUser(null);
         }
-      } else if (status === 'unauthenticated') {
-        setUser(null);
+        setLoading(status === 'loading');
       }
-      setLoading(status === 'loading');
     };
 
     initializeAuth();
@@ -51,25 +79,42 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await authService.login({ email, password });
-      const result = await signIn('credentials', {
-        email,
-        redirect: false,
-      });
+      
+      if (isProduction) {
+        // For production, use Firestore auth directly
+        const response = await authService.login({ email, password });
+        
+        toast({
+          title: 'Login Successful',
+          description: 'Welcome back!',
+          variant: 'default',
+        });
 
-      if (result?.error) {
-        throw new Error(result.error);
+        setUser(response.user);
+        await fetchUserData();
+        return response;
+      } else {
+        // For development, use NextAuth with MySQL
+        const response = await authService.login({ email, password });
+        const result = await signIn('credentials', {
+          email,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+
+        toast({
+          title: 'Login Successful',
+          description: 'Welcome back!',
+          variant: 'default',
+        });
+
+        setUser(response.user);
+        await fetchUserData();
+        return response;
       }
-
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome back!',
-        variant: 'default',
-      });
-
-      setUser(response.user);
-      await fetchUserData();
-      return response;
     } catch (error) {
       toast({
         title: 'Login Failed',
@@ -89,36 +134,62 @@ export function useAuth() {
   const socialLogin = async (provider: 'google' | 'facebook', token: string, userData: any) => {
     try {
       setLoading(true);
-      const response = await authService.socialLogin({
-        provider,
-        token,
-        user: {
+      
+      if (isProduction) {
+        // For production, use Firestore auth directly
+        const response = await authService.socialLogin({
+          provider,
+          token,
+          user: {
+            email: userData.email,
+            name: userData.name,
+            avatar: userData.avatar,
+            providerId: userData.providerId,
+          },
+        });
+
+        toast({
+          title: 'Login Successful',
+          description: 'Welcome to CineHub!',
+          variant: 'default',
+        });
+
+        setUser(response.user);
+        await fetchUserData();
+        return response;
+      } else {
+        // For development, use NextAuth with social login API
+        const response = await authService.socialLogin({
+          provider,
+          token,
+          user: {
+            email: userData.email,
+            name: userData.name,
+            avatar: userData.avatar,
+            providerId: userData.providerId,
+          },
+        });
+
+        const result = await signIn('credentials', {
           email: userData.email,
-          name: userData.name,
-          avatar: userData.avatar,
-          providerId: userData.providerId,
-        },
-      });
+          password: token,
+          redirect: false,
+        });
 
-      const result = await signIn('credentials', {
-        email: userData.email,
-        password: token,
-        redirect: false,
-      });
+        if (result?.error) {
+          throw new Error(result.error);
+        }
 
-      if (result?.error) {
-        throw new Error(result.error);
+        toast({
+          title: 'Login Successful',
+          description: 'Welcome to CineHub!',
+          variant: 'default',
+        });
+
+        setUser(response.user);
+        await fetchUserData();
+        return response;
       }
-
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome to CineHub!',
-        variant: 'default',
-      });
-
-      setUser(response.user);
-      await fetchUserData();
-      return response;
     } catch (error) {
       toast({
         title: 'Login Failed',
@@ -139,11 +210,21 @@ export function useAuth() {
     try {
       setLoading(true);
       const response = await authService.register({ name, email, password });
+      
       toast({
         title: 'Registration Successful',
-        description: 'Please check your email to verify your account.',
+        description: isProduction 
+          ? 'Welcome to CineHub!' 
+          : 'Please check your email to verify your account.',
         variant: 'default',
       });
+      
+      if (isProduction) {
+        // For production, user is automatically logged in after registration
+        setUser(response.user);
+        await fetchUserData();
+      }
+      
       return response;
     } catch (error) {
       toast({
@@ -165,7 +246,11 @@ export function useAuth() {
     try {
       setLoading(true);
       await authService.logout();
-      await signOut({ redirect: false });
+      
+      if (!isProduction) {
+        await signOut({ redirect: false });
+      }
+      
       setUser(null);
       
       // Clear search history when logging out
