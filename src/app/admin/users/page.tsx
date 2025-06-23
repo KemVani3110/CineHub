@@ -45,7 +45,10 @@ export default async function UserManagementPage() {
 
   return (
     <div className="p-6">
-      <UserManagement initialUsers={formattedUsers as any[]} />
+      <UserManagement 
+        initialUsers={formattedUsers as any[]} 
+        currentUserId={session.user.id}
+      />
     </div>
   );
 }

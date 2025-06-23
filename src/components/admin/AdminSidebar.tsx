@@ -286,7 +286,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative",
+                    "flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative cursor-pointer",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-105"
                       : "text-muted-foreground hover:text-primary hover:bg-accent/50 hover:scale-102"
@@ -349,7 +349,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-full h-10 text-primary hover:text-primary hover:bg-primary/10 rounded-xl"
+                    className="w-full h-10 text-primary hover:text-primary hover:bg-primary/10 rounded-xl cursor-pointer"
                     asChild
                   >
                     <Link href="/home">
@@ -364,7 +364,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
             ) : (
               <Button
                 variant="ghost"
-                className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10 rounded-xl h-10 px-4"
+                className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10 rounded-xl h-10 px-4 cursor-pointer"
                 asChild
               >
                 <Link href="/home">
@@ -422,7 +422,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="w-full h-10 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                        className="w-full h-10 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl cursor-pointer"
                       >
                         <LogOut size={20} />
                       </Button>

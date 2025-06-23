@@ -28,6 +28,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Loader2,
@@ -42,6 +52,7 @@ import {
   MoreHorizontal,
   Eye,
   Settings,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,18 +60,25 @@ interface UserManagementProps {
   users?: User[];
   initialUsers?: User[];
   onUsersChange?: (users: User[]) => void;
+  currentUserId?: string;
 }
 
 export function UserManagement({
   users: propUsers,
   initialUsers,
   onUsersChange,
+  currentUserId,
 }: UserManagementProps) {
   const [users, setUsers] = useState<User[]>(propUsers || initialUsers || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,6 +92,39 @@ export function UserManagement({
       onUsersChange(users);
     }
   }, [users, onUsersChange]);
+
+  const refreshUsers = async () => {
+    try {
+      setRefreshing(true);
+
+      const response = await fetch("/api/admin/users", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+
+      const data = await response.json();
+      setUsers(data.users || []);
+
+      toast({
+        title: "Success",
+        description: "Users data refreshed successfully",
+        className: "bg-green-600/10 border-green-500/20 text-green-400",
+      });
+    } catch (error) {
+      console.error("Error refreshing users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh users data",
+        variant: "destructive",
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -89,7 +140,36 @@ export function UserManagement({
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, statusFilter]);
+
   const handleRoleChange = async (userId: number, newRole: string) => {
+    if (currentUserId && String(userId) === currentUserId) {
+      toast({
+        title: "Error",
+        description: "Cannot change your own role",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newRole === "admin") {
+      toast({
+        title: "Error",
+        description: "Cannot promote users to admin role",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading((prev) => ({ ...prev, [`role-${userId}`]: true }));
 
@@ -120,6 +200,11 @@ export function UserManagement({
         description: "User role updated successfully",
         className: "bg-green-600/10 border-green-500/20 text-green-400",
       });
+
+      // Refresh data from server to ensure consistency
+      setTimeout(() => {
+        refreshUsers();
+      }, 1000);
     } catch (error) {
       console.error("Error updating role:", error);
       toast({
@@ -134,6 +219,16 @@ export function UserManagement({
   };
 
   const handleStatusChange = async (userId: number, isActive: boolean) => {
+    const user = users.find((u) => u.id === userId);
+    if (user?.role === "admin" && !isActive) {
+      toast({
+        title: "Error",
+        description: "Cannot deactivate admin accounts",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading((prev) => ({ ...prev, [`status-${userId}`]: true }));
 
@@ -166,6 +261,11 @@ export function UserManagement({
         } successfully`,
         className: "bg-green-600/10 border-green-500/20 text-green-400",
       });
+
+      // Refresh data from server to ensure consistency
+      setTimeout(() => {
+        refreshUsers();
+      }, 1000);
     } catch (error) {
       console.error("Error updating status:", error);
       toast({
@@ -176,6 +276,71 @@ export function UserManagement({
       });
     } finally {
       setLoading((prev) => ({ ...prev, [`status-${userId}`]: false }));
+    }
+  };
+
+  const openDeleteDialog = (userId: number) => {
+    const user = users.find((u) => u.id === userId);
+    if (user?.role === "admin") {
+      toast({
+        title: "Error",
+        description: "Cannot delete admin accounts",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUserToDelete(user || null);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setLoading((prev) => ({ ...prev, [`delete-${userToDelete.id}`]: true }));
+
+      const response = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userToDelete.id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete user");
+      }
+
+      // Remove user from local state immediately for instant feedback
+      setUsers((prevUsers) =>
+        prevUsers.filter((user) => user.id !== userToDelete.id)
+      );
+
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+        className: "bg-green-600/10 border-green-500/20 text-green-400",
+      });
+
+      // Close dialog
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+
+      // Refresh data from server to ensure consistency
+      setTimeout(() => {
+        refreshUsers();
+      }, 1000);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to delete user",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading((prev) => ({ ...prev, [`delete-${userToDelete.id}`]: false }));
     }
   };
 
@@ -208,13 +373,13 @@ export function UserManagement({
   const getStatsCount = (type: string) => {
     switch (type) {
       case "total":
-        return users.length;
+        return filteredUsers.length;
       case "active":
-        return users.filter((u) => u.isActive).length;
+        return filteredUsers.filter((u) => u.isActive).length;
       case "admin":
-        return users.filter((u) => u.role === "admin").length;
+        return filteredUsers.filter((u) => u.role === "admin").length;
       case "moderator":
-        return users.filter((u) => u.role === "moderator").length;
+        return filteredUsers.filter((u) => u.role === "moderator").length;
       default:
         return 0;
     }
@@ -236,11 +401,14 @@ export function UserManagement({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => window.location.reload()}
-          className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)] transition-colors"
+          onClick={refreshUsers}
+          disabled={refreshing}
+          className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)] transition-colors disabled:opacity-50"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+          />
+          {refreshing ? "Refreshing..." : "Refresh"}
         </Button>
       </div>
 
@@ -348,16 +516,28 @@ export function UserManagement({
                     <SelectValue placeholder="Role" />
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--bg-card)] border-[var(--border)]">
-                    <SelectItem value="all" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                    <SelectItem
+                      value="all"
+                      className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                    >
                       All Roles
                     </SelectItem>
-                    <SelectItem value="admin" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                    <SelectItem
+                      value="admin"
+                      className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                    >
                       Admin
                     </SelectItem>
-                    <SelectItem value="moderator" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                    <SelectItem
+                      value="moderator"
+                      className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                    >
                       Moderator
                     </SelectItem>
-                    <SelectItem value="user" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                    <SelectItem
+                      value="user"
+                      className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                    >
                       User
                     </SelectItem>
                   </SelectContent>
@@ -369,13 +549,22 @@ export function UserManagement({
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="bg-[var(--bg-card)] border-[var(--border)]">
-                  <SelectItem value="all" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                  <SelectItem
+                    value="all"
+                    className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                  >
                     All Status
                   </SelectItem>
-                  <SelectItem value="active" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                  <SelectItem
+                    value="active"
+                    className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                  >
                     Active
                   </SelectItem>
-                  <SelectItem value="inactive" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                  <SelectItem
+                    value="inactive"
+                    className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                  >
                     Inactive
                   </SelectItem>
                 </SelectContent>
@@ -412,7 +601,7 @@ export function UserManagement({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <TableRow
                   key={user.id}
                   className="hover:bg-[var(--cinehub-accent)]/5 transition-colors border-[var(--border)] cursor-pointer"
@@ -454,8 +643,16 @@ export function UserManagement({
                   <TableCell className="hidden md:table-cell">
                     <Select
                       value={user.role}
-                      onValueChange={(value) => handleRoleChange(user.id, value)}
-                      disabled={loading[`role-${user.id}`]}
+                      onValueChange={(value) =>
+                        handleRoleChange(user.id, value)
+                      }
+                      disabled={
+                        loading[`role-${user.id}`] ||
+                        user.role === "admin" ||
+                        (currentUserId
+                          ? String(user.id) === currentUserId
+                          : false)
+                      }
                     >
                       <SelectTrigger className="w-[130px] h-9 text-sm bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-main)] cursor-pointer hover:border-[var(--cinehub-accent)] transition-colors">
                         {loading[`role-${user.id}`] ? (
@@ -468,13 +665,16 @@ export function UserManagement({
                         )}
                       </SelectTrigger>
                       <SelectContent className="bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-main)]">
-                        <SelectItem value="admin" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
-                          Admin
-                        </SelectItem>
-                        <SelectItem value="moderator" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                        <SelectItem
+                          value="moderator"
+                          className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                        >
                           Moderator
                         </SelectItem>
-                        <SelectItem value="user" className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10">
+                        <SelectItem
+                          value="user"
+                          className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10"
+                        >
                           User
                         </SelectItem>
                       </SelectContent>
@@ -484,12 +684,17 @@ export function UserManagement({
                     <Badge
                       variant={user.isActive ? "default" : "secondary"}
                       className={cn(
-                        "cursor-pointer hover:opacity-80 transition-opacity",
+                        user.role === "admin"
+                          ? "cursor-not-allowed opacity-80"
+                          : "cursor-pointer hover:opacity-80 transition-opacity",
                         user.isActive
                           ? "bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20 hover:bg-[var(--success)]/20"
                           : "bg-[var(--text-sub)]/10 text-[var(--text-sub)] border-[var(--text-sub)]/20 hover:bg-[var(--text-sub)]/20"
                       )}
-                      onClick={() => handleStatusChange(user.id, !user.isActive)}
+                      onClick={() =>
+                        user.role !== "admin" &&
+                        handleStatusChange(user.id, !user.isActive)
+                      }
                     >
                       {loading[`status-${user.id}`] ? (
                         <div className="flex items-center">
@@ -525,6 +730,25 @@ export function UserManagement({
                           <Settings className="mr-2 h-4 w-4" />
                           Change Role
                         </DropdownMenuItem>
+                        {user.role !== "admin" && (
+                          <DropdownMenuItem
+                            className="cursor-pointer hover:bg-red-500/10 text-red-500"
+                            onClick={() => openDeleteDialog(user.id)}
+                            disabled={loading[`delete-${user.id}`]}
+                          >
+                            {loading[`delete-${user.id}`] ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete User
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -533,6 +757,76 @@ export function UserManagement({
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {filteredUsers.length > 0 && totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-[var(--border)]">
+            <div className="text-sm text-[var(--text-sub)]">
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, filteredUsers.length)} of{" "}
+              {filteredUsers.length} users
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="cursor-pointer disabled:cursor-not-allowed bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-main)] hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)] disabled:opacity-50"
+              >
+                Previous
+              </Button>
+
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pages = [];
+                  const showPages = 5;
+                  let startPage = Math.max(
+                    1,
+                    currentPage - Math.floor(showPages / 2)
+                  );
+                  const endPage = Math.min(totalPages, startPage + showPages - 1);
+
+                  if (endPage - startPage < showPages - 1) {
+                    startPage = Math.max(1, endPage - showPages + 1);
+                  }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <Button
+                        key={i}
+                        variant={currentPage === i ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(i)}
+                        className={`cursor-pointer min-w-[2.5rem] ${
+                          currentPage === i
+                            ? "bg-[var(--cinehub-accent)] text-white hover:bg-[var(--cinehub-accent)]/90"
+                            : "bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-main)] hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)]"
+                        }`}
+                      >
+                        {i}
+                      </Button>
+                    );
+                  }
+                  return pages;
+                })()}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="cursor-pointer disabled:cursor-not-allowed bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-main)] hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)] disabled:opacity-50"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Empty State */}
@@ -562,6 +856,63 @@ export function UserManagement({
           </CardContent>
         </Card>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-[var(--bg-card)] border-[var(--border)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[var(--text-main)]">
+              Delete User Account
+            </AlertDialogTitle>
+            <div className="space-y-3">
+              <AlertDialogDescription className="text-[var(--text-sub)]">
+                Are you sure you want to delete{" "}
+                <strong>{userToDelete?.name}</strong>? This action cannot be
+                undone and will permanently remove all user data.
+              </AlertDialogDescription>
+              <div className="text-[var(--text-sub)] text-sm">
+                <p className="font-medium mb-2">
+                  This will permanently delete:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>User profile and settings</li>
+                  <li>Watchlist and favorites</li>
+                  <li>Ratings and reviews</li>
+                  <li>Activity history</li>
+                </ul>
+              </div>
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="cursor-pointer bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-main)] hover:bg-[var(--cinehub-accent)]/10 hover:border-[var(--cinehub-accent)]/40 hover:text-[var(--cinehub-accent)] transition-colors"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setUserToDelete(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={loading[`delete-${userToDelete?.id}`]}
+              className="cursor-pointer bg-red-600 hover:bg-red-700 text-white border-red-600 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+            >
+              {loading[`delete-${userToDelete?.id}`] ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete User
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

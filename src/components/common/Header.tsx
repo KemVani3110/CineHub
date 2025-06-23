@@ -179,7 +179,8 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
   return (
     <>
       <header
-        className={`w-full bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-40 transition-all duration-300 ${
+               className={`w-full bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-40 transition-all duration-300 ${
+
           isSidebarOpen ? "hidden" : "block"
         }`}
       >
@@ -223,7 +224,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                     className={`nav-item flex items-center space-x-2 px-4 py-2 mx-1 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
                       isActive
                         ? "text-white bg-primary shadow-lg shadow-primary/25"
-                        : "text-muted-foreground hover:text-primary hover:bg-accent/10"
+                        : "text-slate-300 hover:text-white hover:bg-slate-700/50"
                     }`}
                   >
                     <Icon size={20} />
@@ -359,21 +360,21 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="lg:hidden h-9 w-9 rounded-full hover:bg-accent/10 relative"
+                    className="lg:hidden h-9 w-9 rounded-full hover:bg-slate-700/50 text-slate-300 hover:text-white relative"
                   >
                     <Menu size={22} />
                   </Button>
                 </SheetTrigger>
                 <SheetContent
                   side="right"
-                  className="w-[300px] sm:w-[400px] p-0"
+                  className="w-[300px] sm:w-[400px] p-0 bg-slate-900 border-slate-700"
                 >
                   <SheetHeader className="sr-only">
                     <SheetTitle>Navigation Menu</SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col h-full">
                     {/* Header - Replaced with User Info */}
-                    <div className="p-4 border-b border-border/50">
+                    <div className="p-4 border-b border-slate-700/50">
                       {authUser ? (
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-12 w-12">
@@ -393,7 +394,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                               {authUser.name || authUser.email}
                             </p>
                             {authUser.email && authUser.name && (
-                              <p className="text-xs text-muted-foreground truncate">
+                              <p className="text-xs text-slate-400 truncate">
                                 {authUser.email}
                               </p>
                             )}
@@ -406,7 +407,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           </div>
                           <div>
                             <p className="font-medium">Guest User</p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-slate-400">
                               Sign in to access more features
                             </p>
                           </div>
@@ -428,7 +429,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                               className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                                 isActive
                                   ? "text-white bg-primary shadow-lg shadow-primary/25"
-                                  : "text-muted-foreground hover:text-primary hover:bg-accent/10"
+                                  : "text-slate-300 hover:text-white hover:bg-slate-700/50"
                               }`}
                             >
                               <Icon size={20} className="flex-shrink-0" />
@@ -438,7 +439,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                         })}
                       </div>
 
-                      <Separator className="my-4" />
+                      <Separator className="my-4 bg-slate-700" />
 
                       {/* User Section */}
                       {authUser ? (
@@ -446,7 +447,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           <Link
                             href="/profile"
                             onClick={closeMobileMenu}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent/10"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                           >
                             <User size={20} className="flex-shrink-0" />
                             <span>Profile</span>
@@ -455,7 +456,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           <Link
                             href="/favorite-actors"
                             onClick={closeMobileMenu}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent/10"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                           >
                             <Heart size={20} className="flex-shrink-0" />
                             <span>Favorite Actors</span>
@@ -466,7 +467,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           <Link
                             href="/login"
                             onClick={closeMobileMenu}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent/10"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                           >
                             <LogIn size={20} className="flex-shrink-0" />
                             <span>Login</span>
@@ -474,7 +475,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           <Link
                             href="/register"
                             onClick={closeMobileMenu}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent/10"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                           >
                             <User size={20} className="flex-shrink-0" />
                             <span>Register</span>
@@ -489,7 +490,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                               key={item.path}
                               href={item.path}
                               onClick={closeMobileMenu}
-                              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent/10"
+                              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                             >
                               <item.icon size={20} className="flex-shrink-0" />
                               <span>{item.name}</span>
@@ -500,7 +501,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                     </div>
 
                     {/* Footer with Logout and Version */}
-                    <div className="mt-auto border-t border-border/50 bg-muted/50">
+                    <div className="mt-auto border-t border-slate-700/50 bg-slate-800/50">
                       {authUser && (
                         <Button
                           variant="ghost"
@@ -512,7 +513,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                         </Button>
                       )}
                       <div className="px-4 py-3 text-center">
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-slate-400">
                           CineHub v1.0.0
                         </p>
                       </div>

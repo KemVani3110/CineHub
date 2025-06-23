@@ -200,7 +200,7 @@ export default function HomePage() {
   return (
     <QueryClientProvider client={queryClient}>
       <div
-        className="min-h-screen relative overflow-hidden"
+        className="min-h-screen relative"
         style={{ backgroundColor: "#0D1B2A", color: "#E0E6ED" }}
       >
         {/* Background decorative elements */}

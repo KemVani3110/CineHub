@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 import {
   Users,
   Activity,
@@ -40,40 +41,44 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { Metadata } from "next";
+import { DashboardPaginationComponent } from "@/components/admin/DashboardPagination";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | CineHub",
   description: "Admin dashboard for managing users and system",
 };
 
+const DASHBOARD_ITEMS_PER_PAGE = 5;
+
 async function getStats() {
-  const connection = await pool.getConnection();
   try {
     const [users, activities, ratings, watchlist] = await Promise.all([
-      connection.query("SELECT COUNT(*) as count FROM users"),
-      connection.query("SELECT COUNT(*) as count FROM user_activity_logs"),
-      connection.query("SELECT COUNT(*) as count FROM ratings"),
-      connection.query("SELECT COUNT(*) as count FROM watchlist"),
+      pool.query("SELECT COUNT(*) as count FROM users"),
+      pool.query("SELECT COUNT(*) as count FROM user_activity_logs"), 
+      pool.query("SELECT COUNT(*) as count FROM ratings"),
+      pool.query("SELECT COUNT(*) as count FROM watchlist"),
     ]);
 
     return {
-      totalUsers: (users as any)[0][0].count,
-      totalActivities: (activities as any)[0][0].count,
-      totalRatings: (ratings as any)[0][0].count,
-      totalWatchlist: (watchlist as any)[0][0].count,
+      totalUsers: (users as any)[0]?.count || 0,
+      totalActivities: (activities as any)[0]?.count || 0,
+      totalRatings: (ratings as any)[0]?.count || 0,
+      totalWatchlist: (watchlist as any)[0]?.count || 0,
     };
   } catch (error) {
     console.error("Error in getStats:", error);
-    throw error;
-  } finally {
-    connection.release();
+    return {
+      totalUsers: 0,
+      totalActivities: 0,
+      totalRatings: 0,
+      totalWatchlist: 0,
+    };
   }
 }
 
 async function getUserStats() {
-  const connection = await pool.getConnection();
   try {
-    const [userStats] = await connection.query(`
+    const [userStats] = await pool.query(`
       SELECT 
         COUNT(*) as total_users,
         COUNT(CASE WHEN is_active = 1 THEN 1 END) as active_users,
@@ -82,19 +87,28 @@ async function getUserStats() {
       FROM users
     `);
 
-    return (userStats as any)[0];
+    return (userStats as any)[0] || {
+      total_users: 0,
+      active_users: 0,
+      admin_users: 0,
+      moderator_users: 0,
+    };
   } catch (error) {
     console.error("Error in getUserStats:", error);
-    throw error;
-  } finally {
-    connection.release();
+    return {
+      total_users: 0,
+      active_users: 0,
+      admin_users: 0,
+      moderator_users: 0,
+    };
   }
 }
 
-async function getRecentActivityLogs() {
-  const connection = await pool.getConnection();
+async function getRecentActivityLogs(page: number = 1) {
   try {
-    const [rows] = await connection.query(`
+    const offset = (page - 1) * DASHBOARD_ITEMS_PER_PAGE;
+    
+    const [rows] = await pool.query(`
       SELECT 
         al.id,
         al.admin_id,
@@ -112,14 +126,37 @@ async function getRecentActivityLogs() {
       LEFT JOIN users u ON al.admin_id = u.id
       LEFT JOIN users tu ON al.target_user_id = tu.id
       ORDER BY al.created_at DESC
-      LIMIT 10
+      LIMIT ${DASHBOARD_ITEMS_PER_PAGE} OFFSET ${offset}
     `);
-    return rows;
+    
+    const [countResult] = await pool.query(`
+      SELECT COUNT(*) as total
+      FROM admin_activity_logs
+    `);
+    
+    const total = (countResult as any)[0]?.total || 0;
+    const totalPages = Math.ceil(total / DASHBOARD_ITEMS_PER_PAGE);
+    
+    return {
+      logs: rows,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: DASHBOARD_ITEMS_PER_PAGE
+      }
+    };
   } catch (error) {
     console.error("Error in getRecentActivityLogs:", error);
-    throw error;
-  } finally {
-    connection.release();
+    return {
+      logs: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: DASHBOARD_ITEMS_PER_PAGE
+      }
+    };
   }
 }
 
@@ -130,38 +167,47 @@ function getActionBadgeVariant(action: string) {
   return "outline";
 }
 
-export default async function AdminDashboardPage() {
+
+
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ activityPage?: string }>;
+}) {
   const session = await getServerSession(authOptions);
-  const [stats, userStats, recentLogs] = await Promise.all([
+  const params = await searchParams;
+  const activityPage = parseInt(params.activityPage || '1', 10);
+  
+  const [stats, userStats, recentLogsData] = await Promise.all([
     getStats(),
     getUserStats(),
-    getRecentActivityLogs(),
+    getRecentActivityLogs(activityPage),
   ]);
 
   const activePercentage =
-    userStats.total_users > 0
-      ? Math.round((userStats.active_users / userStats.total_users) * 100)
+    userStats?.total_users > 0
+      ? Math.round(((userStats?.active_users || 0) / userStats.total_users) * 100)
       : 0;
 
   return (
       <div className="container mx-auto px-4 py-6 space-y-8">
         {/* Header */}
         <div className="relative overflow-hidden">
-          <Card className="border-0 shadow-xl bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 text-white">
+          <Card className="border-0 shadow-xl bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white">
             <CardHeader className="pb-8">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
-                      <BarChart3 className="h-8 w-8 text-white" />
+                    <div className="p-3 rounded-2xl bg-primary/20 backdrop-blur-sm">
+                      <BarChart3 className="h-8 w-8 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-4xl font-bold tracking-tight">
+                      <CardTitle className="text-4xl font-bold tracking-tight text-white">
                         Admin Dashboard
                       </CardTitle>
-                      <p className="text-blue-100 text-lg mt-2">
+                      <p className="text-slate-300 text-lg mt-2">
                         Welcome back,{" "}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-primary">
                           {session?.user?.name}
                         </span>
                       </p>
@@ -186,7 +232,7 @@ export default async function AdminDashboardPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-0 cursor-pointer backdrop-blur-sm"
+                    className="bg-white/10 hover:bg-white/20 text-white border-0 cursor-pointer backdrop-blur-sm transition-all duration-300"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Refresh
@@ -194,7 +240,7 @@ export default async function AdminDashboardPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-0 cursor-pointer backdrop-blur-sm"
+                    className="bg-white/10 hover:bg-white/20 text-white border-0 cursor-pointer backdrop-blur-sm transition-all duration-300"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export
@@ -202,7 +248,7 @@ export default async function AdminDashboardPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-0 cursor-pointer backdrop-blur-sm"
+                    className="bg-white/10 hover:bg-white/20 text-white border-0 cursor-pointer backdrop-blur-sm transition-all duration-300"
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
@@ -215,85 +261,85 @@ export default async function AdminDashboardPage() {
 
         {/*  Main Stats Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+          <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-primary/20 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900 hover:border-primary/40">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
+              <CardTitle className="text-sm font-medium text-slate-300">
                 Total Users
               </CardTitle>
-              <div className="p-3 rounded-2xl bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="p-3 rounded-2xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <Users className="h-6 w-6 text-primary" />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
-                {stats.totalUsers.toLocaleString()}
+              <div className="text-3xl font-bold text-white">
+                {(stats?.totalUsers || 0).toLocaleString()}
               </div>
-              <p className="text-xs text-blue-600/70 dark:text-blue-400/70">
+              <p className="text-xs text-slate-400">
                 All registered users
               </p>
               <div className="flex items-center space-x-2">
-                <div className="h-2 flex-1 bg-blue-200 dark:bg-blue-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full w-full"></div>
+                <div className="h-2 flex-1 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full w-full"></div>
                 </div>
-                <span className="text-xs text-blue-600 dark:text-blue-400">
+                <span className="text-xs text-primary">
                   100%
                 </span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-800/20">
+          <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-primary/20 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900 hover:border-primary/40">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">
+              <CardTitle className="text-sm font-medium text-slate-300">
                 Active Users
               </CardTitle>
               <div className="p-3 rounded-2xl bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-                <Activity className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <Activity className="h-6 w-6 text-green-400" />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center space-x-3">
-                <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+                <div className="text-3xl font-bold text-white">
                   {userStats.active_users.toLocaleString()}
                 </div>
                 <Badge
                   variant="secondary"
-                  className="bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300"
+                  className="bg-green-500/20 text-green-400 hover:bg-green-500/30 border-green-500/30"
                 >
                   {activePercentage}%
                 </Badge>
               </div>
-              <p className="text-xs text-green-600/70 dark:text-green-400/70">
+              <p className="text-xs text-slate-400">
                 Currently active
               </p>
               <div className="flex items-center space-x-2">
-                <div className="h-2 flex-1 bg-green-200 dark:bg-green-800 rounded-full overflow-hidden">
+                <div className="h-2 flex-1 bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-500 rounded-full transition-all duration-700"
                     style={{ width: `${activePercentage}%` }}
                   ></div>
                 </div>
-                <span className="text-xs text-green-600 dark:text-green-400">
+                <span className="text-xs text-green-400">
                   {activePercentage}%
                 </span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-800/20">
+          <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-primary/20 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900 hover:border-primary/40">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+              <CardTitle className="text-sm font-medium text-slate-300">
                 Total Ratings
               </CardTitle>
               <div className="p-3 rounded-2xl bg-yellow-500/10 group-hover:bg-yellow-500/20 transition-colors">
-                <Star className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                <Star className="h-6 w-6 text-yellow-400" />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">
+              <div className="text-3xl font-bold text-white">
                 {stats.totalRatings.toLocaleString()}
               </div>
-              <p className="text-xs text-yellow-600/70 dark:text-yellow-400/70">
+              <p className="text-xs text-slate-400">
                 User ratings given
               </p>
               <div className="flex items-center space-x-1">
@@ -303,30 +349,30 @@ export default async function AdminDashboardPage() {
                     className="h-3 w-3 fill-yellow-400 text-yellow-400"
                   />
                 ))}
-                <span className="text-xs text-yellow-600/70 ml-2">
+                <span className="text-xs text-slate-400 ml-2">
                   Average: 4.2
                 </span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/20 dark:to-violet-800/20">
+          <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-primary/20 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900 hover:border-primary/40">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">
+              <CardTitle className="text-sm font-medium text-slate-300">
                 Watchlist Items
               </CardTitle>
               <div className="p-3 rounded-2xl bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
-                <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <TrendingUp className="h-6 w-6 text-purple-400" />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+              <div className="text-3xl font-bold text-white">
                 {stats.totalWatchlist.toLocaleString()}
               </div>
-              <p className="text-xs text-purple-600/70 dark:text-purple-400/70">
+              <p className="text-xs text-slate-400">
                 Items in watchlists
               </p>
-              <div className="flex items-center text-xs text-purple-600/70">
+              <div className="flex items-center text-xs text-purple-400">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 <span>+12% from last month</span>
               </div>
@@ -336,11 +382,11 @@ export default async function AdminDashboardPage() {
 
         {/*  User Role Stats */}
         <div className="grid gap-6 md:grid-cols-3">
-          <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white">
+          <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                  <p className="text-blue-100 text-sm font-medium">
+                  <p className="text-primary-foreground/80 text-sm font-medium">
                     Regular Users
                   </p>
                   <p className="text-3xl font-bold">
@@ -350,7 +396,7 @@ export default async function AdminDashboardPage() {
                       userStats.moderator_users
                     ).toLocaleString()}
                   </p>
-                  <p className="text-blue-200 text-xs">Standard access level</p>
+                  <p className="text-primary-foreground/70 text-xs">Standard access level</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
                   <Users className="h-8 w-8 text-white" />
@@ -359,7 +405,7 @@ export default async function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 text-white">
+          <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 text-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -376,7 +422,7 @@ export default async function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 text-white">
+          <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-orange-600 via-orange-700 to-orange-800 text-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -397,44 +443,32 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/*  Recent Activity Section */}
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+        <Card className="border-primary/20 shadow-xl bg-gradient-to-br from-slate-800 to-slate-900">
+          <CardHeader className="border-b border-primary/20 bg-gradient-to-r from-slate-800 to-slate-700">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="space-y-2">
-                <CardTitle className="flex items-center space-x-3 text-xl">
+                <CardTitle className="flex items-center space-x-3 text-xl text-white">
                   <div className="p-2 rounded-xl bg-primary/10">
                     <Activity className="h-6 w-6 text-primary" />
                   </div>
                   <span>Recent Admin Activity</span>
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Latest administrative actions and system changes
+                <p className="text-sm text-slate-400">
+                  Latest administrative actions and system changes (Page {recentLogsData.pagination.currentPage} of {recentLogsData.pagination.totalPages})
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center space-x-2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search activities..."
-                    className="w-48 cursor-pointer"
-                  />
-                </div>
-                <Select>
-                  <SelectTrigger className="w-32 cursor-pointer">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Actions</SelectItem>
-                    <SelectItem value="create">Create</SelectItem>
-                    <SelectItem value="update">Update</SelectItem>
-                    <SelectItem value="delete">Delete</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm" className="cursor-pointer">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Date Range
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="cursor-pointer border-slate-600 text-slate-300 hover:bg-slate-700"
+                  asChild
+                >
+                  <Link href="/admin/activity-logs">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View All
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -444,30 +478,29 @@ export default async function AdminDashboardPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="font-semibold">
+                  <TableRow className="bg-slate-700/50 border-slate-600">
+                    <TableHead className="font-semibold text-slate-300">
                       Administrator
                     </TableHead>
-                    <TableHead className="font-semibold">Action</TableHead>
-                    <TableHead className="font-semibold">Target User</TableHead>
-                    <TableHead className="font-semibold">Description</TableHead>
-                    <TableHead className="font-semibold">Date & Time</TableHead>
-                    <TableHead className="font-semibold">Actions</TableHead>
+                    <TableHead className="font-semibold text-slate-300">Action</TableHead>
+                    <TableHead className="font-semibold text-slate-300">Target User</TableHead>
+                    <TableHead className="font-semibold text-slate-300">Description</TableHead>
+                    <TableHead className="font-semibold text-slate-300">Date & Time</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(recentLogs as any).length === 0 ? (
+                  {(recentLogsData.logs as any).length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12">
+                      <TableCell colSpan={5} className="text-center py-12 border-slate-600">
                         <div className="flex flex-col items-center space-y-4">
-                          <div className="p-4 rounded-full bg-muted">
-                            <Activity className="h-8 w-8 text-muted-foreground" />
+                          <div className="p-4 rounded-full bg-slate-700">
+                            <Activity className="h-8 w-8 text-slate-400" />
                           </div>
                           <div className="space-y-2">
-                            <p className="text-lg font-medium text-muted-foreground">
+                            <p className="text-lg font-medium text-slate-300">
                               No recent activity
                             </p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-slate-400">
                               Administrative actions will appear here when they
                               occur
                             </p>
@@ -476,10 +509,10 @@ export default async function AdminDashboardPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    (recentLogs as any).map((log: any) => (
+                    (recentLogsData.logs as any).map((log: any) => (
                       <TableRow
                         key={log.id}
-                        className="hover:bg-muted/50 transition-colors cursor-pointer group"
+                        className="hover:bg-slate-700/50 transition-colors cursor-pointer group border-slate-600"
                       >
                         <TableCell className="py-4">
                           <div className="flex items-center space-x-3">
@@ -493,10 +526,10 @@ export default async function AdminDashboardPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="font-medium text-sm">
+                              <div className="font-medium text-sm text-white">
                                 {log.admin_name}
                               </div>
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-xs text-slate-400">
                                 {log.admin_email}
                               </div>
                             </div>
@@ -514,7 +547,7 @@ export default async function AdminDashboardPage() {
                           {log.target_user_name ? (
                             <div className="flex items-center space-x-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                                <AvatarFallback className="bg-slate-600 text-slate-300 text-xs">
                                   {log.target_user_name
                                     ?.split(" ")
                                     .map((n: string) => n[0])
@@ -523,44 +556,35 @@ export default async function AdminDashboardPage() {
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className="font-medium text-sm">
+                                <div className="font-medium text-sm text-white">
                                   {log.target_user_name}
                                 </div>
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs text-slate-400">
                                   {log.target_user_email}
                                 </div>
                               </div>
                             </div>
                           ) : (
-                            <span className="text-muted-foreground text-sm">
+                            <span className="text-slate-400 text-sm">
                               No target
                             </span>
                           )}
                         </TableCell>
                         <TableCell className="max-w-md">
                           <div
-                            className="text-sm truncate"
+                            className="text-sm truncate text-slate-300"
                             title={log.description}
                           >
                             {log.description}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm font-medium">
+                          <div className="text-sm font-medium text-white">
                             {format(new Date(log.created_at), "MMM d, yyyy")}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-slate-400">
                             {format(new Date(log.created_at), "HH:mm:ss")}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -568,6 +592,13 @@ export default async function AdminDashboardPage() {
                 </TableBody>
               </Table>
             </div>
+            
+            {/* Pagination */}
+            <DashboardPaginationComponent 
+              currentPage={recentLogsData.pagination.currentPage}
+              totalPages={recentLogsData.pagination.totalPages}
+              totalItems={recentLogsData.pagination.totalItems}
+            />
           </CardContent>
         </Card>
       </div>

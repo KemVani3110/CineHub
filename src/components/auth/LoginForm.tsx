@@ -39,9 +39,13 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      await login(formData.email, formData.password);
-      // Redirect using window.location for immediate navigation
-      window.location.href = '/home';
+      const response = await login(formData.email, formData.password);
+      // Check user role and redirect accordingly
+      if (response?.user?.role === 'admin') {
+        window.location.href = '/admin/dashboard';
+      } else {
+        window.location.href = '/home';
+      }
     } catch (error) {
       // Check if it's a migration error
       if (error instanceof Error && error.message.includes('Account migration required')) {
