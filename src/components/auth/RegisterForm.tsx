@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, UserPlus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,23 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMigration, setIsMigration] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { register } = useAuth();
+
+  // Handle migration parameters
+  useEffect(() => {
+    const email = searchParams.get('email');
+    const migration = searchParams.get('migration');
+    
+    if (email && migration === 'true') {
+      setFormData(prev => ({ ...prev, email }));
+      setIsMigration(true);
+    }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -61,15 +74,22 @@ export default function RegisterForm() {
 
       toast({
         title: "Success",
-        description: "Account created successfully! Welcome to CineHub",
+        description: isMigration 
+          ? "Account migration completed successfully! You can now sign in with your new credentials."
+          : "Account created successfully! Welcome to CineHub",
       });
 
-      router.push("/login");
+      if (isMigration) {
+        // For migration, redirect to login with success message
+        router.push("/login?migrated=true");
+      } else {
+        router.push("/login");
+      }
     } catch (error) {
       toast({
         title: "Error",
         description:
-          error instanceof Error ? error.message : "Registration failed",
+          error instanceof Error ? error.message : isMigration ? "Migration failed" : "Registration failed",
         variant: "destructive",
       });
     } finally {
@@ -100,14 +120,17 @@ export default function RegisterForm() {
           <div className="text-center mb-6 sm:mb-8 animate-fade-in-down">
             <div className="mb-2">
               <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                START FOR FREE
+                {isMigration ? 'ACCOUNT MIGRATION' : 'START FOR FREE'}
               </span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-              Create Account
+              {isMigration ? 'Migrate Account' : 'Create Account'}
             </h1>
             <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-              Join CineHub and discover amazing movies
+              {isMigration 
+                ? 'Complete your account migration to the new system' 
+                : 'Join CineHub and discover amazing movies'
+              }
             </p>
           </div>
 
@@ -164,7 +187,8 @@ export default function RegisterForm() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="pl-12 h-12 bg-card border-border rounded-lg placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                  disabled={isMigration}
+                  className="pl-12 h-12 bg-card border-border rounded-lg placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg

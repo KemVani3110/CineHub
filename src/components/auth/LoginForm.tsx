@@ -11,6 +11,7 @@ import SocialLoginButtons from "./SocialLoginButtons";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function LoginForm() {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showMigrationDialog, setShowMigrationDialog] = useState(false);
+  const [migrationEmail, setMigrationEmail] = useState('');
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -36,16 +39,15 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const response = await login(formData.email, formData.password);
-      
-      // Redirect based on role with immediate navigation
-      const targetPath = response.user.role === "admin" ? "/admin/dashboard" : "/home";
-      
-      // Use window.location for immediate redirect that bypasses any client-side routing issues
-      window.location.href = targetPath;
-      
+      await login(formData.email, formData.password);
+      // Redirect using window.location for immediate navigation
+      window.location.href = '/home';
     } catch (error) {
-      console.error("Login error:", error);
+      // Check if it's a migration error
+      if (error instanceof Error && error.message.includes('Account migration required')) {
+        setMigrationEmail(formData.email);
+        setShowMigrationDialog(true);
+      }
       // Error already handled by useAuth hook via toast
     } finally {
       setIsLoading(false);
@@ -56,6 +58,11 @@ export default function LoginForm() {
     // This is handled by SocialLoginButtons component
     // The onLogin callback will be triggered after successful login
     console.log("Social login initiated:", provider);
+  };
+
+  const handleMigrationRedirect = () => {
+    setShowMigrationDialog(false);
+    router.push(`/register?email=${encodeURIComponent(migrationEmail)}&migration=true`);
   };
 
   return (
@@ -242,6 +249,21 @@ export default function LoginForm() {
           </div>
         </div>
       </div>
+
+      {/* Migration Dialog */}
+      <AlertDialog open={showMigrationDialog} onOpenChange={setShowMigrationDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Account Migration Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your account requires migration. Please create a new account with the provided email.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleMigrationRedirect}>Create New Account</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

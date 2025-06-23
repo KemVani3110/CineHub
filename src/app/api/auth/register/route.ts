@@ -25,7 +25,7 @@ if (!getApps().length) {
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, firebaseToken } = await req.json();
+    const { name, email, password, firebaseToken, isMigration } = await req.json();
 
     // Validate input
     if (!name || !email) {
@@ -56,14 +56,16 @@ export async function POST(req: Request) {
           );
         }
 
-        // Check if user already exists in Firestore
-        const existingUser = await adminDb.collection('users').doc(decodedToken.uid).get();
-        
-        if (existingUser.exists) {
-          return NextResponse.json(
-            { message: 'User already exists' },
-            { status: 400 }
-          );
+        // Check if user already exists in Firestore (skip for migration)
+        if (!isMigration) {
+          const existingUser = await adminDb.collection('users').doc(decodedToken.uid).get();
+          
+          if (existingUser.exists) {
+            return NextResponse.json(
+              { message: 'User already exists' },
+              { status: 400 }
+            );
+          }
         }
 
         // Create user document in Firestore
@@ -86,7 +88,7 @@ export async function POST(req: Request) {
         // Log activity
         await adminDb.collection('user_activity_logs').add({
           userId: decodedToken.uid,
-          action: 'user_registered',
+          action: isMigration ? 'user_migrated' : 'user_registered',
           details: { provider: 'email' },
           timestamp: new Date(),
           ip_address: null
@@ -94,7 +96,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(
           {
-            message: 'Registration successful',
+            message: isMigration ? 'Account migration successful' : 'Registration successful',
             user: {
               id: parseInt(decodedToken.uid.slice(-8), 16),
               name: userData.name,

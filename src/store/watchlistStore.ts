@@ -120,7 +120,19 @@ export const useWatchlistStore = create<WatchlistStore>()(
 
           const data = await response.json();
           // Handle new API response format { watchlist: [...] }
-          const watchlistItems = data.watchlist || data || [];
+          const rawWatchlistItems = data.watchlist || data || [];
+          
+          // Map the API response to the expected format
+          const watchlistItems = rawWatchlistItems
+            .filter((item: any) => item.id && item.media_type) // Filter out invalid items
+            .map((item: any) => ({
+              id: item.id,
+              mediaType: item.media_type, // Convert snake_case to camelCase
+              title: item.title,
+              posterPath: item.poster_path, // Convert snake_case to camelCase
+              addedAt: item.added_at || new Date().toISOString(),
+            }));
+          
           set({ items: watchlistItems, isLoading: false });
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'An error occurred', isLoading: false });

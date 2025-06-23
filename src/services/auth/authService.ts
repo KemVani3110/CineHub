@@ -17,7 +17,11 @@ import {
   collection, 
   addDoc, 
   serverTimestamp,
-  updateDoc
+  updateDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc
 } from 'firebase/firestore';
 
 interface LoginCredentials {
@@ -119,47 +123,111 @@ class FirestoreAuthService {
     }
   }
 
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+  private async createFirebaseAuthUser(email: string, password: string, userData: any) {
     try {
-      // Use Firebase client to authenticate and get token
-      const userCredential = await signInWithEmailAndPassword(
-        auth, 
-        credentials.email, 
-        credentials.password
-      );
-      
+      // Create Firebase Auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
-      const token = await firebaseUser.getIdToken();
 
-      // Call our API with the Firebase token
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: credentials.email,
-          firebaseToken: token
-        }),
+      // Update Firebase profile with existing data
+      await updateProfile(firebaseUser, {
+        displayName: userData.name,
+        photoURL: userData.avatar
       });
 
-      const data = await response.json();
+      // Update Firestore document with Firebase UID
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      await setDoc(userDocRef, {
+        ...userData,
+        firebase_uid: firebaseUser.uid,
+        updated_at: serverTimestamp()
+      }, { merge: true });
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+      return firebaseUser;
+    } catch (error) {
+      console.error('Error creating Firebase Auth user:', error);
+      throw error;
+    }
+  }
+
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    try {
+      // First, try Firebase Auth login
+      try {
+        const userCredential = await signInWithEmailAndPassword(
+          auth, 
+          credentials.email, 
+          credentials.password
+        );
+        
+        const firebaseUser = userCredential.user;
+        const token = await firebaseUser.getIdToken();
+
+        // Call our API with the Firebase token
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: credentials.email,
+            firebaseToken: token
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Login failed');
+        }
+
+        return {
+          user: data.user,
+          token: data.token
+        };
+      } catch (firebaseError: any) {
+        // If Firebase Auth fails, check if user exists in Firestore
+        if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/invalid-credential') {
+          // Try to find user by email in Firestore
+          const usersRef = collection(db, 'users');
+          const q = query(usersRef, where('email', '==', credentials.email));
+          const querySnapshot = await getDocs(q);
+          
+          if (querySnapshot.empty) {
+            throw new Error('Invalid email or password');
+          }
+          
+          const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data();
+          
+          // For migrated users, we need them to reset their password
+          // since we can't verify their old password without the hash
+          throw new Error('Account migration required. Please register again with the same email to migrate your account to the new system.');
+        }
+        
+        // Re-throw other Firebase errors
+        throw firebaseError;
       }
-
-      return {
-        user: data.user,
-        token: data.token
-      };
     } catch (error: any) {
+      console.error('Login error:', error);
       throw new Error(error.message || 'Login failed');
     }
   }
 
   async register(userData: Partial<User> & { password: string }): Promise<AuthResponse> {
     try {
+      // Check if user already exists in Firestore (for migration)
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', userData.email));
+      const querySnapshot = await getDocs(q);
+      
+      let existingUserData = null;
+      if (!querySnapshot.empty) {
+        existingUserData = querySnapshot.docs[0].data();
+        // Delete the old document
+        await deleteDoc(querySnapshot.docs[0].ref);
+      }
+
       // Use Firebase client to create user and get token
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -169,23 +237,55 @@ class FirestoreAuthService {
 
       const firebaseUser = userCredential.user;
 
-      // Update Firebase profile
+      // Update Firebase profile with merged data
+      const displayName = userData.name || existingUserData?.name || '';
+      const photoURL = userData.avatar || existingUserData?.avatar || '';
+      
       await updateProfile(firebaseUser, {
-        displayName: userData.name
+        displayName,
+        photoURL
+      });
+
+      // Create new Firestore document with Firebase UID
+      const newUserData = {
+        id: firebaseUser.uid,
+        name: displayName,
+        email: firebaseUser.email || '',
+        avatar: photoURL,
+        role: existingUserData?.role || 'user',
+        is_active: true,
+        email_verified: firebaseUser.emailVerified,
+        created_at: existingUserData?.created_at || serverTimestamp(),
+        updated_at: serverTimestamp(),
+        last_login_at: serverTimestamp(),
+        provider: 'email',
+        provider_id: firebaseUser.uid
+      };
+
+      await setDoc(doc(db, 'users', firebaseUser.uid), newUserData);
+
+      // Log activity
+      await addDoc(collection(db, 'user_activity_logs'), {
+        userId: firebaseUser.uid,
+        action: existingUserData ? 'user_migrated' : 'user_registered',
+        details: { provider: 'email' },
+        timestamp: serverTimestamp(),
+        ip_address: null
       });
 
       const token = await firebaseUser.getIdToken();
 
-      // Call our API with the Firebase token
+      // Call our API to sync with backend
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: userData.name,
+          name: displayName,
           email: userData.email,
-          firebaseToken: token
+          firebaseToken: token,
+          isMigration: !!existingUserData
         }),
       });
 
@@ -200,6 +300,9 @@ class FirestoreAuthService {
         token: data.token
       };
     } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('This email is already registered. Please try logging in instead.');
+      }
       throw new Error(error.message || 'Registration failed');
     }
   }
