@@ -1,190 +1,279 @@
 # CineHub Deployment Guide
 
-## Prerequisites
+## Overview
 
-- Node.js v18 or higher
-- npm or yarn
-- Vercel account (recommended for Next.js deployment)
-- Firebase project
+CineHub uses a dual authentication system:
+- **Local Development**: MySQL + NextAuth.js + bcrypt
+- **Production (Vercel)**: Firebase Auth + Firestore
+
+This allows for fast local development while using serverless-compatible auth in production.
+
+## Local Development Setup
+
+### Prerequisites
+- Node.js 18+ 
 - MySQL database
-- TMDB API key
+- Firebase project (for testing production auth locally)
 
-## Environment Setup
+### Environment Variables (.env.local)
 
-1. Create a production `.env` file with the following variables:
-```env
-# Database
-DATABASE_URL=your_production_mysql_connection_string
+```bash
+# Database (MySQL - Local Only)
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=CINEHUB
 
-# Firebase
-FIREBASE_API_KEY=your_firebase_api_key
-FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-FIREBASE_PROJECT_ID=your_firebase_project_id
-FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-FIREBASE_APP_ID=your_firebase_app_id
+# NextAuth.js (Local Only)
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-generate-with-openssl
+
+# JWT (Local Only)
+JWT_SECRET=your-jwt-secret
+
+# Firebase Configuration (Used in both Local & Production)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef
+
+# Firebase Admin (Production Auth)
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-abc@your_project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
 
 # TMDB API
-TMDB_API_KEY=your_tmdb_api_key
-TMDB_API_URL=https://api.themoviedb.org/3
+NEXT_PUBLIC_TMDB_API_KEY=your_tmdb_api_key
 
-# NextAuth
-NEXTAUTH_URL=your_production_url
-NEXTAUTH_SECRET=your_production_nextauth_secret
+# Environment Flags
+NODE_ENV=development
 ```
 
-## Deployment Options
+### Installation & Setup
 
-### 1. Vercel (Recommended)
+1. **Clone and Install Dependencies**
+   ```bash
+   git clone <repository>
+   cd cinehub
+   npm install
+   ```
 
-1. Install Vercel CLI:
+2. **Setup MySQL Database**
+   ```bash
+   # Import the database schema
+   mysql -u root -p < database/cinehub.sql
+   ```
+
+3. **Configure Environment Variables**
+   - Copy `.env.example` to `.env.local`
+   - Fill in all the variables above
+
+4. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+
+## Production Deployment (Vercel)
+
+### Firebase Setup
+
+1. **Create Firebase Project**
+   - Go to [Firebase Console](https://console.firebase.google.com)
+   - Create new project
+   - Enable Authentication
+   - Enable Firestore Database
+
+2. **Configure Authentication Providers**
+   ```bash
+   # In Firebase Console > Authentication > Sign-in method
+   # Enable Email/Password
+   # Enable Google (optional)
+   # Enable Facebook (optional)
+   ```
+
+3. **Setup Firestore Security Rules**
+   - Copy the rules from `firestore.rules` to your Firebase project
+   - Deploy the rules in Firebase Console
+
+4. **Generate Service Account Key**
+   ```bash
+   # In Firebase Console > Project Settings > Service accounts
+   # Click "Generate new private key"
+   # Download the JSON file
+   ```
+
+### Vercel Environment Variables
+
+#### Required for Production
+
 ```bash
-npm install -g vercel
+# Firebase Client Configuration (Public)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com  
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef
+
+# Firebase Admin Configuration (Private)
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-abc@your_project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
+
+# TMDB API
+NEXT_PUBLIC_TMDB_API_KEY=your_tmdb_api_key
+
+# Environment Flags (Critical!)
+NODE_ENV=production
+VERCEL_ENV=production
 ```
 
-2. Login to Vercel:
+#### DO NOT INCLUDE in Production
 ```bash
+# These are MySQL-specific and not needed for Vercel
+DB_HOST=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+NEXTAUTH_URL=
+NEXTAUTH_SECRET=
+JWT_SECRET=
+```
+
+### Deployment Steps
+
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Deploy to production"
+   git push origin main
+   ```
+
+2. **Connect to Vercel**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Import your GitHub repository
+   - Framework preset: Next.js
+
+3. **Configure Environment Variables**
+   - In Vercel project settings > Environment Variables
+   - Add all the required production variables above
+   - Set environment to "Production"
+
+4. **Deploy**
+   - Vercel will automatically deploy on push to main branch
+   - Check deployment logs for any errors
+
+### Environment Variable Setup in Vercel
+
+#### Option 1: Through Vercel Dashboard
+1. Go to your project in Vercel
+2. Navigate to Settings > Environment Variables
+3. Add each variable one by one
+4. Select "Production" environment
+
+#### Option 2: Using Vercel CLI
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login to Vercel
 vercel login
+
+# Add environment variables
+vercel env add NEXT_PUBLIC_FIREBASE_API_KEY
+vercel env add FIREBASE_CLIENT_EMAIL
+vercel env add FIREBASE_PRIVATE_KEY
+# ... add all other variables
 ```
 
-3. Deploy:
-```bash
-vercel
-```
+### Important Notes
 
-4. For production deployment:
-```bash
-vercel --prod
-```
+1. **Firebase Private Key**: Make sure to properly escape the private key:
+   ```bash
+   # Correct format with escaped newlines
+   "-----BEGIN PRIVATE KEY-----\nMIIEvg...key_content...\n-----END PRIVATE KEY-----\n"
+   ```
 
-### 2. Docker Deployment
+2. **Environment Detection**: The app automatically detects the environment:
+   ```javascript
+   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+   ```
 
-1. Build the Docker image:
-```bash
-docker build -t cinehub .
-```
+3. **Database Migration**: In production, user data is stored in Firestore, not MySQL.
 
-2. Run the container:
-```bash
-docker run -p 3000:3000 cinehub
-```
+## Authentication Flow
 
-### 3. Traditional Server Deployment
+### Local Development
+1. User enters email/password
+2. API validates against MySQL database
+3. NextAuth.js creates session
+4. JWT token stored in HTTP-only cookie
 
-1. Build the application:
-```bash
-npm run build
-```
-
-2. Start the production server:
-```bash
-npm run start
-```
-
-## Database Setup
-
-1. Create a production MySQL database
-2. Run database migrations
-3. Configure database connection string in environment variables
-
-## Firebase Setup
-
-1. Create a new Firebase project
-2. Enable Authentication methods
-3. Set up Firestore database
-4. Configure Firebase security rules
-5. Update Firebase configuration in environment variables
-
-## SSL/TLS Configuration
-
-For production deployment, ensure SSL/TLS is properly configured:
-
-1. Obtain SSL certificates
-2. Configure SSL in your hosting platform
-3. Update `NEXTAUTH_URL` to use HTTPS
-
-## Monitoring and Maintenance
-
-### Health Checks
-
-Implement health check endpoints:
-- `/api/health` - Basic health check
-- `/api/health/db` - Database connection check
-- `/api/health/firebase` - Firebase connection check
-
-### Logging
-
-Configure logging for production:
-- Application logs
-- Error logs
-- Access logs
-
-### Backup Strategy
-
-1. Database backups
-   - Regular MySQL dumps
-   - Firestore exports
-
-2. Application backups
-   - Source code version control
-   - Environment configuration backups
-
-## Performance Optimization
-
-1. Enable caching:
-   - API responses
-   - Static assets
-   - Database queries
-
-2. Configure CDN:
-   - Static assets
-   - Images
-   - API responses
-
-3. Enable compression:
-   - Gzip/Brotli compression
-   - Image optimization
-
-## Security Considerations
-
-1. Enable security headers:
-   - Content Security Policy (CSP)
-   - X-Frame-Options
-   - X-Content-Type-Options
-   - Strict-Transport-Security
-
-2. Configure CORS:
-   - Set appropriate origins
-   - Configure allowed methods
-   - Set security headers
-
-3. Rate limiting:
-   - API endpoints
-   - Authentication attempts
-   - Search requests
+### Production (Vercel)
+1. User enters email/password
+2. Firebase Auth validates credentials
+3. Firebase ID token generated
+4. API verifies token and updates Firestore
+5. User data retrieved from Firestore
 
 ## Troubleshooting
 
-Common issues and solutions:
+### Common Issues
 
-1. Database connection issues
-   - Check connection string
-   - Verify network access
-   - Check database credentials
+1. **"Firebase token required" Error**
+   - Check that `NODE_ENV=production` is set
+   - Verify Firebase configuration is correct
 
-2. Firebase authentication issues
-   - Verify Firebase configuration
-   - Check authentication methods
-   - Verify security rules
+2. **"Invalid private key" Error**
+   - Ensure private key is properly escaped with \n
+   - Check that quotes are properly formatted
 
-3. API integration issues
-   - Verify API keys
-   - Check rate limits
-   - Verify endpoint access
+3. **Authentication Loop**
+   - Clear browser cookies/localStorage
+   - Check environment variable configuration
 
-## Rollback Procedure
+4. **Build Errors**
+   - Verify all required environment variables are set
+   - Check that Firebase project has correct configuration
 
-1. Keep track of deployments
-2. Maintain database backups
-3. Document configuration changes
-4. Test rollback procedures regularly
+### Debugging Commands
+
+```bash
+# Check environment variables are loaded
+vercel env ls
+
+# View deployment logs
+vercel logs
+
+# Run local production build
+npm run build
+npm run start
+```
+
+## Security Considerations
+
+1. **Environment Variables**: Never commit sensitive variables to git
+2. **Firebase Rules**: Ensure Firestore rules are properly configured
+3. **API Keys**: Use environment-specific API keys
+4. **CORS**: Configure proper CORS settings for production domain
+
+## Performance Optimization
+
+1. **Firebase Connection**: Connection pooling is handled automatically
+2. **Caching**: Implement caching for frequently accessed data
+3. **Bundle Size**: Tree-shake unused Firebase features
+4. **CDN**: Leverage Vercel's edge network for static assets
+
+## Monitoring
+
+1. **Vercel Analytics**: Monitor performance and errors
+2. **Firebase Console**: Track authentication usage
+3. **Error Tracking**: Implement error tracking service
+4. **Logs**: Monitor function logs for issues
+
+## Rollback Strategy
+
+1. **Vercel Instant Rollback**: Use Vercel dashboard to rollback deployments
+2. **Environment Variables**: Keep backup of working configurations
+3. **Database**: Firestore has built-in backup/restore capabilities
+4. **Git**: Use git tags for release management

@@ -121,6 +121,7 @@ class FirestoreAuthService {
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
+      // Use Firebase client to authenticate and get token
       const userCredential = await signInWithEmailAndPassword(
         auth, 
         credentials.email, 
@@ -128,32 +129,29 @@ class FirestoreAuthService {
       );
       
       const firebaseUser = userCredential.user;
-      await this.updateUserLastLogin(firebaseUser.uid);
-      
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-      const userData = userDoc.data();
-
-      if (!userData || !userData.is_active) {
-        throw new Error('Account is disabled');
-      }
-
       const token = await firebaseUser.getIdToken();
 
-      return {
-        user: {
-          id: parseInt(firebaseUser.uid.slice(-8), 16), // Convert to number for compatibility
-          email: firebaseUser.email || '',
-          name: userData.name || firebaseUser.displayName || '',
-          role: userData.role || 'user',
-          avatar: userData.avatar || firebaseUser.photoURL || undefined,
-          is_active: userData.is_active || true,
-          email_verified: firebaseUser.emailVerified,
-          created_at: userData.created_at?.toDate()?.toISOString() || new Date().toISOString(),
-          updated_at: userData.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
-          last_login_at: userData.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
-          provider: userData.provider === 'email' ? 'local' : userData.provider || 'local'
+      // Call our API with the Firebase token
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        token
+        body: JSON.stringify({
+          email: credentials.email,
+          firebaseToken: token
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      return {
+        user: data.user,
+        token: data.token
       };
     } catch (error: any) {
       throw new Error(error.message || 'Login failed');
@@ -162,6 +160,7 @@ class FirestoreAuthService {
 
   async register(userData: Partial<User> & { password: string }): Promise<AuthResponse> {
     try {
+      // Use Firebase client to create user and get token
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         userData.email!,
@@ -175,28 +174,30 @@ class FirestoreAuthService {
         displayName: userData.name
       });
 
-      // Create Firestore document
-      await this.createUserDocument(firebaseUser, {
-        name: userData.name,
-        provider: 'email'
-      });
-
       const token = await firebaseUser.getIdToken();
 
-      return {
-        user: {
-          id: parseInt(firebaseUser.uid.slice(-8), 16),
-          email: firebaseUser.email || '',
-          name: userData.name || '',
-          role: 'user',
-          avatar: undefined,
-          is_active: true,
-          email_verified: firebaseUser.emailVerified,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          provider: 'local'
+      // Call our API with the Firebase token
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        token
+        body: JSON.stringify({
+          name: userData.name,
+          email: userData.email,
+          firebaseToken: token
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      return {
+        user: data.user,
+        token: data.token
       };
     } catch (error: any) {
       throw new Error(error.message || 'Registration failed');

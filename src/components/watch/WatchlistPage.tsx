@@ -45,8 +45,9 @@ export function WatchlistPage() {
         await fetchWatchlist();
         
         // Fetch details for each item
+        const safeItemsForEffect = Array.isArray(items) ? items : [];
         const details = await Promise.all(
-          items.map(async (item) => {
+          safeItemsForEffect.map(async (item) => {
             try {
               if (item.mediaType === 'movie') {
                 const movieDetails = await fetchMovieDetails(item.id);
@@ -171,7 +172,10 @@ export function WatchlistPage() {
     );
   }
 
-  if (items.length === 0) {
+  // Ensure items is an array
+  const safeItems = Array.isArray(items) ? items : [];
+
+  if (safeItems.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center space-y-8 px-4">
@@ -179,9 +183,6 @@ export function WatchlistPage() {
           <div className="relative">
             <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-primary/10 via-accent/10 to-muted/20 flex items-center justify-center">
               <Heart className="w-16 h-16 text-muted-foreground/50" />
-            </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
             </div>
           </div>
           
@@ -209,8 +210,8 @@ export function WatchlistPage() {
   }
 
   // Separate movies and TV shows
-  const movies = items.filter(item => item.mediaType === 'movie');
-  const tvShows = items.filter(item => item.mediaType === 'tv');
+  const movies = safeItems.filter(item => item.mediaType === 'movie');
+  const tvShows = safeItems.filter(item => item.mediaType === 'tv');
 
   const getRating = (id: number, mediaType: 'movie' | 'tv') => {
     const details = mediaDetails.find(d => d.id === id && d.mediaType === mediaType);
@@ -231,7 +232,7 @@ export function WatchlistPage() {
             </h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
-            Your curated collection of {items.length} amazing {items.length === 1 ? 'title' : 'titles'} waiting to be discovered
+            Your curated collection of {safeItems.length} amazing {safeItems.length === 1 ? 'title' : 'titles'} waiting to be discovered
           </p>
           
           {/* View Mode Toggle */}

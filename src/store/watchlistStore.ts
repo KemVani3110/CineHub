@@ -47,16 +47,27 @@ export const useWatchlistStore = create<WatchlistStore>()(
       addToWatchlist: async (item) => {
         try {
           set({ isLoading: true, error: null });
+          
+          // Map the item properties to match the API expectations
+          const apiPayload = {
+            movie_id: item.mediaType === 'movie' ? item.id : null,
+            tv_id: item.mediaType === 'tv' ? item.id : null,
+            media_type: item.mediaType,
+            title: item.title,
+            poster_path: item.posterPath,
+          };
+
           const response = await fetch('/api/watchlist', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(item),
+            body: JSON.stringify(apiPayload),
           });
 
           if (!response.ok) {
-            throw new Error('Failed to add to watchlist');
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to add to watchlist');
           }
 
           const newItem = { ...item, addedAt: new Date().toISOString() };
@@ -66,6 +77,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
           }));
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'An error occurred', isLoading: false });
+          throw error; // Re-throw for UI error handling
         }
       },
 
@@ -107,7 +119,9 @@ export const useWatchlistStore = create<WatchlistStore>()(
           }
 
           const data = await response.json();
-          set({ items: data, isLoading: false });
+          // Handle new API response format { watchlist: [...] }
+          const watchlistItems = data.watchlist || data || [];
+          set({ items: watchlistItems, isLoading: false });
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'An error occurred', isLoading: false });
         }
