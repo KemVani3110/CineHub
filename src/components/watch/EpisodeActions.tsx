@@ -7,23 +7,65 @@ import {
   MessageCircle,
   Trophy,
   Zap,
-  BookmarkPlus
+  BookmarkPlus,
+  Play,
+  Clock,
+  Calendar,
+  Users,
+  SkipForward,
+  SkipBack,
+  Tv
 } from "lucide-react";
 import { WatchlistButton } from "@/components/common/WatchlistButton";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface MovieActionsProps {
-  title: string;
+interface EpisodeActionsProps {
+  showTitle: string;
+  episodeTitle: string;
   onShare: () => void;
-  id: number;
+  showId: number;
+  seasonNumber: number;
+  episodeNumber: number;
   posterPath: string;
   voteAverage: number;
   voteCount: number;
-  popularity: number;
+  popularity?: number;
+  runtime?: number;
+  airDate?: string;
+  seasons: Array<{ season_number: number; name?: string; episode_count?: number }>;
+  onSeasonChange: (seasonNumber: string) => void;
+  onEpisodeChange: (direction: "next" | "prev") => void;
+  hasNextEpisode: boolean;
+  hasPreviousEpisode: boolean;
 }
 
-export function MovieActions({ title, onShare, id, posterPath, voteAverage, voteCount, popularity }: MovieActionsProps) {
+export function EpisodeActions({ 
+  showTitle, 
+  episodeTitle,
+  onShare, 
+  showId, 
+  seasonNumber,
+  episodeNumber,
+  posterPath, 
+  voteAverage, 
+  voteCount, 
+  popularity = 0,
+  runtime,
+  airDate,
+  seasons,
+  onSeasonChange,
+  onEpisodeChange,
+  hasNextEpisode,
+  hasPreviousEpisode
+}: EpisodeActionsProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isRated, setIsRated] = useState(false);
 
@@ -40,9 +82,9 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
       {/* Primary Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <WatchlistButton
-          id={id}
-          mediaType="movie"
-          title={title}
+          id={showId}
+          mediaType="tv"
+          title={showTitle}
           posterPath={posterPath}
           className="bg-gradient-to-r from-cinehub-accent to-cinehub-accent-hover text-slate-900 border-0 hover:from-cinehub-accent-hover hover:to-cinehub-accent hover:text-slate-900 font-bold shadow-xl hover:shadow-cinehub-accent/30 transition-all duration-300 hover:scale-105 cursor-pointer rounded-xl py-3 px-6"
         />
@@ -53,7 +95,61 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
           onClick={onShare}
         >
           <Share2 className="w-5 h-5 mr-2" />
-          Share Movie
+          Share Episode
+        </Button>
+      </div>
+
+      {/* Episode Navigation */}
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          onClick={() => onEpisodeChange("prev")}
+          disabled={!hasPreviousEpisode}
+          className={cn(
+            "flex items-center gap-3 h-16 px-6 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl",
+            !hasPreviousEpisode ? "opacity-50 cursor-not-allowed hover:scale-100" : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
+          )}
+        >
+          <SkipBack className="w-5 h-5" />
+          <span className="text-sm font-semibold">Previous</span>
+        </Button>
+
+        <div className="flex-1">
+          <Select
+            value={seasonNumber.toString()}
+            onValueChange={onSeasonChange}
+          >
+            <SelectTrigger className="w-full h-16 px-6 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-purple-500/20 hover:to-purple-600/20 hover:text-purple-400 hover:border-purple-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-purple-500/20 data-[state=open]:scale-105 data-[state=open]:border-purple-400/50">
+              <div className="flex items-center justify-center gap-3 w-full">
+                <Calendar className="w-5 h-5" />
+                <span className="text-sm font-semibold">Season {seasonNumber}</span>
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-700 min-w-[200px]">
+              {seasons.map((s) => (
+                <SelectItem
+                  key={s.season_number}
+                  value={s.season_number.toString()}
+                  className="text-slate-300 hover:bg-cinehub-accent/20 cursor-pointer transition-colors duration-200 focus:bg-cinehub-accent/20 focus:text-cinehub-accent"
+                >
+                  Season {s.season_number} {s.episode_count && `(${s.episode_count} eps)`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button
+          variant="ghost"
+          onClick={() => onEpisodeChange("next")}
+          disabled={!hasNextEpisode}
+          className={cn(
+            "flex items-center gap-3 h-16 px-6 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl",
+            !hasNextEpisode ? "opacity-50 cursor-not-allowed hover:scale-100" : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
+          )}
+        >
+          <span className="text-sm font-semibold">Next</span>
+          <SkipForward className="w-5 h-5" />
         </Button>
       </div>
 
@@ -108,13 +204,13 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
         </Button>
       </div>
 
-      {/* Action Stats */}
+      {/* Episode Stats */}
       <div className="bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-xl sm:rounded-2xl border border-slate-700/40 backdrop-blur-sm shadow-xl p-3 sm:p-6">
         <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-3 sm:mb-6">
           <div className="text-center group cursor-pointer">
             <div className="bg-gradient-to-br from-cinehub-accent/20 to-cinehub-accent-hover/20 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-cinehub-accent/30 group-hover:border-cinehub-accent/50 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[60px] sm:min-h-[80px] flex flex-col justify-center">
               <div className="text-sm sm:text-2xl font-bold text-cinehub-accent mb-0.5 sm:mb-1 leading-tight">
-                {voteAverage.toFixed(1)}
+                {voteAverage > 0 ? voteAverage.toFixed(1) : "N/A"}
               </div>
               <div className="text-[9px] sm:text-xs text-slate-300 font-medium uppercase tracking-wide leading-tight">
                 Rating
@@ -127,7 +223,7 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
               <div className="text-sm sm:text-2xl font-bold text-blue-400 mb-0.5 sm:mb-1 leading-tight">
                 {voteCount >= 1000 
                   ? `${(voteCount / 1000).toFixed(1)}K` 
-                  : voteCount.toLocaleString()
+                  : voteCount > 0 ? voteCount.toLocaleString() : "0"
                 }
               </div>
               <div className="text-[9px] sm:text-xs text-slate-300 font-medium uppercase tracking-wide leading-tight">
@@ -135,6 +231,35 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Episode Info Cards */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+          {runtime && (
+            <div className="text-center group cursor-pointer">
+              <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-lg p-2 sm:p-3 border border-purple-500/30 group-hover:border-purple-500/50 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[50px] sm:min-h-[60px] flex flex-col justify-center">
+                <div className="text-xs sm:text-lg font-bold text-purple-400 mb-0.5 leading-tight">
+                  {runtime}m
+                </div>
+                <div className="text-[8px] sm:text-[10px] text-slate-300 font-medium uppercase tracking-wide leading-tight">
+                  Runtime
+                </div>
+              </div>
+            </div>
+          )}
+
+          {airDate && (
+            <div className="text-center group cursor-pointer">
+              <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-lg p-2 sm:p-3 border border-emerald-500/30 group-hover:border-emerald-500/50 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[50px] sm:min-h-[60px] flex flex-col justify-center">
+                <div className="text-xs sm:text-lg font-bold text-emerald-400 mb-0.5 leading-tight">
+                  {new Date(airDate).getFullYear()}
+                </div>
+                <div className="text-[8px] sm:text-[10px] text-slate-300 font-medium uppercase tracking-wide leading-tight">
+                  Aired
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">

@@ -27,16 +27,8 @@ export async function GET(
       );
     }
 
-    // Get session first
+    // Get session (optional for streaming)
     const session = await getServerSession(authOptions);
-    
-    // Check authentication
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized - Please login first" },
-        { status: 401 }
-      );
-    }
 
     // Validate media type
     if (!["movie", "tv"].includes(type)) {
@@ -66,24 +58,26 @@ export async function GET(
 
     const mediaData = await tmdbResponse.json();
 
-    // Add to watch history
-    await pool.execute(
-      `INSERT INTO watch_history 
-        (user_id, media_type, movie_id, tv_id, title, poster_path, watched_at)
-       VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-       ON DUPLICATE KEY UPDATE 
-         watched_at = CURRENT_TIMESTAMP,
-         title = VALUES(title),
-         poster_path = VALUES(poster_path)`,
-      [
-        session.user.id,
-        type,
-        type === 'movie' ? id : null,
-        type === 'tv' ? id : null,
-        mediaData.title || mediaData.name,
-        mediaData.poster_path
-      ]
-    );
+    // Add to watch history (only if user is logged in)
+    if (session?.user?.id) {
+      await pool.execute(
+        `INSERT INTO watch_history 
+          (user_id, media_type, movie_id, tv_id, title, poster_path, watched_at)
+         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+         ON DUPLICATE KEY UPDATE 
+           watched_at = CURRENT_TIMESTAMP,
+           title = VALUES(title),
+           poster_path = VALUES(poster_path)`,
+        [
+          session.user.id,
+          type,
+          type === 'movie' ? id : null,
+          type === 'tv' ? id : null,
+          mediaData.title || mediaData.name,
+          mediaData.poster_path
+        ]
+      );
+    }
 
     // Return video sources (placeholder)
     return NextResponse.json({

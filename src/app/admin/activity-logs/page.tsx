@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -50,8 +50,10 @@ async function getActivityLogs(page: number = 1) {
       al.created_at,
       u.name as admin_name,
       u.email as admin_email,
+      u.avatar as admin_avatar,
       tu.name as target_user_name,
-      tu.email as target_user_email
+      tu.email as target_user_email,
+      tu.avatar as target_user_avatar
     FROM admin_activity_logs al
     LEFT JOIN users u ON al.admin_id = u.id
     LEFT JOIN users tu ON al.target_user_id = tu.id
@@ -339,6 +341,13 @@ export default async function ActivityLogs({
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
+                          {log.admin_avatar && (
+                            <AvatarImage 
+                              src={log.admin_avatar} 
+                              alt={log.admin_name || "Admin"}
+                              className="object-cover"
+                            />
+                          )}
                           <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                             {getUserInitials(log.admin_name)}
                           </AvatarFallback>
@@ -370,6 +379,13 @@ export default async function ActivityLogs({
                       {log.target_user_name ? (
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-7 w-7">
+                            {log.target_user_avatar && (
+                              <AvatarImage 
+                                src={log.target_user_avatar} 
+                                alt={log.target_user_name || "User"}
+                                className="object-cover"
+                              />
+                            )}
                             <AvatarFallback className="bg-slate-600 text-slate-300 text-xs">
                               {getUserInitials(log.target_user_name)}
                             </AvatarFallback>
@@ -458,6 +474,13 @@ export default async function ActivityLogs({
               {/* Admin info */}
               <div className="flex items-center space-x-3">
                 <Avatar className="h-8 w-8">
+                  {log.admin_avatar && (
+                    <AvatarImage 
+                      src={log.admin_avatar} 
+                      alt={log.admin_name || "Admin"}
+                      className="object-cover"
+                    />
+                  )}
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                     {getUserInitials(log.admin_name)}
                   </AvatarFallback>

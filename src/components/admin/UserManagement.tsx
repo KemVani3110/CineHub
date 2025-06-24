@@ -108,19 +108,8 @@ export function UserManagement({
 
       const data = await response.json();
       setUsers(data.users || []);
-
-      toast({
-        title: "Success",
-        description: "Users data refreshed successfully",
-        className: "bg-green-600/10 border-green-500/20 text-green-400",
-      });
     } catch (error) {
       console.error("Error refreshing users:", error);
-      toast({
-        title: "Error",
-        description: "Failed to refresh users data",
-        variant: "destructive",
-      });
     } finally {
       setRefreshing(false);
     }
@@ -699,7 +688,7 @@ export function UserManagement({
                       {loading[`status-${user.id}`] ? (
                         <div className="flex items-center">
                           <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                          <span>...</span>
+                          <span>Updating...</span>
                         </div>
                       ) : user.isActive ? (
                         "Active"
@@ -786,7 +775,10 @@ export function UserManagement({
                     1,
                     currentPage - Math.floor(showPages / 2)
                   );
-                  const endPage = Math.min(totalPages, startPage + showPages - 1);
+                  const endPage = Math.min(
+                    totalPages,
+                    startPage + showPages - 1
+                  );
 
                   if (endPage - startPage < showPages - 1) {
                     startPage = Math.max(1, endPage - showPages + 1);

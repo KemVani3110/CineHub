@@ -221,7 +221,7 @@ export function WatchlistPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        {/* Enhanced Header */}
+        {/*  Header */}
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-4 mb-8">
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
@@ -301,7 +301,7 @@ export function WatchlistPage() {
                           release_date: item.addedAt
                         }}
                       />
-                      {/* Enhanced Remove Button */}
+                      {/* Remove Button */}
                       <Button
                         variant="destructive"
                         size="icon"

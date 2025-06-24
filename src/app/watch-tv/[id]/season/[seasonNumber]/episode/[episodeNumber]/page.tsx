@@ -21,6 +21,7 @@ import {
 import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { EpisodesList } from "@/components/watch/EpisodesList";
 import { WatchlistButton } from "@/components/common/WatchlistButton";
+import { EpisodeActions } from "@/components/watch/EpisodeActions";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -29,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 export default function WatchTVEpisode() {
   const { id, seasonNumber, episodeNumber } = useParams();
@@ -36,6 +38,7 @@ export default function WatchTVEpisode() {
   const [show, setShow] = useState<TMDBTVDetails | null>(null);
   const [season, setSeason] = useState<TMDBSeasonDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isTheaterMode, setIsTheaterMode] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -153,62 +156,104 @@ export default function WatchTVEpisode() {
   const prevEpisode = season.episodes[currentEpisodeIndex - 1];
 
   return (
-    <div className="min-h-screen bg-main text-foreground">
+    <div className={cn(
+      "min-h-screen text-foreground transition-all duration-500",
+      isTheaterMode ? "bg-black" : "bg-main"
+    )}>
       {/* Header with Back Button and Episode Title */}
-      <div className="sticky top-0 z-50 bg-main/95 backdrop-blur-md border-b border-custom shadow-sm">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
+      <div className={cn(
+        "fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b transition-all duration-500",
+        isTheaterMode 
+          ? "bg-black/95 border-slate-800/50" 
+          : "bg-main/95 border-custom"
+      )}>
+        <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Button
               variant="ghost"
               size="icon"
-              className="text-foreground hover:text-accent hover:bg-accent/10 shrink-0 cursor-pointer transition-all duration-200"
+              className="text-foreground hover:text-accent hover:bg-accent/20 shrink-0 cursor-pointer rounded-full transition-all duration-200 hover:scale-105 w-8 h-8 sm:w-10 sm:h-10"
               onClick={() => router.push(`/tv/${id}`)}
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
+            
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">
-                {currentEpisode.name}
-              </h1>
-              <div className="flex items-center gap-2 text-sm text-sub">
-                <span className="font-medium">{show.name}</span>
-                <span>•</span>
-                <span>S{seasonNumber}E{episodeNumber}</span>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-foreground truncate">
+                  {currentEpisode.name}
+                </h1>
+                
+                <div className="hidden sm:flex items-center gap-4 shrink-0">
+                  <div className="flex items-center gap-2 bg-foreground/5 backdrop-blur-sm px-3 py-1.5 rounded-full border border-foreground/10">
+                    <span className="text-sm font-medium text-foreground">
+                      S{seasonNumber}E{episodeNumber}
+                    </span>
+                  </div>
+                  
+                  {currentEpisode.air_date && (
+                    <div className="flex items-center gap-2 bg-foreground/5 backdrop-blur-sm px-3 py-1.5 rounded-full border border-foreground/10">
+                      <Calendar className="h-4 w-4 text-accent" />
+                      <span className="text-sm font-medium text-foreground">
+                        {new Date(currentEpisode.air_date).getFullYear()}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {currentEpisode.runtime && (
+                    <div className="flex items-center gap-2 bg-foreground/5 backdrop-blur-sm px-3 py-1.5 rounded-full border border-foreground/10">
+                      <Clock className="h-4 w-4 text-accent" />
+                      <span className="text-sm font-medium text-foreground">{currentEpisode.runtime} min</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Mobile info - Below title */}
+              <div className="flex sm:hidden items-center gap-1.5 mt-1">
+                <div className="flex items-center gap-1 bg-foreground/5 backdrop-blur-sm px-2 py-0.5 rounded-full border border-foreground/10">
+                  <span className="text-xs font-medium text-foreground">
+                    S{seasonNumber}E{episodeNumber}
+                  </span>
+                </div>
+                
                 {currentEpisode.air_date && (
-                  <>
-                    <span>•</span>
-                    <Calendar className="h-3 w-3" />
-                    <span>{new Date(currentEpisode.air_date).getFullYear()}</span>
-                  </>
+                  <div className="flex items-center gap-1 bg-foreground/5 backdrop-blur-sm px-2 py-0.5 rounded-full border border-foreground/10">
+                    <Calendar className="h-2.5 w-2.5 text-accent" />
+                    <span className="text-xs font-medium text-foreground">
+                      {new Date(currentEpisode.air_date).getFullYear()}
+                    </span>
+                  </div>
                 )}
+                
                 {currentEpisode.runtime && (
-                  <>
-                    <span>•</span>
-                    <Clock className="h-3 w-3" />
-                    <span>{currentEpisode.runtime} min</span>
-                  </>
+                  <div className="flex items-center gap-1 bg-foreground/5 backdrop-blur-sm px-2 py-0.5 rounded-full border border-foreground/10">
+                    <Clock className="h-2.5 w-2.5 text-accent" />
+                    <span className="text-xs font-medium text-foreground">{currentEpisode.runtime}m</span>
+                  </div>
                 )}
               </div>
             </div>
+
             {/* Episode Navigation */}
-            <div className="flex gap-1">
+            <div className="flex gap-0.5 sm:gap-1">
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-foreground hover:text-accent hover:bg-accent/10 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-foreground hover:text-accent hover:bg-accent/20 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-full w-8 h-8 sm:w-10 sm:h-10"
                 onClick={() => handleEpisodeChange("prev")}
                 disabled={!prevEpisode}
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-foreground hover:text-accent hover:bg-accent/10 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-foreground hover:text-accent hover:bg-accent/20 cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-full w-8 h-8 sm:w-10 sm:h-10"
                 onClick={() => handleEpisodeChange("next")}
                 disabled={!nextEpisode}
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </div>
           </div>
@@ -216,35 +261,45 @@ export default function WatchTVEpisode() {
       </div>
 
       {/* Main Content */}
-      <div className="pt-5 pb-8">
-        <div className="max-w-6xl mx-auto px-4">
-          {/* Video Player Section */}
-          <div className="mb-6 sm:mb-8">
-            <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+      <div className="pt-20 pb-8">
+        {/* Video Player Section - Horizontal Layout */}
+        <div className="w-full">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] bg-black rounded-lg overflow-hidden shadow-2xl">
               <VideoPlayer
                 videoUrl={`/api/stream/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}`}
                 posterUrl={
                   currentEpisode.still_path
                     ? `https://image.tmdb.org/t/p/original${currentEpisode.still_path}`
+                    : show.backdrop_path
+                    ? `https://image.tmdb.org/t/p/original${show.backdrop_path}`
                     : undefined
                 }
                 title={`${show.name} - S${seasonNumber}E${episodeNumber}: ${currentEpisode.name}`}
                 duration={currentEpisode.runtime}
+                onTheaterModeChange={setIsTheaterMode}
               />
             </div>
           </div>
+        </div>
+
+        {/* Content Section - Dimmed in Theater Mode */}
+        <div className={cn(
+          "max-w-6xl mx-auto px-4 mt-8 transition-all duration-500",
+          isTheaterMode ? "opacity-20 pointer-events-none" : "opacity-100"
+        )}>
 
           {/* Episode Details Section */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Main Content */}
-            <div className="xl:col-span-3 space-y-6">
+            <div className="lg:col-span-2 space-y-6">
               {/* Episode Info Card */}
-              <Card className="bg-card-custom border-custom shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row gap-6">
+              <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50 backdrop-blur-sm shadow-xl">
+                <CardContent className="p-6 sm:p-8">
+                  <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
                     {/* Episode Still/Poster */}
-                    <div className="shrink-0 mx-auto lg:mx-0">
-                      <div className="relative w-full max-w-xs lg:w-64 aspect-video rounded-xl overflow-hidden bg-muted shadow-lg">
+                    <div className="shrink-0 mx-auto sm:mx-0">
+                      <div className="relative w-48 h-28 sm:w-64 sm:h-36 rounded-xl overflow-hidden bg-slate-800/50 shadow-lg border border-slate-700/50">
                         {currentEpisode.still_path ? (
                           <img
                             src={`https://image.tmdb.org/t/p/w500${currentEpisode.still_path}`}
@@ -260,58 +315,61 @@ export default function WatchTVEpisode() {
                             loading="lazy"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                            <Play className="h-12 w-12 text-muted-foreground opacity-50" />
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-700">
+                            <Play className="h-12 w-12 text-slate-400" />
                           </div>
                         )}
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                       </div>
                     </div>
 
                     {/* Episode Details */}
-                    <div className="flex-1 space-y-4">
+                    <div className="flex-1 space-y-6">
                       <div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 leading-tight">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 tracking-tight">
                           {currentEpisode.name}
                         </h2>
-                        <p className="text-accent text-base sm:text-lg font-medium">
+                        <p className="text-cinehub-accent text-base sm:text-lg font-medium">
                           {show.name} • Season {seasonNumber} Episode {episodeNumber}
                         </p>
                       </div>
 
                       {/* Rating and Info */}
-                      <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-4">
                         {currentEpisode.vote_average > 0 && (
-                          <div className="flex items-center gap-2 bg-gradient-to-r from-accent/20 to-accent/10 px-3 py-1.5 rounded-full border border-accent/30">
-                            <Star className="h-4 w-4 text-accent fill-current" />
-                            <span className="text-sm font-semibold text-accent">
+                          <div className="flex items-center gap-2 bg-gradient-to-r from-cinehub-accent/20 to-cinehub-accent-hover/20 px-4 py-2 rounded-full border border-cinehub-accent/30">
+                            <Star className="h-5 w-5 text-cinehub-accent fill-current" />
+                            <span className="text-base font-bold text-cinehub-accent">
                               {currentEpisode.vote_average.toFixed(1)}
                             </span>
+                            <span className="text-sm text-slate-300">/10</span>
                           </div>
                         )}
                         
                         {show.spoken_languages && show.spoken_languages.length > 0 && (
-                          <div className="flex items-center gap-2 text-sub text-sm bg-muted/50 px-3 py-1.5 rounded-full">
-                            <Globe className="h-4 w-4" />
-                            <span>{show.spoken_languages[0].english_name}</span>
+                          <div className="flex items-center gap-2 bg-slate-800/60 px-3 py-2 rounded-full border border-slate-600/50">
+                            <Globe className="h-4 w-4 text-slate-300" />
+                            <span className="text-sm text-slate-300 font-medium">{show.spoken_languages[0].english_name}</span>
                           </div>
                         )}
 
                         {currentEpisode.runtime && (
-                          <div className="flex items-center gap-2 text-sub text-sm bg-muted/50 px-3 py-1.5 rounded-full">
-                            <Clock className="h-4 w-4" />
-                            <span>{currentEpisode.runtime} minutes</span>
+                          <div className="flex items-center gap-2 bg-slate-800/60 px-3 py-2 rounded-full border border-slate-600/50">
+                            <Clock className="h-4 w-4 text-slate-300" />
+                            <span className="text-sm text-slate-300 font-medium">{currentEpisode.runtime} min</span>
                           </div>
                         )}
                       </div>
 
                       {/* Genres */}
                       {show.genres && show.genres.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {show.genres.slice(0, 5).map((genre) => (
+                        <div className="flex flex-wrap gap-3">
+                          {show.genres.slice(0, 4).map((genre) => (
                             <Badge
                               key={genre.id}
                               variant="secondary"
-                              className="bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors duration-200 cursor-default"
+                              className="bg-gradient-to-r from-cinehub-accent/10 to-cinehub-accent-hover/10 text-cinehub-accent border-cinehub-accent/30 hover:bg-cinehub-accent/20 hover:border-cinehub-accent/50 transition-all duration-200 px-3 py-1.5 text-sm font-medium"
                             >
                               {genre.name}
                             </Badge>
@@ -321,9 +379,9 @@ export default function WatchTVEpisode() {
 
                       {/* Overview */}
                       {currentEpisode.overview && (
-                        <div className="pt-2">
-                          <h3 className="font-semibold text-foreground mb-3 text-lg">Overview</h3>
-                          <p className="text-sub text-base leading-relaxed">
+                        <div className="bg-slate-800/40 rounded-xl p-4 border border-slate-700/50">
+                          <h3 className="font-bold text-white mb-3 text-lg">Overview</h3>
+                          <p className="text-slate-300 text-sm sm:text-base leading-relaxed line-clamp-4 sm:line-clamp-none">
                             {currentEpisode.overview}
                           </p>
                         </div>
@@ -334,53 +392,42 @@ export default function WatchTVEpisode() {
               </Card>
 
               {/* Actions Card */}
-              <Card className="bg-card-custom border-custom shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex flex-wrap gap-4">
-                    <Button
-                      variant="outline"
-                      size="default"
-                      className="border-custom text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent px-6 py-2.5 cursor-pointer transition-all duration-300 font-medium"
-                      onClick={handleShare}
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Share Episode
-                    </Button>
-                    <WatchlistButton
-                      id={show.id}
-                      mediaType="tv"
-                      title={show.name}
-                      posterPath={show.poster_path || ""}
-                    />
-                    <Select
-                      value={(seasonNumber as string).toString()}
-                      onValueChange={handleSeasonChange}
-                    >
-                      <SelectTrigger className="w-[140px] bg-card-custom border-custom cursor-pointer hover:border-accent transition-colors duration-200">
-                        <SelectValue placeholder="Season" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card-custom border-custom">
-                        {show.seasons.map((s) => (
-                          <SelectItem
-                            key={s.season_number}
-                            value={s.season_number.toString()}
-                            className="text-foreground hover:bg-accent/10 cursor-pointer transition-colors duration-200"
-                          >
-                            Season {s.season_number}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50 backdrop-blur-sm shadow-xl">
+                <CardContent className="p-6 sm:p-8">
+                  <h3 className="font-bold text-white mb-6 text-lg flex items-center gap-3">
+                    <div className="w-1 h-8 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full"></div>
+                    Episode Actions
+                    <div className="flex-1 h-px bg-gradient-to-r from-slate-600 to-transparent"></div>
+                  </h3>
+                  <EpisodeActions
+                    showTitle={show.name}
+                    episodeTitle={currentEpisode.name}
+                    onShare={handleShare}
+                    showId={show.id}
+                    seasonNumber={Number(seasonNumber)}
+                    episodeNumber={Number(episodeNumber)}
+                    posterPath={show.poster_path || ""}
+                    voteAverage={currentEpisode.vote_average}
+                    voteCount={currentEpisode.vote_count}
+                    popularity={show.popularity}
+                    runtime={currentEpisode.runtime}
+                    airDate={currentEpisode.air_date}
+                    seasons={show.seasons}
+                    onSeasonChange={handleSeasonChange}
+                    onEpisodeChange={handleEpisodeChange}
+                    hasNextEpisode={!!nextEpisode}
+                    hasPreviousEpisode={!!prevEpisode}
+                  />
                 </CardContent>
               </Card>
 
               {/* Episodes List Card */}
-              <Card className="bg-card-custom border-custom shadow-lg">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-                    <Play className="h-5 w-5 text-accent" />
+              <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50 backdrop-blur-sm shadow-xl">
+                <CardContent className="p-6 sm:p-8">
+                  <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <div className="w-1 h-8 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full"></div>
                     Episodes
+                    <div className="flex-1 h-px bg-gradient-to-r from-slate-600 to-transparent"></div>
                   </h3>
                   <EpisodesList
                     episodes={season.episodes}
@@ -395,14 +442,20 @@ export default function WatchTVEpisode() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Episode Details */}
-              <Card className="bg-card-custom border-custom shadow-lg">
+              <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50 backdrop-blur-sm shadow-xl">
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-6 text-lg">Episode Details</h3>
+                  <h3 className="font-bold text-white mb-6 text-lg flex items-center gap-2">
+                    <div className="w-1 h-6 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full"></div>
+                    Episode Details
+                  </h3>
                   <div className="space-y-4">
                     {currentEpisode.air_date && (
-                      <div className="flex justify-between items-center py-2 border-b border-custom/50 last:border-b-0">
-                        <span className="text-sub text-sm font-medium">Air Date</span>
-                        <span className="text-foreground text-sm font-semibold">
+                      <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                        <span className="text-slate-300 text-sm font-medium flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-cinehub-accent" />
+                          Air Date
+                        </span>
+                        <span className="text-white text-sm font-bold">
                           {new Date(currentEpisode.air_date).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
@@ -413,32 +466,35 @@ export default function WatchTVEpisode() {
                     )}
                     
                     {currentEpisode.runtime && (
-                      <div className="flex justify-between items-center py-2 border-b border-custom/50 last:border-b-0">
-                        <span className="text-sub text-sm font-medium">Duration</span>
-                        <span className="text-foreground text-sm font-semibold">
+                      <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                        <span className="text-slate-300 text-sm font-medium flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-cinehub-accent" />
+                          Duration
+                        </span>
+                        <span className="text-white text-sm font-bold">
                           {currentEpisode.runtime} min
                         </span>
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center py-2 border-b border-custom/50 last:border-b-0">
-                      <span className="text-sub text-sm font-medium">Season</span>
-                      <span className="text-foreground text-sm font-semibold">
+                    <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                      <span className="text-slate-300 text-sm font-medium">Season</span>
+                      <span className="text-white text-sm font-bold">
                         {seasonNumber}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center py-2 border-b border-custom/50 last:border-b-0">
-                      <span className="text-sub text-sm font-medium">Episode</span>
-                      <span className="text-foreground text-sm font-semibold">
+                    <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                      <span className="text-slate-300 text-sm font-medium">Episode</span>
+                      <span className="text-white text-sm font-bold">
                         {episodeNumber}
                       </span>
                     </div>
 
                     {currentEpisode.vote_count > 0 && (
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-sub text-sm font-medium">Votes</span>
-                        <span className="text-foreground text-sm font-semibold">
+                      <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                        <span className="text-slate-300 text-sm font-medium">Votes</span>
+                        <span className="text-white text-sm font-bold">
                           {currentEpisode.vote_count.toLocaleString()}
                         </span>
                       </div>
@@ -448,43 +504,49 @@ export default function WatchTVEpisode() {
               </Card>
 
               {/* Show Info */}
-              <Card className="bg-card-custom border-custom shadow-lg">
+              <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50 backdrop-blur-sm shadow-xl">
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-6 text-lg">Show Details</h3>
+                  <h3 className="font-bold text-white mb-6 text-lg flex items-center gap-2">
+                    <div className="w-1 h-6 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full"></div>
+                    Show Details
+                  </h3>
                   <div className="space-y-4">
                     {show.first_air_date && (
-                      <div className="flex justify-between items-center py-2 border-b border-custom/50 last:border-b-0">
-                        <span className="text-sub text-sm font-medium">First Aired</span>
-                        <span className="text-foreground text-sm font-semibold">
+                      <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                        <span className="text-slate-300 text-sm font-medium flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-cinehub-accent" />
+                          First Aired
+                        </span>
+                        <span className="text-white text-sm font-bold">
                           {new Date(show.first_air_date).getFullYear()}
                         </span>
                       </div>
                     )}
                     
                     {show.number_of_seasons && (
-                      <div className="flex justify-between items-center py-2 border-b border-custom/50 last:border-b-0">
-                        <span className="text-sub text-sm font-medium">Seasons</span>
-                        <span className="text-foreground text-sm font-semibold">
+                      <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                        <span className="text-slate-300 text-sm font-medium">Seasons</span>
+                        <span className="text-white text-sm font-bold">
                           {show.number_of_seasons}
                         </span>
                       </div>
                     )}
 
                     {show.number_of_episodes && (
-                      <div className="flex justify-between items-center py-2 border-b border-custom/50 last:border-b-0">
-                        <span className="text-sub text-sm font-medium">Episodes</span>
-                        <span className="text-foreground text-sm font-semibold">
+                      <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                        <span className="text-slate-300 text-sm font-medium">Episodes</span>
+                        <span className="text-white text-sm font-bold">
                           {show.number_of_episodes}
                         </span>
                       </div>
                     )}
 
                     {show.vote_average > 0 && (
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-sub text-sm font-medium">Show Rating</span>
+                      <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+                        <span className="text-slate-300 text-sm font-medium">Show Rating</span>
                         <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 text-accent fill-current" />
-                          <span className="text-foreground text-sm font-semibold">
+                          <Star className="h-3 w-3 text-cinehub-accent fill-current" />
+                          <span className="text-white text-sm font-bold">
                             {show.vote_average.toFixed(1)}/10
                           </span>
                         </div>
@@ -496,12 +558,18 @@ export default function WatchTVEpisode() {
 
               {/* Networks */}
               {show.networks && show.networks.length > 0 && (
-                <Card className="bg-card-custom border-custom shadow-lg">
+                <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50 backdrop-blur-sm shadow-xl">
                   <CardContent className="p-6">
-                    <h3 className="font-semibold text-foreground mb-6 text-lg">Networks</h3>
+                    <h3 className="font-bold text-white mb-6 text-lg flex items-center gap-2">
+                      <div className="w-1 h-6 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full"></div>
+                      Networks
+                    </h3>
                     <div className="space-y-3">
                       {show.networks.slice(0, 3).map((network) => (
-                        <div key={network.id} className="text-sm text-foreground font-medium py-2 px-3 bg-muted/30 rounded-lg">
+                        <div 
+                          key={network.id} 
+                          className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 text-sm text-slate-300 font-medium hover:bg-slate-700/40 transition-colors duration-200"
+                        >
                           {network.name}
                         </div>
                       ))}
@@ -521,117 +589,136 @@ function WatchTVEpisodeSkeleton() {
   return (
     <div className="min-h-screen bg-main">
       {/* Header Skeleton */}
-      <div className="sticky top-0 z-50 bg-main/95 backdrop-blur-md border-b border-custom">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-10 w-10 rounded-md" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-5 w-48" />
-              <Skeleton className="h-4 w-64" />
+      <div className="fixed top-0 left-0 right-0 z-40 bg-main/95 backdrop-blur-md border-b border-custom">
+        <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="skeleton w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 animate-pulse" />
+            <div className="flex-1 space-y-1 sm:space-y-2">
+              <div className="skeleton h-4 sm:h-6 w-32 sm:w-48 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+              <div className="flex gap-1 sm:gap-2">
+                <div className="skeleton h-3 sm:h-4 w-14 sm:w-20 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                <div className="skeleton h-3 sm:h-4 w-12 sm:w-16 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                <div className="skeleton h-3 sm:h-4 w-10 sm:w-20 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+              </div>
             </div>
-            <div className="flex gap-1">
-              <Skeleton className="h-10 w-10 rounded-md" />
-              <Skeleton className="h-10 w-10 rounded-md" />
+            <div className="flex gap-0.5 sm:gap-1">
+              <div className="skeleton w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 animate-pulse" />
+              <div className="skeleton w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 animate-pulse" />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="pb-8">
+      <div className="pt-14 sm:pt-20 pb-8">
         <div className="max-w-7xl mx-auto px-4">
           {/* Video Player Skeleton */}
-          <div className="mb-6 sm:mb-8">
-            <Skeleton className="w-full aspect-video rounded-lg" />
+          <div className="py-4 mb-8">
+            <div className="skeleton w-full aspect-[16/9] sm:aspect-[21/9] rounded-lg bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 animate-pulse" />
           </div>
 
           {/* Content Skeleton */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-8">
-            <div className="xl:col-span-3 space-y-6">
-              <Card className="bg-card-custom border-custom">
-                <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row gap-6">
-                    <Skeleton className="w-full max-w-xs lg:w-64 aspect-video rounded-xl mx-auto lg:mx-0" />
-                    <div className="flex-1 space-y-4">
-                      <Skeleton className="h-8 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                        <Skeleton className="h-6 w-16 rounded-full" />
+          <div className="max-w-6xl mx-auto mt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50">
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+                      <div className="skeleton w-48 h-28 sm:w-64 sm:h-36 rounded-xl mx-auto sm:mx-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 animate-pulse" />
+                      <div className="flex-1 space-y-4">
+                        <div className="skeleton h-8 w-3/4 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                        <div className="skeleton h-4 w-1/2 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                        <div className="flex gap-2">
+                          <div className="skeleton h-6 w-16 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                          <div className="skeleton h-6 w-16 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                          <div className="skeleton h-6 w-16 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                        </div>
+                        <div className="bg-slate-800/40 rounded-xl p-4">
+                          <div className="skeleton h-5 w-20 mb-3 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                          <div className="skeleton h-20 w-full rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                        </div>
                       </div>
-                      <Skeleton className="h-20 w-full" />
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-card-custom border-custom">
-                <CardContent className="p-6">
-                  <div className="flex gap-4">
-                    <Skeleton className="h-10 w-32" />
-                    <Skeleton className="h-10 w-24" />
-                    <Skeleton className="h-10 w-32" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50">
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="skeleton h-5 w-32 mb-4 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                    <div className="flex gap-4">
+                      <div className="skeleton h-10 w-32 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                      <div className="skeleton h-10 w-24 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                      <div className="skeleton h-10 w-32 rounded-full bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="bg-card-custom border-custom">
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-24 mb-6" />
-                  <div className="space-y-3">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Skeleton key={i} className="h-[100px] w-full rounded-lg" />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50">
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-1 h-8 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full" />
+                      <div className="skeleton h-6 w-24 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                      <div className="flex-1 h-px bg-gradient-to-r from-slate-600 to-transparent" />
+                    </div>
+                    <div className="space-y-3">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="skeleton h-[100px] w-full rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-              <Card className="bg-card-custom border-custom">
-                <CardContent className="p-6">
-                  <Skeleton className="h-32 w-full" />
-                </CardContent>
-              </Card>
-            </div>
+              <div className="space-y-6">
+                <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="w-1 h-6 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full" />
+                      <div className="skeleton h-5 w-32 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                    </div>
+                    <div className="space-y-4">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
+                          <div className="skeleton h-4 w-20 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                          <div className="skeleton h-4 w-16 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <div className="space-y-6">
-              <Card className="bg-card-custom border-custom">
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-32 mb-6" />
-                  <div className="space-y-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex justify-between py-2">
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-16" />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="w-1 h-6 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full" />
+                      <div className="skeleton h-5 w-28 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                    </div>
+                    <div className="space-y-4">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
+                          <div className="skeleton h-4 w-20 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                          <div className="skeleton h-4 w-16 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="bg-card-custom border-custom">
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-28 mb-6" />
-                  <div className="space-y-4">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="flex justify-between py-2">
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-16" />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card-custom border-custom">
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-24 mb-6" />
-                  <div className="space-y-3">
-                    {Array.from({ length: 2 }).map((_, i) => (
-                      <Skeleton key={i} className="h-8 w-full rounded-lg" />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="w-1 h-6 bg-gradient-to-b from-cinehub-accent to-cinehub-accent-hover rounded-full" />
+                      <div className="skeleton h-5 w-24 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                    </div>
+                    <div className="space-y-3">
+                      {Array.from({ length: 2 }).map((_, i) => (
+                        <div key={i} className="p-3 bg-slate-800/40 rounded-lg">
+                          <div className="skeleton h-4 w-full rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
