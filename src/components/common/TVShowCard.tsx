@@ -14,11 +14,23 @@ interface TVShowCardProps {
   showCharacter?: boolean;
 }
 
-const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
+const ImageWithFallback = ({
+  src,
+  alt,
+  hasImage,
+}: {
+  src: string;
+  alt: string;
+  hasImage: boolean;
+}) => {
   const [error, setError] = React.useState(false);
 
-  if (error) {
-    return null;
+  if (error || !hasImage) {
+    return (
+      <div className="relative aspect-[2/3] w-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+        <Film className="w-16 h-16 text-slate-400" />
+      </div>
+    );
   }
 
   return (
@@ -36,7 +48,11 @@ const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   );
 };
 
-export function TVShowCard({ show, showRating = true, showCharacter = false }: TVShowCardProps) {
+export function TVShowCard({
+  show,
+  showRating = true,
+  showCharacter = false,
+}: TVShowCardProps) {
   const router = useRouter();
   const title = show.name;
   const releaseDate = show.first_air_date;
@@ -52,12 +68,9 @@ export function TVShowCard({ show, showRating = true, showCharacter = false }: T
     <div onClick={handleClick} className="group relative cursor-pointer">
       <div className="relative overflow-hidden rounded-2xl">
         <ImageWithFallback
-          src={
-            show.poster_path
-              ? getImageUrl(show.poster_path, "w500")
-              : "/images/no-poster.jpg"
-          }
+          src={show.poster_path ? getImageUrl(show.poster_path, "w500") : ""}
           alt={title || "TV Show poster"}
+          hasImage={!!show.poster_path}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">

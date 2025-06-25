@@ -36,16 +36,27 @@ export default function ActorDetail({ actor }: ActorDetailProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { user, getCurrentUser } = useAuthStore();
-  const { addFavoriteActor, removeFavoriteActor, isFavoriteActor, fetchFavoriteActors } =
-    useFavoriteStore();
+  const {
+    addFavoriteActor,
+    removeFavoriteActor,
+    isFavoriteActor,
+    fetchFavoriteActors,
+  } = useFavoriteStore();
   const [showFullBio, setShowFullBio] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     const init = async () => {
-      await getCurrentUser();
+      // Only fetch user if we don't already have user data
+      if (!user) {
+        await getCurrentUser();
+      }
+
       if (user) {
         await fetchFavoriteActors();
+      } else {
+        // Clear favorites when user is not logged in
+        useFavoriteStore.getState().resetFavorites();
       }
     };
     init();
@@ -89,6 +100,11 @@ export default function ActorDetail({ actor }: ActorDetailProps) {
 
   const handleFavorite = async () => {
     if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to add actors to your favorites.",
+        variant: "default",
+      });
       router.push("/login");
       return;
     }
@@ -191,14 +207,16 @@ export default function ActorDetail({ actor }: ActorDetailProps) {
                       size="icon"
                       onClick={() => handleFavorite()}
                       className={`${
-                        isFavoriteActor(actorData.id)
+                        user && isFavoriteActor(actorData.id)
                           ? "text-red-500 border-red-500/50 bg-red-500/20 hover:bg-red-500 hover:text-white backdrop-blur-sm"
                           : "text-red-500 border-red-500/50 bg-bg-card/80 hover:bg-red-500 hover:text-white backdrop-blur-sm"
                       } transition-all duration-300 cursor-pointer shadow-lg`}
                     >
                       <Heart
                         className={`w-4 h-4 ${
-                          isFavoriteActor(actorData.id) ? "fill-current" : ""
+                          user && isFavoriteActor(actorData.id)
+                            ? "fill-current"
+                            : ""
                         }`}
                       />
                     </Button>

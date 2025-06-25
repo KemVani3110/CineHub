@@ -7,29 +7,19 @@ import { TMDBTVDetails, TMDBSeasonDetails } from "@/types/tmdb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
-  Star, 
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Star,
   Globe,
   Play,
   ChevronLeft,
   ChevronRight,
-  Share2
 } from "lucide-react";
 import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { EpisodesList } from "@/components/watch/EpisodesList";
-import { WatchlistButton } from "@/components/common/WatchlistButton";
 import { EpisodeActions } from "@/components/watch/EpisodeActions";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 export default function WatchTVEpisode() {
@@ -106,8 +96,8 @@ export default function WatchTVEpisode() {
             <p className="text-sub mb-6">
               The TV show you're looking for could not be loaded.
             </p>
-            <Button 
-              onClick={() => router.push('/')}
+            <Button
+              onClick={() => router.push("/")}
               className="btn-primary w-full"
             >
               Back to Home
@@ -136,7 +126,7 @@ export default function WatchTVEpisode() {
             <p className="text-sub mb-6">
               The episode you're looking for could not be loaded.
             </p>
-            <Button 
+            <Button
               onClick={() => router.push(`/tv/${id}`)}
               className="btn-primary w-full"
             >
@@ -156,17 +146,21 @@ export default function WatchTVEpisode() {
   const prevEpisode = season.episodes[currentEpisodeIndex - 1];
 
   return (
-    <div className={cn(
-      "min-h-screen text-foreground transition-all duration-500",
-      isTheaterMode ? "bg-black" : "bg-main"
-    )}>
+    <div
+      className={cn(
+        "min-h-screen text-foreground transition-all duration-500",
+        isTheaterMode ? "bg-black" : "bg-main"
+      )}
+    >
       {/* Header with Back Button and Episode Title */}
-      <div className={cn(
-        "fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b transition-all duration-500",
-        isTheaterMode 
-          ? "bg-black/95 border-slate-800/50" 
-          : "bg-main/95 border-custom"
-      )}>
+      <div
+        className={cn(
+          "fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b transition-all duration-500",
+          isTheaterMode
+            ? "bg-black/95 border-slate-800/50"
+            : "bg-main/95 border-custom"
+        )}
+      >
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-4">
           <div className="flex items-center gap-2 sm:gap-4">
             <Button
@@ -177,20 +171,20 @@ export default function WatchTVEpisode() {
             >
               <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            
+
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 sm:gap-4">
                 <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-foreground truncate">
                   {currentEpisode.name}
                 </h1>
-                
+
                 <div className="hidden sm:flex items-center gap-4 shrink-0">
                   <div className="flex items-center gap-2 bg-foreground/5 backdrop-blur-sm px-3 py-1.5 rounded-full border border-foreground/10">
                     <span className="text-sm font-medium text-foreground">
                       S{seasonNumber}E{episodeNumber}
                     </span>
                   </div>
-                  
+
                   {currentEpisode.air_date && (
                     <div className="flex items-center gap-2 bg-foreground/5 backdrop-blur-sm px-3 py-1.5 rounded-full border border-foreground/10">
                       <Calendar className="h-4 w-4 text-accent" />
@@ -199,16 +193,18 @@ export default function WatchTVEpisode() {
                       </span>
                     </div>
                   )}
-                  
+
                   {currentEpisode.runtime && (
                     <div className="flex items-center gap-2 bg-foreground/5 backdrop-blur-sm px-3 py-1.5 rounded-full border border-foreground/10">
                       <Clock className="h-4 w-4 text-accent" />
-                      <span className="text-sm font-medium text-foreground">{currentEpisode.runtime} min</span>
+                      <span className="text-sm font-medium text-foreground">
+                        {currentEpisode.runtime} min
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
-              
+
               {/* Mobile info - Below title */}
               <div className="flex sm:hidden items-center gap-1.5 mt-1">
                 <div className="flex items-center gap-1 bg-foreground/5 backdrop-blur-sm px-2 py-0.5 rounded-full border border-foreground/10">
@@ -216,7 +212,7 @@ export default function WatchTVEpisode() {
                     S{seasonNumber}E{episodeNumber}
                   </span>
                 </div>
-                
+
                 {currentEpisode.air_date && (
                   <div className="flex items-center gap-1 bg-foreground/5 backdrop-blur-sm px-2 py-0.5 rounded-full border border-foreground/10">
                     <Calendar className="h-2.5 w-2.5 text-accent" />
@@ -225,11 +221,13 @@ export default function WatchTVEpisode() {
                     </span>
                   </div>
                 )}
-                
+
                 {currentEpisode.runtime && (
                   <div className="flex items-center gap-1 bg-foreground/5 backdrop-blur-sm px-2 py-0.5 rounded-full border border-foreground/10">
                     <Clock className="h-2.5 w-2.5 text-accent" />
-                    <span className="text-xs font-medium text-foreground">{currentEpisode.runtime}m</span>
+                    <span className="text-xs font-medium text-foreground">
+                      {currentEpisode.runtime}m
+                    </span>
                   </div>
                 )}
               </div>
@@ -284,11 +282,12 @@ export default function WatchTVEpisode() {
         </div>
 
         {/* Content Section - Dimmed in Theater Mode */}
-        <div className={cn(
-          "max-w-6xl mx-auto px-4 mt-8 transition-all duration-500",
-          isTheaterMode ? "opacity-20 pointer-events-none" : "opacity-100"
-        )}>
-
+        <div
+          className={cn(
+            "max-w-6xl mx-auto px-4 mt-8 transition-all duration-500",
+            isTheaterMode ? "opacity-20 pointer-events-none" : "opacity-100"
+          )}
+        >
           {/* Episode Details Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Main Content */}
@@ -331,7 +330,8 @@ export default function WatchTVEpisode() {
                           {currentEpisode.name}
                         </h2>
                         <p className="text-cinehub-accent text-base sm:text-lg font-medium">
-                          {show.name} • Season {seasonNumber} Episode {episodeNumber}
+                          {show.name} • Season {seasonNumber} Episode{" "}
+                          {episodeNumber}
                         </p>
                       </div>
 
@@ -346,18 +346,23 @@ export default function WatchTVEpisode() {
                             <span className="text-sm text-slate-300">/10</span>
                           </div>
                         )}
-                        
-                        {show.spoken_languages && show.spoken_languages.length > 0 && (
-                          <div className="flex items-center gap-2 bg-slate-800/60 px-3 py-2 rounded-full border border-slate-600/50">
-                            <Globe className="h-4 w-4 text-slate-300" />
-                            <span className="text-sm text-slate-300 font-medium">{show.spoken_languages[0].english_name}</span>
-                          </div>
-                        )}
+
+                        {show.spoken_languages &&
+                          show.spoken_languages.length > 0 && (
+                            <div className="flex items-center gap-2 bg-slate-800/60 px-3 py-2 rounded-full border border-slate-600/50">
+                              <Globe className="h-4 w-4 text-slate-300" />
+                              <span className="text-sm text-slate-300 font-medium">
+                                {show.spoken_languages[0].english_name}
+                              </span>
+                            </div>
+                          )}
 
                         {currentEpisode.runtime && (
                           <div className="flex items-center gap-2 bg-slate-800/60 px-3 py-2 rounded-full border border-slate-600/50">
                             <Clock className="h-4 w-4 text-slate-300" />
-                            <span className="text-sm text-slate-300 font-medium">{currentEpisode.runtime} min</span>
+                            <span className="text-sm text-slate-300 font-medium">
+                              {currentEpisode.runtime} min
+                            </span>
                           </div>
                         )}
                       </div>
@@ -380,7 +385,9 @@ export default function WatchTVEpisode() {
                       {/* Overview */}
                       {currentEpisode.overview && (
                         <div className="bg-slate-800/40 rounded-xl p-4 border border-slate-700/50">
-                          <h3 className="font-bold text-white mb-3 text-lg">Overview</h3>
+                          <h3 className="font-bold text-white mb-3 text-lg">
+                            Overview
+                          </h3>
                           <p className="text-slate-300 text-sm sm:text-base leading-relaxed line-clamp-4 sm:line-clamp-none">
                             {currentEpisode.overview}
                           </p>
@@ -456,15 +463,18 @@ export default function WatchTVEpisode() {
                           Air Date
                         </span>
                         <span className="text-white text-sm font-bold">
-                          {new Date(currentEpisode.air_date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
+                          {new Date(currentEpisode.air_date).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
                         </span>
                       </div>
                     )}
-                    
+
                     {currentEpisode.runtime && (
                       <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
                         <span className="text-slate-300 text-sm font-medium flex items-center gap-2">
@@ -478,14 +488,18 @@ export default function WatchTVEpisode() {
                     )}
 
                     <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
-                      <span className="text-slate-300 text-sm font-medium">Season</span>
+                      <span className="text-slate-300 text-sm font-medium">
+                        Season
+                      </span>
                       <span className="text-white text-sm font-bold">
                         {seasonNumber}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
-                      <span className="text-slate-300 text-sm font-medium">Episode</span>
+                      <span className="text-slate-300 text-sm font-medium">
+                        Episode
+                      </span>
                       <span className="text-white text-sm font-bold">
                         {episodeNumber}
                       </span>
@@ -493,7 +507,9 @@ export default function WatchTVEpisode() {
 
                     {currentEpisode.vote_count > 0 && (
                       <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
-                        <span className="text-slate-300 text-sm font-medium">Votes</span>
+                        <span className="text-slate-300 text-sm font-medium">
+                          Votes
+                        </span>
                         <span className="text-white text-sm font-bold">
                           {currentEpisode.vote_count.toLocaleString()}
                         </span>
@@ -522,10 +538,12 @@ export default function WatchTVEpisode() {
                         </span>
                       </div>
                     )}
-                    
+
                     {show.number_of_seasons && (
                       <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
-                        <span className="text-slate-300 text-sm font-medium">Seasons</span>
+                        <span className="text-slate-300 text-sm font-medium">
+                          Seasons
+                        </span>
                         <span className="text-white text-sm font-bold">
                           {show.number_of_seasons}
                         </span>
@@ -534,7 +552,9 @@ export default function WatchTVEpisode() {
 
                     {show.number_of_episodes && (
                       <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
-                        <span className="text-slate-300 text-sm font-medium">Episodes</span>
+                        <span className="text-slate-300 text-sm font-medium">
+                          Episodes
+                        </span>
                         <span className="text-white text-sm font-bold">
                           {show.number_of_episodes}
                         </span>
@@ -543,7 +563,9 @@ export default function WatchTVEpisode() {
 
                     {show.vote_average > 0 && (
                       <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
-                        <span className="text-slate-300 text-sm font-medium">Show Rating</span>
+                        <span className="text-slate-300 text-sm font-medium">
+                          Show Rating
+                        </span>
                         <div className="flex items-center gap-1">
                           <Star className="h-3 w-3 text-cinehub-accent fill-current" />
                           <span className="text-white text-sm font-bold">
@@ -566,8 +588,8 @@ export default function WatchTVEpisode() {
                     </h3>
                     <div className="space-y-3">
                       {show.networks.slice(0, 3).map((network) => (
-                        <div 
-                          key={network.id} 
+                        <div
+                          key={network.id}
                           className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 text-sm text-slate-300 font-medium hover:bg-slate-700/40 transition-colors duration-200"
                         >
                           {network.name}
@@ -640,7 +662,7 @@ function WatchTVEpisodeSkeleton() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50">
                   <CardContent className="p-6 sm:p-8">
                     <div className="skeleton h-5 w-32 mb-4 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
@@ -661,7 +683,10 @@ function WatchTVEpisodeSkeleton() {
                     </div>
                     <div className="space-y-3">
                       {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="skeleton h-[100px] w-full rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
+                        <div
+                          key={i}
+                          className="skeleton h-[100px] w-full rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse"
+                        />
                       ))}
                     </div>
                   </CardContent>
@@ -677,7 +702,10 @@ function WatchTVEpisodeSkeleton() {
                     </div>
                     <div className="space-y-4">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
+                        <div
+                          key={i}
+                          className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg"
+                        >
                           <div className="skeleton h-4 w-20 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
                           <div className="skeleton h-4 w-16 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
                         </div>
@@ -694,7 +722,10 @@ function WatchTVEpisodeSkeleton() {
                     </div>
                     <div className="space-y-4">
                       {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
+                        <div
+                          key={i}
+                          className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg"
+                        >
                           <div className="skeleton h-4 w-20 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
                           <div className="skeleton h-4 w-16 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
                         </div>

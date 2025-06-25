@@ -1,7 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
-@import "tw-animate-css";
 
 @theme inline {
   --color-background: var(--background);
@@ -115,26 +114,41 @@
 
   /* Custom Scrollbar Styles */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     display: block !important;
   }
 
   ::-webkit-scrollbar-track {
     background: var(--bg-card);
-    border-radius: 4px;
+    border-radius: 6px;
+    margin: 2px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--cinehub-accent);
-    border-radius: 4px;
+    background: linear-gradient(
+      45deg,
+      var(--cinehub-accent),
+      var(--cinehub-accent-hover)
+    );
+    border-radius: 6px;
     transition: all 0.3s ease;
+    border: 2px solid var(--bg-card);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--cinehub-accent-hover);
+    background: linear-gradient(
+      45deg,
+      var(--cinehub-accent-hover),
+      var(--cinehub-accent)
+    );
+    box-shadow: 0 0 10px rgba(79, 209, 197, 0.5);
   }
 
+  ::-webkit-scrollbar-corner {
+    background: var(--bg-card);
+  }
+  
   /* Firefox Scrollbar */
   * {
     scrollbar-width: thin;
@@ -277,8 +291,19 @@
 
   /* Loading skeleton */
   .skeleton {
-    @apply bg-card animate-pulse;
+    @apply bg-gradient-to-r from-border/30 via-border/50 to-border/30 animate-pulse;
     border-radius: 8px;
+    background-size: 200% 100%;
+    animation: skeleton-loading 2s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
 
   /* Mobile hamburger menu */
@@ -312,34 +337,23 @@
     background-color: var(--danger);
   }
 
-  /* Custom Scrollbar */
+  /* Utility class for thin scrollbars when needed */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cinehub-accent) var(--bg-card);
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    background: var(--bg-card);
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(79, 209, 197, 0.5);
-    border-radius: 4px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(79, 209, 197, 0.7);
-  }
-
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .scrollbar-thin::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .scrollbar-thin {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: thin; /* Firefox */
+    background: var(--cinehub-accent);
+    border-radius: 2px;
   }
 }
 

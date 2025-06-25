@@ -18,6 +18,7 @@ interface FavoriteState {
   fetchFavoriteActors: () => Promise<void>;
   isFavoriteActor: (actorId: number) => boolean;
   resetFavorites: () => void;
+  clearUserData: () => void;
 }
 
 export const useFavoriteStore = create<FavoriteState>()(
@@ -115,6 +116,11 @@ export const useFavoriteStore = create<FavoriteState>()(
       },
 
       resetFavorites: () => {
+        set({ actors: [], isLoading: false, error: null });
+      },
+
+      // Clear favorites when user authentication changes
+      clearUserData: () => {
         set({ actors: [], isLoading: false, error: null });
       },
     }),

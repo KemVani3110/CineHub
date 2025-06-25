@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Tv,
   Film,
@@ -10,6 +10,8 @@ import {
   Flame,
   Trophy,
   Clock3,
+  ArrowUp,
+  ChevronDown,
 } from "lucide-react";
 import {
   Header,
@@ -77,6 +79,92 @@ const queryClient = new QueryClient({
   },
 });
 
+// Parallax Background Component
+const ParallaxBackground = () => {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {/* Main background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0D1B2A] via-[#0F2027] to-[#203A43] opacity-90" />
+
+      {/* Animated floating orbs */}
+      <div
+        className="absolute top-20 left-10 w-32 h-32 bg-[#4FD1C5]/8 rounded-full blur-3xl animate-pulse"
+        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+      />
+      <div
+        className="absolute top-40 right-20 w-24 h-24 bg-[#63B3ED]/8 rounded-full blur-2xl animate-pulse delay-1000"
+        style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+      />
+      <div
+        className="absolute bottom-20 left-1/4 w-40 h-40 bg-[#4FD1C5]/5 rounded-full blur-3xl animate-pulse delay-2000"
+        style={{ transform: `translateY(${scrollY * -0.1}px)` }}
+      />
+      <div
+        className="absolute top-1/2 right-1/3 w-28 h-28 bg-[#38B2AC]/6 rounded-full blur-2xl animate-pulse delay-3000"
+        style={{ transform: `translateY(${scrollY * 0.2}px)` }}
+      />
+
+      {/* Floating particles */}
+      <div className="absolute inset-0">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-[#4FD1C5]/20 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              transform: `translateY(${
+                scrollY * (0.05 + Math.random() * 0.1)
+              }px)`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Grid pattern overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, #4FD1C5 1px, transparent 0)`,
+          backgroundSize: "50px 50px",
+          transform: `translateY(${scrollY * 0.05}px)`,
+        }}
+      />
+    </div>
+  );
+};
+
+// Section Divider
+const SectionDivider = () => (
+  <div className="relative my-20 flex items-center justify-center">
+    <div className="w-full max-w-md mx-auto">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gradient-to-r from-transparent via-[#4FD1C5]/30 to-transparent" />
+        </div>
+        <div className="relative flex justify-center">
+          <div className="bg-[#0D1B2A] px-6 py-2 rounded-full border border-[#4FD1C5]/20 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#4FD1C5] rounded-full animate-pulse" />
+              <div className="w-1 h-1 bg-[#63B3ED] rounded-full animate-pulse delay-300" />
+              <div className="w-1.5 h-1.5 bg-[#4FD1C5] rounded-full animate-pulse delay-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const SectionTitle = ({
   children,
   icon: Icon,
@@ -88,34 +176,38 @@ const SectionTitle = ({
   subtitle?: string;
   gradient?: boolean;
 }) => (
-  <div className="mb-8 group">
-    <div className="flex items-center gap-4 mb-3">
+  <div className="mb-12 group">
+    <div className="flex items-center gap-4 mb-4">
       <div className="relative flex-shrink-0">
-        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#4FD1C5] to-[#63B3ED] shadow-lg shadow-[#4FD1C5]/20 group-hover:shadow-[#4FD1C5]/30 transition-all duration-300">
-          <Icon className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4FD1C5] to-[#63B3ED] shadow-lg shadow-[#4FD1C5]/20 group-hover:shadow-[#4FD1C5]/40 transition-all duration-500 group-hover:scale-110">
+          <Icon className="w-7 h-7 text-white drop-shadow-sm" />
         </div>
-        <div className="absolute -inset-1 bg-gradient-to-r from-[#4FD1C5] to-[#63B3ED] rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+        <div className="absolute -inset-2 bg-gradient-to-r from-[#4FD1C5] to-[#63B3ED] rounded-2xl blur opacity-20 group-hover:opacity-40 transition-all duration-500"></div>
+        {/* Floating ring effect */}
+        <div className="absolute -inset-4 border border-[#4FD1C5]/10 rounded-2xl animate-pulse"></div>
       </div>
       <div className="flex-1 min-w-0">
         <h2
-          className={`text-2xl sm:text-3xl md:text-4.5xl font-bold tracking-tight leading-tight ${
+          className={`text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight ${
             gradient
               ? "bg-gradient-to-r from-[#4FD1C5] via-[#63B3ED] to-[#4FD1C5] bg-clip-text text-transparent"
-              : "text-white"
-          } group-hover:text-[#4FD1C5] transition-colors duration-300`}
+              : "text-white drop-shadow-sm"
+          } group-hover:text-[#4FD1C5] transition-all duration-500`}
         >
           {children}
         </h2>
         {subtitle && (
-          <p className="text-[#9aafc3] text-xs sm:text-sm mt-1 font-medium tracking-wide">
+          <p className="text-[#9aafc3] text-sm sm:text-base mt-2 font-medium tracking-wide opacity-80 group-hover:opacity-100 transition-opacity duration-300">
             {subtitle}
           </p>
         )}
       </div>
     </div>
     <div className="relative">
-      <div className="h-1 w-20 sm:w-24 bg-gradient-to-r from-[#4FD1C5] to-[#63B3ED] rounded-full group-hover:w-28 sm:group-hover:w-32 transition-all duration-500" />
-      <div className="absolute top-0 left-0 h-1 w-8 sm:w-12 bg-gradient-to-r from-white/50 to-transparent rounded-full animate-pulse" />
+      <div className="h-1.5 w-24 sm:w-32 bg-gradient-to-r from-[#4FD1C5] via-[#63B3ED] to-[#4FD1C5] rounded-full group-hover:w-36 sm:group-hover:w-40 transition-all duration-700 shadow-lg shadow-[#4FD1C5]/30" />
+      <div className="absolute top-0 left-0 h-1.5 w-12 sm:w-16 bg-gradient-to-r from-white/60 to-transparent rounded-full animate-pulse" />
+      {/* Glow effect */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-[#4FD1C5]/20 to-[#63B3ED]/20 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     </div>
   </div>
 );
@@ -135,36 +227,43 @@ const ToggleButton = ({
 }) => (
   <button
     onClick={onClick}
-    className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] min-w-[140px] ${
+    className={`group relative flex items-center gap-4 px-8 py-5 rounded-2xl transition-all duration-500 cursor-pointer transform hover:scale-[1.03] min-w-[160px] overflow-hidden ${
       active
-        ? "bg-gradient-to-br from-[#4FD1C5] to-[#38B2AC] text-white shadow-xl shadow-[#4FD1C5]/25"
-        : "bg-[#1B263B]/80 text-gray-300 hover:bg-[#2D3748]/80 hover:text-white border border-[#2D3748]/50 hover:border-[#4FD1C5]/30 backdrop-blur-sm"
+        ? "bg-gradient-to-br from-[#4FD1C5] to-[#38B2AC] text-white shadow-2xl shadow-[#4FD1C5]/30"
+        : "bg-[#1B263B]/90 text-gray-300 hover:bg-[#2D3748]/90 hover:text-white border border-[#2D3748]/50 hover:border-[#4FD1C5]/40 backdrop-blur-md"
     }`}
   >
+    {/* Animated background */}
+    {active && (
+      <div className="absolute inset-0 bg-gradient-to-r from-[#4FD1C5]/10 to-[#38B2AC]/10 animate-pulse" />
+    )}
+
     {/* Icon container */}
     <div
-      className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 ${
+      className={`relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-500 ${
         active
-          ? "bg-white/20 text-white"
-          : "bg-[#4FD1C5]/10 text-[#4FD1C5] group-hover:bg-[#4FD1C5]/20"
+          ? "bg-white/20 text-white shadow-lg"
+          : "bg-[#4FD1C5]/15 text-[#4FD1C5] group-hover:bg-[#4FD1C5]/25 group-hover:scale-110"
       }`}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className="w-5 h-5 drop-shadow-sm" />
     </div>
 
     {/* Text content */}
-    <div className="text-left flex-1">
+    <div className="text-left flex-1 relative z-10">
       <div
-        className={`font-semibold text-base leading-tight ${
-          active ? "text-white" : "text-gray-200 group-hover:text-white"
+        className={`font-bold text-lg leading-tight ${
+          active
+            ? "text-white drop-shadow-sm"
+            : "text-gray-200 group-hover:text-white"
         }`}
       >
         {label}
       </div>
       {count && (
         <div
-          className={`text-xs leading-tight mt-0.5 ${
-            active ? "text-white/80" : "text-gray-400 group-hover:text-gray-300"
+          className={`text-sm leading-tight mt-1 ${
+            active ? "text-white/90" : "text-gray-400 group-hover:text-gray-300"
           }`}
         >
           {count}
@@ -172,9 +271,12 @@ const ToggleButton = ({
       )}
     </div>
 
-    {/* Active indicator */}
+    {/* Hover glow effect */}
+    <div className="absolute -inset-1 bg-gradient-to-r from-[#4FD1C5]/0 via-[#4FD1C5]/20 to-[#4FD1C5]/0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm" />
+
+    {/* Active shimmer effect */}
     {active && (
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#4FD1C5]/10 to-[#38B2AC]/10 pointer-events-none" />
+      <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
     )}
   </button>
 );
@@ -196,33 +298,37 @@ export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<"movies" | "tv">("movies");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollIndicator(window.scrollY < 100);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <div
-        className="min-h-screen relative"
+        className="min-h-screen relative overflow-x-hidden"
         style={{ backgroundColor: "#0D1B2A", color: "#E0E6ED" }}
       >
-        {/* Background decorative elements */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-[#4FD1C5]/5 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute top-40 right-20 w-24 h-24 bg-[#63B3ED]/5 rounded-full blur-2xl animate-pulse delay-1000" />
-          <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-[#4FD1C5]/3 rounded-full blur-3xl animate-pulse delay-2000" />
-        </div>
+        {/* Parallax Background */}
+        <ParallaxBackground />
 
         <LazyHeader
           onSidebarChange={(open: boolean) => setIsSidebarOpen(open)}
         />
-
         {/*Mobile Sidebar */}
         {isMenuOpen && (
           <div className="fixed inset-0 z-50 md:hidden">
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => setIsMenuOpen(false)}
             ></div>
             <div
-              className="fixed left-0 top-0 h-full w-80 p-6 shadow-2xl"
+              className="fixed left-0 top-0 h-full w-80 p-6 shadow-2xl border-r border-[#2D3748]/50"
               style={{ backgroundColor: "#1B263B" }}
             >
               <div className="space-y-6">
@@ -249,8 +355,10 @@ export default function HomePage() {
             {/* Hero Section */}
             <LazyHeroSection />
 
+            <SectionDivider />
+
             {/* Recommendations Section */}
-            <section className="mb-16">
+            <section className="mb-20">
               <SectionTitle
                 icon={Star}
                 subtitle="Personalized recommendations based on your watchlist and ratings"
@@ -265,9 +373,11 @@ export default function HomePage() {
               </React.Suspense>
             </section>
 
+            <SectionDivider />
+
             {/* Section Toggle */}
-            <div className="flex flex-col sm:flex-row gap-6 mb-16 justify-center items-center">
-              <div className="flex gap-4">
+            <div className="flex flex-col lg:flex-row gap-8 mb-20 justify-center items-center">
+              <div className="flex gap-6">
                 <ToggleButton
                   active={activeSection === "movies"}
                   onClick={() => setActiveSection("movies")}
@@ -283,21 +393,11 @@ export default function HomePage() {
                   count="Trending series"
                 />
               </div>
-
-              {/* Section indicator */}
-              <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-[#1B263B]/50 rounded-full border border-[#2D3748]">
-                <div className="w-2 h-2 bg-[#4FD1C5] rounded-full animate-pulse" />
-                <span className="text-sm text-[#9aafc3] font-medium">
-                  {activeSection === "movies"
-                    ? "Movie Collection"
-                    : "TV Series Collection"}
-                </span>
-              </div>
             </div>
 
             {/* Movies Section */}
             {activeSection === "movies" && (
-              <div className="space-y-16">
+              <div className="space-y-20">
                 <section className="relative">
                   <SectionTitle
                     icon={Flame}
@@ -313,6 +413,8 @@ export default function HomePage() {
                   </React.Suspense>
                 </section>
 
+                <SectionDivider />
+
                 <section className="relative">
                   <SectionTitle
                     icon={Trophy}
@@ -326,6 +428,8 @@ export default function HomePage() {
                     <LazyTopRatedMovies />
                   </React.Suspense>
                 </section>
+
+                <SectionDivider />
 
                 <section className="relative">
                   <SectionTitle
@@ -342,6 +446,8 @@ export default function HomePage() {
                     <LazyNowPlayingMovies />
                   </React.Suspense>
                 </section>
+
+                <SectionDivider />
 
                 <section className="relative">
                   <SectionTitle
@@ -361,7 +467,7 @@ export default function HomePage() {
 
             {/* TV Shows Section */}
             {activeSection === "tv" && (
-              <div className="space-y-16">
+              <div className="space-y-20">
                 <section className="relative">
                   <SectionTitle
                     icon={Sparkles}
@@ -379,6 +485,8 @@ export default function HomePage() {
                   </React.Suspense>
                 </section>
 
+                <SectionDivider />
+
                 <section className="relative">
                   <SectionTitle
                     icon={Star}
@@ -394,6 +502,8 @@ export default function HomePage() {
                     <LazyTopRatedTVShows />
                   </React.Suspense>
                 </section>
+
+                <SectionDivider />
 
                 <section className="relative">
                   <SectionTitle icon={Star} subtitle="Currently airing on TV">

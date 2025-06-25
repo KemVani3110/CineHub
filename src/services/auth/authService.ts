@@ -1,6 +1,6 @@
 import { User } from '@/types/user';
 import { auth, db } from '@/lib/firebase';
-import { 
+import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
@@ -10,12 +10,12 @@ import {
   updateProfile,
   onAuthStateChanged
 } from 'firebase/auth';
-import { 
-  doc, 
-  setDoc, 
-  getDoc, 
-  collection, 
-  addDoc, 
+import {
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  addDoc,
   serverTimestamp,
   updateDoc,
   query,
@@ -64,7 +64,7 @@ class FirestoreAuthService {
   constructor() {
     this.googleProvider.addScope('email');
     this.googleProvider.addScope('profile');
-    
+
     this.facebookProvider.addScope('email');
     this.facebookProvider.addScope('public_profile');
   }
@@ -95,7 +95,7 @@ class FirestoreAuthService {
 
       try {
         await setDoc(userDocRef, userData);
-        
+
         // Log activity
         await addDoc(collection(db, 'user_activity_logs'), {
           userId: uid,
@@ -155,11 +155,11 @@ class FirestoreAuthService {
       // First, try Firebase Auth login
       try {
         const userCredential = await signInWithEmailAndPassword(
-          auth, 
-          credentials.email, 
+          auth,
+          credentials.email,
           credentials.password
         );
-        
+
         const firebaseUser = userCredential.user;
         const token = await firebaseUser.getIdToken();
 
@@ -192,19 +192,19 @@ class FirestoreAuthService {
           const usersRef = collection(db, 'users');
           const q = query(usersRef, where('email', '==', credentials.email));
           const querySnapshot = await getDocs(q);
-          
+
           if (querySnapshot.empty) {
             throw new Error('Invalid email or password');
           }
-          
+
           const userDoc = querySnapshot.docs[0];
           const userData = userDoc.data();
-          
+
           // For migrated users, we need them to reset their password
           // since we can't verify their old password without the hash
           throw new Error('Account migration required. Please register again with the same email to migrate your account to the new system.');
         }
-        
+
         // Re-throw other Firebase errors
         throw firebaseError;
       }
@@ -220,7 +220,7 @@ class FirestoreAuthService {
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('email', '==', userData.email));
       const querySnapshot = await getDocs(q);
-      
+
       let existingUserData = null;
       if (!querySnapshot.empty) {
         existingUserData = querySnapshot.docs[0].data();
@@ -240,7 +240,7 @@ class FirestoreAuthService {
       // Update Firebase profile with merged data
       const displayName = userData.name || existingUserData?.name || '';
       const photoURL = userData.avatar || existingUserData?.avatar || '';
-      
+
       await updateProfile(firebaseUser, {
         displayName,
         photoURL
@@ -320,23 +320,23 @@ class FirestoreAuthService {
             const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
             const userData = userDoc.data();
 
-                         if (userData) {
-               resolve({
-                 id: parseInt(firebaseUser.uid.slice(-8), 16),
-                 email: firebaseUser.email || '',
-                 name: userData.name || firebaseUser.displayName || '',
-                 role: userData.role || 'user',
-                 avatar: userData.avatar || firebaseUser.photoURL || undefined,
-                 is_active: userData.is_active || true,
-                 email_verified: firebaseUser.emailVerified,
-                 created_at: userData.created_at?.toDate()?.toISOString() || new Date().toISOString(),
-                 updated_at: userData.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
-                 last_login_at: userData.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
-                 provider: userData.provider === 'email' ? 'local' : userData.provider || 'local'
-               });
-             } else {
-               resolve(null);
-             }
+            if (userData) {
+              resolve({
+                id: parseInt(firebaseUser.uid.slice(-8), 16),
+                email: firebaseUser.email || '',
+                name: userData.name || firebaseUser.displayName || '',
+                role: userData.role || 'user',
+                avatar: userData.avatar || firebaseUser.photoURL || undefined,
+                is_active: userData.is_active || true,
+                email_verified: firebaseUser.emailVerified,
+                created_at: userData.created_at?.toDate()?.toISOString() || new Date().toISOString(),
+                updated_at: userData.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
+                last_login_at: userData.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
+                provider: userData.provider === 'email' ? 'local' : userData.provider || 'local'
+              });
+            } else {
+              resolve(null);
+            }
           } catch (error) {
             resolve(null);
           }
@@ -350,7 +350,7 @@ class FirestoreAuthService {
   async socialLogin(data: SocialLoginData): Promise<AuthResponse> {
     try {
       let result;
-      
+
       if (data.provider === 'google') {
         result = await signInWithPopup(auth, this.googleProvider);
       } else if (data.provider === 'facebook') {
@@ -360,7 +360,7 @@ class FirestoreAuthService {
       }
 
       const firebaseUser = result.user;
-      
+
       // Create or update user document
       await this.createUserDocument(firebaseUser, {
         provider: data.provider,
@@ -375,22 +375,22 @@ class FirestoreAuthService {
 
       const token = await firebaseUser.getIdToken();
 
-             return {
-         user: {
-           id: parseInt(firebaseUser.uid.slice(-8), 16),
-           email: firebaseUser.email || '',
-           name: userData?.name || firebaseUser.displayName || '',
-           role: userData?.role || 'user',
-           avatar: userData?.avatar || firebaseUser.photoURL || undefined,
-           is_active: userData?.is_active || true,
-           email_verified: firebaseUser.emailVerified,
-           created_at: userData?.created_at?.toDate()?.toISOString() || new Date().toISOString(),
-           updated_at: userData?.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
-           last_login_at: userData?.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
-           provider: data.provider
-         },
-         token
-       };
+      return {
+        user: {
+          id: parseInt(firebaseUser.uid.slice(-8), 16),
+          email: firebaseUser.email || '',
+          name: userData?.name || firebaseUser.displayName || '',
+          role: userData?.role || 'user',
+          avatar: userData?.avatar || firebaseUser.photoURL || undefined,
+          is_active: userData?.is_active || true,
+          email_verified: firebaseUser.emailVerified,
+          created_at: userData?.created_at?.toDate()?.toISOString() || new Date().toISOString(),
+          updated_at: userData?.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
+          last_login_at: userData?.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
+          provider: data.provider
+        },
+        token
+      };
     } catch (error: any) {
       throw new Error(error.message || 'Social login failed');
     }
@@ -423,19 +423,19 @@ class FirestoreAuthService {
       const updatedDoc = await getDoc(userDocRef);
       const userData = updatedDoc.data();
 
-             return {
-         id: parseInt(currentUser.uid.slice(-8), 16),
-         email: currentUser.email || '',
-         name: userData?.name || currentUser.displayName || '',
-         role: userData?.role || 'user',
-         avatar: userData?.avatar || currentUser.photoURL || undefined,
-         is_active: userData?.is_active || true,
-         email_verified: currentUser.emailVerified,
-         created_at: userData?.created_at?.toDate()?.toISOString() || new Date().toISOString(),
-         updated_at: userData?.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
-         last_login_at: userData?.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
-         provider: userData?.provider === 'email' ? 'local' : userData?.provider || 'local'
-       };
+      return {
+        id: parseInt(currentUser.uid.slice(-8), 16),
+        email: currentUser.email || '',
+        name: userData?.name || currentUser.displayName || '',
+        role: userData?.role || 'user',
+        avatar: userData?.avatar || currentUser.photoURL || undefined,
+        is_active: userData?.is_active || true,
+        email_verified: currentUser.emailVerified,
+        created_at: userData?.created_at?.toDate()?.toISOString() || new Date().toISOString(),
+        updated_at: userData?.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
+        last_login_at: userData?.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
+        provider: userData?.provider === 'email' ? 'local' : userData?.provider || 'local'
+      };
     } catch (error: any) {
       throw new Error(error.message || 'Failed to update profile');
     }
@@ -454,19 +454,19 @@ class FirestoreAuthService {
       throw new Error('User data not found');
     }
 
-         return {
-       id: parseInt(currentUser.uid.slice(-8), 16),
-       email: currentUser.email || '',
-       name: userData.name || currentUser.displayName || '',
-       role: userData.role || 'user',
-       avatar: userData.avatar || currentUser.photoURL || undefined,
-       is_active: userData.is_active || true,
-       email_verified: currentUser.emailVerified,
-       created_at: userData.created_at?.toDate()?.toISOString() || new Date().toISOString(),
-       updated_at: userData.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
-       last_login_at: userData.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
-       provider: userData.provider === 'email' ? 'local' : userData.provider || 'local'
-     };
+    return {
+      id: parseInt(currentUser.uid.slice(-8), 16),
+      email: currentUser.email || '',
+      name: userData.name || currentUser.displayName || '',
+      role: userData.role || 'user',
+      avatar: userData.avatar || currentUser.photoURL || undefined,
+      is_active: userData.is_active || true,
+      email_verified: currentUser.emailVerified,
+      created_at: userData.created_at?.toDate()?.toISOString() || new Date().toISOString(),
+      updated_at: userData.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
+      last_login_at: userData.last_login_at?.toDate()?.toISOString() || new Date().toISOString(),
+      provider: userData.provider === 'email' ? 'local' : userData.provider || 'local'
+    };
   }
 }
 
@@ -528,7 +528,15 @@ class AuthService {
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      const response = await fetch(`${this.baseUrl}/me`);
+      const response = await fetch(`${this.baseUrl}/me`, {
+        credentials: 'include' // Include cookies for session
+      });
+
+      // If 401, user is not authenticated - return null silently
+      if (response.status === 401) {
+        return null;
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -590,6 +598,6 @@ class AuthService {
 }
 
 // Export the appropriate service based on environment
-export const authService = isProduction 
-  ? new FirestoreAuthService() 
+export const authService = isProduction
+  ? new FirestoreAuthService()
   : AuthService.getInstance();

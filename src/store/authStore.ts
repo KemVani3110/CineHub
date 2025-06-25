@@ -6,6 +6,7 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   error: string | null;
+  hasCheckedAuth: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: Partial<User> & { password: string }) => Promise<void>;
   logout: () => Promise<void>;
@@ -18,16 +19,21 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isLoading: false,
   error: null,
+  hasCheckedAuth: false,
 
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
       const response = await authService.login({ email, password });
-      set({ user: response.user, isLoading: false });
+      set({
+        user: response.user,
+        isLoading: false,
+        hasCheckedAuth: true
+      });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Login failed',
-        isLoading: false 
+        isLoading: false
       });
       throw error;
     }
@@ -37,11 +43,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await authService.register(userData);
-      set({ user: response.user, isLoading: false });
+      set({
+        user: response.user,
+        isLoading: false,
+        hasCheckedAuth: true
+      });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Registration failed',
-        isLoading: false 
+        isLoading: false
       });
       throw error;
     }
@@ -51,11 +61,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       await authService.logout();
-      set({ user: null, isLoading: false });
+      set({
+        user: null,
+        isLoading: false,
+        hasCheckedAuth: false // Reset auth check when logout
+      });
+
+      // Clear all persisted data from other stores
+      localStorage.removeItem('favorites-storage');
+      localStorage.removeItem('watchlist-storage');
+      localStorage.removeItem('rating-storage');
+      localStorage.removeItem('history-storage');
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Logout failed',
-        isLoading: false 
+        isLoading: false
       });
       throw error;
     }
@@ -69,29 +89,44 @@ export const useAuthStore = create<AuthState>((set) => ({
         token,
         user: {
           email: '',
-          name: '',  
+          name: '',
           providerId: provider
         }
       });
-      set({ user: response.user, isLoading: false });
+      set({
+        user: response.user,
+        isLoading: false,
+        hasCheckedAuth: true
+      });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Social login failed',
-        isLoading: false 
+        isLoading: false
       });
       throw error;
     }
   },
 
   getCurrentUser: async () => {
+    const { isLoading, hasCheckedAuth } = useAuthStore.getState();
+
+    // Don't fetch if already loading or already checked
+    if (isLoading || hasCheckedAuth) return;
+
     set({ isLoading: true, error: null });
     try {
-      const user = await authService.getCurrentUser();
-      set({ user, isLoading: false });
+      const currentUser = await authService.getCurrentUser();
+      set({
+        user: currentUser,
+        isLoading: false,
+        hasCheckedAuth: true
+      });
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to get current user',
-        isLoading: false 
+      set({
+        user: null,
+        error: null, // Don't set error for auth failures
+        isLoading: false,
+        hasCheckedAuth: true
       });
     }
   },

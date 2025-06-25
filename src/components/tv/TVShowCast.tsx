@@ -4,16 +4,9 @@ import { TMDBTVDetails, TMDBCastMember } from "@/types/tmdb";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Users,
-  Award,
-  Star,
-  ChevronRight,
-  Sparkles,
-} from "lucide-react";
+import { Users, User, Award, Star, ChevronRight, Sparkles } from "lucide-react";
 import { getImageUrl } from "@/services/tmdb";
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -66,18 +59,20 @@ export default function TVShowCast({
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-card to-bg-card/80 border border-border hover:border-cinehub-accent/30 transition-all duration-300">
           {/* Profile Image */}
           <div className="relative aspect-[3/4] overflow-hidden">
-            <Image
-              src={
-                person.profile_path
-                  ? getImageUrl(person.profile_path, "w500")
-                  : "/images/no-profile.jpg"
-              }
-              alt={person.name}
-              fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
+            {person.profile_path ? (
+              <Image
+                src={getImageUrl(person.profile_path, "w500")}
+                alt={person.name}
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                <User className="w-12 h-12 text-slate-400" />
+              </div>
+            )}
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-bg-main/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -189,7 +184,11 @@ function CastSkeleton() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="space-y-4 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
+              <div
+                key={i}
+                className="space-y-4 animate-pulse"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
                 <div className="skeleton aspect-[3/4] w-full rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card" />
                 <div className="skeleton h-4 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
                 <div className="skeleton h-3 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { lazy, Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import Loading from "@/components/common/Loading";
 
 // Error boundary for lazy loaded components
@@ -29,8 +28,35 @@ class LazyLoadErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         this.props.fallback || (
-          <div className="flex items-center justify-center p-4 text-red-500">
-            Failed to load component. Please try refreshing the page.
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <div className="w-16 h-16 mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-destructive"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-text-main mb-2">
+              Component Load Error
+            </h3>
+            <p className="text-text-sub mb-4 max-w-md">
+              Failed to load this component. This might be due to a network
+              issue or a temporary error.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-cinehub-accent text-white rounded-lg hover:bg-cinehub-accent/90 transition-colors"
+            >
+              Refresh Page
+            </button>
           </div>
         )
       );
@@ -56,6 +82,18 @@ export const TVShowCard = lazy(() =>
 export const InternalMovieCard = lazy(() =>
   import("@/components/movie/InternalMovieCard").then((mod) => ({
     default: mod.InternalMovieCard,
+  }))
+);
+
+// Watch components
+export const WatchlistPage = lazy(() =>
+  import("@/components/watch/WatchlistPage").then((mod) => ({
+    default: mod.WatchlistPage,
+  }))
+);
+export const VideoPlayer = lazy(() =>
+  import("@/components/common/VideoPlayer").then((mod) => ({
+    default: mod.VideoPlayer,
   }))
 );
 
@@ -152,6 +190,24 @@ export const MovieReviews = lazy(
 
 // Actor components
 export const ActorDetail = lazy(() => import("@/components/actor/ActorDetail"));
+export const ActorCard = lazy(() =>
+  import("@/components/common/ActorCard").then((mod) => ({
+    default: mod.ActorCard,
+  }))
+);
+
+// Profile components
+export const Settings = lazy(() => import("@/components/profile/Settings"));
+
+// Admin components
+export const AdminSidebar = lazy(
+  () => import("@/components/admin/AdminSidebar")
+);
+export const UserManagement = lazy(() =>
+  import("@/components/admin/UserManagement").then((mod) => ({
+    default: mod.UserManagement,
+  }))
+);
 
 // Skeleton components for different content types
 const MovieCardSkeleton = () => (

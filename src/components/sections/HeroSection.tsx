@@ -20,8 +20,14 @@ import {
   fetchMovieDetails,
   fetchTVShowDetails,
 } from "@/services/tmdb";
-import { TMDBMovie, TMDBTVShow, TMDBGenre, TMDBMovieDetails, TMDBTVDetails } from "@/types/tmdb";
-import { motion} from "framer-motion";
+import {
+  TMDBMovie,
+  TMDBTVShow,
+  TMDBGenre,
+  TMDBMovieDetails,
+  TMDBTVDetails,
+} from "@/types/tmdb";
+import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import useEmblaCarousel from "embla-carousel-react";
 import { Button } from "@/components/ui/button";
@@ -64,7 +70,7 @@ const HeroSection = () => {
   // Fetch detailed information for the current item
   const { data: currentItemDetails } = useQuery({
     queryKey: [activeTab, currentItem?.id, "details"],
-    queryFn: () => 
+    queryFn: () =>
       activeTab === "movies"
         ? fetchMovieDetails(currentItem?.id as number)
         : fetchTVShowDetails(currentItem?.id as number),
@@ -215,36 +221,57 @@ const HeroSection = () => {
                 className="object-cover"
                 priority={index === 0}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-bg-main/90 via-bg-main/60 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-bg-main/70 via-transparent to-bg-main/40" />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg-main/60" />
+              {/* Background Gradients */}
+              <div className="absolute inset-0 bg-gradient-to-t from-bg-main/95 via-bg-main/70 to-bg-main/20" />
+              <div className="absolute inset-0 bg-gradient-to-r from-bg-main/80 via-bg-main/30 to-bg-main/50" />
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-transparent to-cinehub-accent/10" />
+              <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-bg-main/60" />
 
               {/* Play Button */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
+                {/* Outer Ring - Subtle Breathing */}
+                <div className="absolute inset-0 w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-cinehub-accent/10 via-slate-400/10 to-cinehub-accent/15 animate-pulse -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2" />
+
                 <Button
                   onClick={() =>
                     router.push(
-                      `/${activeTab === "movies" ? "movie" : "tv"}/${
-                        item.id
-                      }`
+                      `/${activeTab === "movies" ? "movie" : "tv"}/${item.id}`
                     )
                   }
-                  className="relative w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-cinehub-accent via-cinehub-accent/90 to-cinehub-accent-hover hover:from-cinehub-accent-hover hover:to-cinehub-accent text-bg-main rounded-full transition-all duration-300 hover:scale-110 cursor-pointer shadow-2xl backdrop-blur-sm overflow-hidden group/btn border border-white/10"
+                  className="relative w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-slate-700 via-cinehub-accent to-slate-800 hover:from-cinehub-accent hover:via-slate-600 hover:to-cinehub-accent-hover text-white rounded-full transition-all duration-400 hover:scale-110 cursor-pointer shadow-xl backdrop-blur-sm overflow-hidden group/btn border border-slate-300/20 hover:border-cinehub-accent/50"
                 >
-                  {/* Ripple Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-cinehub-accent/0 via-white/30 to-cinehub-accent/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
-                  
-                  {/* Play Icon */}
+                  {/* Dual Color Inner Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-cinehub-accent/30 via-slate-600/20 to-cinehub-accent-hover/30 rounded-full transition-opacity duration-400 group-hover/btn:opacity-80" />
+
+                  {/* Refined Shimmer */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-800 rounded-full" />
+
+                  {/* Play Icon - Cleaner Animation */}
                   <div className="relative flex items-center justify-center">
-                    <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-current transition-all duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12" />
+                    <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current transition-all duration-400 group-hover/btn:scale-115 group-hover/btn:translate-x-0.5 drop-shadow-md" />
                   </div>
 
-                  {/* Glow Effect */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cinehub-accent/30 via-cinehub-accent-hover/20 to-cinehub-accent/30 blur-xl scale-0 group-hover/btn:scale-100 transition-transform duration-300" />
+                  {/* Dual Color Glow */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cinehub-accent/30 via-slate-400/20 to-cinehub-accent-hover/30 blur-lg scale-0 group-hover/btn:scale-125 transition-all duration-400" />
 
-                  {/* Border Glow */}
-                  <div className="absolute inset-0 rounded-full border-2 border-white/20 scale-0 group-hover/btn:scale-100 transition-transform duration-300" />
+                  {/* Subtle Inner Light */}
+                  <div className="absolute inset-1 rounded-full bg-gradient-to-br from-cinehub-accent/15 via-slate-300/10 to-cinehub-accent/20 scale-0 group-hover/btn:scale-100 transition-all duration-300" />
+
+                  {/* Clean Border Effect */}
+                  <div className="absolute inset-0 rounded-full border border-cinehub-accent/30 scale-100 group-hover/btn:scale-110 opacity-0 group-hover/btn:opacity-100 transition-all duration-400" />
                 </Button>
+
+                {/* Minimal Floating Dots */}
+                <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-400">
+                  <div
+                    className="absolute w-0.5 h-0.5 bg-cinehub-accent rounded-full animate-ping"
+                    style={{ top: "25%", left: "75%", animationDelay: "0s" }}
+                  />
+                  <div
+                    className="absolute w-0.5 h-0.5 bg-slate-300 rounded-full animate-ping"
+                    style={{ top: "75%", left: "25%", animationDelay: "0.7s" }}
+                  />
+                </div>
               </div>
 
               {/* Content */}
@@ -260,13 +287,19 @@ const HeroSection = () => {
                     {/* Title */}
                     <motion.div
                       variants={itemVariants}
-                      className="mb-2 sm:mb-3"
+                      className="mb-3 sm:mb-4"
                     >
-                      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-text-main leading-tight">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight drop-shadow-lg bg-gradient-to-r from-white via-white to-slate-200 bg-clip-text text-transparent">
                         {activeTab === "movies"
                           ? (item as TMDBMovie).title
                           : (item as TMDBTVShow).name}
                       </h1>
+                      {/* Subtitle Shadow Effect */}
+                      <div className="absolute -z-10 text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-cinehub-accent/20 blur-sm translate-x-1 translate-y-1">
+                        {activeTab === "movies"
+                          ? (item as TMDBMovie).title
+                          : (item as TMDBTVShow).name}
+                      </div>
                     </motion.div>
 
                     {/* Metadata Row */}
@@ -274,44 +307,67 @@ const HeroSection = () => {
                       variants={itemVariants}
                       className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4"
                     >
-                      {/* Rating */}
-                      <div className="flex items-center gap-1.5 sm:gap-2 bg-bg-card/50 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-border">
-                        <Star className="w-3 h-3 sm:w-4 sm:h-4 text-warning fill-current" />
-                        <span className="text-text-main font-semibold text-xs sm:text-sm lg:text-base">
+                      {/*  Rating */}
+                      <motion.div
+                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-warning/20 via-warning/10 to-warning/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-warning/30 hover:border-warning/50 transition-all duration-300 hover:scale-105 cursor-default group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Star className="w-3 h-3 sm:w-4 sm:h-4 text-warning fill-current group-hover:rotate-12 transition-transform duration-300" />
+                        <span className="text-white font-semibold text-xs sm:text-sm lg:text-base">
                           {item.vote_average.toFixed(1)}
                         </span>
-                      </div>
+                      </motion.div>
 
-                      {/* Release Date */}
-                      <div className="flex items-center gap-1.5 sm:gap-2 bg-bg-card/50 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-border">
-                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-cinehub-accent" />
-                        <span className="text-text-main font-medium text-xs sm:text-sm">
+                      {/*  Release Date */}
+                      <motion.div
+                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-cinehub-accent/20 via-cinehub-accent/10 to-cinehub-accent/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-cinehub-accent/30 hover:border-cinehub-accent/50 transition-all duration-300 hover:scale-105 cursor-default group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-cinehub-accent group-hover:rotate-12 transition-transform duration-300" />
+                        <span className="text-white font-medium text-xs sm:text-sm">
                           {formatDate(
                             activeTab === "movies"
                               ? (item as TMDBMovie).release_date
                               : (item as TMDBTVShow).first_air_date
                           )}
                         </span>
-                      </div>
+                      </motion.div>
 
-                      {/* Runtime */}
-                      <div className="flex items-center gap-1.5 sm:gap-2 bg-bg-card/50 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-border">
-                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-text-sub" />
-                        <span className="text-text-main font-medium text-xs sm:text-sm">
-                          {activeTab === "movies" 
-                            ? `${(currentItemDetails as TMDBMovieDetails)?.runtime || 0} min`
-                            : `${(currentItemDetails as TMDBTVDetails)?.episode_run_time?.[0] || 0} min/ep`}
+                      {/*  Runtime */}
+                      <motion.div
+                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-slate-600/20 via-slate-500/10 to-slate-600/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-slate-400/30 hover:border-slate-300/50 transition-all duration-300 hover:scale-105 cursor-default group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-slate-300 group-hover:rotate-12 transition-transform duration-300" />
+                        <span className="text-white font-medium text-xs sm:text-sm">
+                          {activeTab === "movies"
+                            ? `${
+                                (currentItemDetails as TMDBMovieDetails)
+                                  ?.runtime || 0
+                              } min`
+                            : `${
+                                (currentItemDetails as TMDBTVDetails)
+                                  ?.episode_run_time?.[0] || 0
+                              } min/ep`}
                         </span>
-                      </div>
+                      </motion.div>
 
-                      {/* Genres */}
+                      {/*  Genres */}
                       {getGenreNames(item.genre_ids).map((genre, index) => (
-                        <span
+                        <motion.span
                           key={index}
-                          className="px-2 py-1 sm:px-3 sm:py-1.5 bg-bg-card/30 backdrop-blur-sm border border-border rounded-full text-text-main font-medium text-xs hover:border-cinehub-accent transition-colors duration-300"
+                          className="px-2 py-1 sm:px-3 sm:py-1.5 bg-gradient-to-r from-bg-card/40 via-bg-card/20 to-bg-card/40 backdrop-blur-sm border border-border hover:border-cinehub-accent rounded-full text-white font-medium text-xs hover:scale-105 transition-all duration-300 cursor-default"
+                          whileHover={{
+                            scale: 1.05,
+                            backgroundColor: "rgba(var(--cinehub-accent), 0.1)",
+                          }}
+                          whileTap={{ scale: 0.95 }}
                         >
                           {genre}
-                        </span>
+                        </motion.span>
                       ))}
                     </motion.div>
 
@@ -336,24 +392,37 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Navigation Buttons */}
+      {/*  Navigation Buttons */}
       <div className="absolute top-3 sm:top-4 lg:top-6 left-3 sm:left-4 lg:left-6 flex gap-2 sm:gap-3 z-20">
-        <Button
-          variant="ghost"
-          size="icon"
+        <motion.button
           onClick={scrollPrev}
-          className="bg-bg-card/30 backdrop-blur-sm border border-border hover:border-cinehub-accent text-white hover:text-cinehub-accent p-1.5 sm:p-2 rounded-full transition-all duration-300 hover:shadow-lg hover:bg-bg-card/50 cursor-pointer group"
+          className="relative bg-gradient-to-br from-bg-card/40 via-bg-card/30 to-bg-card/40 backdrop-blur-md border border-border/50 hover:border-cinehub-accent/60 text-white hover:text-cinehub-accent p-2 sm:p-2.5 rounded-full transition-all duration-300 hover:shadow-xl cursor-pointer group overflow-hidden"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
+          {/* Inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-cinehub-accent/0 to-cinehub-accent/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+          <ChevronLeft className="relative w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 group-hover:-translate-x-0.5 group-hover:drop-shadow-lg" />
+
+          {/* Ripple effect */}
+          <div className="absolute inset-0 bg-cinehub-accent/20 rounded-full scale-0 group-hover:scale-100 transition-transform duration-500 opacity-50" />
+        </motion.button>
+
+        <motion.button
           onClick={scrollNext}
-          className="bg-bg-card/30 backdrop-blur-sm border border-border hover:border-cinehub-accent text-white hover:text-cinehub-accent p-1.5 sm:p-2 rounded-full transition-all duration-300 hover:shadow-lg hover:bg-bg-card/50 cursor-pointer group"
+          className="relative bg-gradient-to-br from-bg-card/40 via-bg-card/30 to-bg-card/40 backdrop-blur-md border border-border/50 hover:border-cinehub-accent/60 text-white hover:text-cinehub-accent p-2 sm:p-2.5 rounded-full transition-all duration-300 hover:shadow-xl cursor-pointer group overflow-hidden"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-        </Button>
+          {/* Inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-cinehub-accent/0 to-cinehub-accent/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+          <ChevronRight className="relative w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 group-hover:translate-x-0.5 group-hover:drop-shadow-lg" />
+
+          {/* Ripple effect */}
+          <div className="absolute inset-0 bg-cinehub-accent/20 rounded-full scale-0 group-hover:scale-100 transition-transform duration-500 opacity-50" />
+        </motion.button>
       </div>
 
       {/* Tab Buttons */}
@@ -388,20 +457,51 @@ const HeroSection = () => {
         </Button>
       </div>
 
-      {/* Dots Indicator */}
-      <div className="absolute bottom-4 sm:bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex gap-1.5 md:gap-2 z-20">
+      {/*  Dots Indicator */}
+      <div className="absolute bottom-4 sm:bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex gap-2 md:gap-3 z-20">
         {items?.map((_: TMDBMovie | TMDBTVShow, index: number) => (
-          <Button
+          <motion.button
             key={index}
-            variant="ghost"
-            size="icon"
             onClick={() => emblaApi?.scrollTo(index)}
-            className={`transition-all duration-300 rounded-full p-0 cursor-pointer hover:scale-110 ${
+            className={`relative rounded-full cursor-pointer transition-all duration-500 ${
               index === currentIndex
-                ? "w-6 md:w-8 h-1.5 md:h-2 bg-cinehub-accent shadow-lg"
-                : "w-1.5 md:w-2 h-1.5 md:h-2 bg-text-sub/60 hover:bg-cinehub-accent/80"
+                ? "w-8 md:w-10 h-2 md:h-2.5"
+                : "w-2 md:w-2.5 h-2 md:h-2.5"
             }`}
-          />
+            whileHover={{ scale: 1.2 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {/* Background */}
+            <div
+              className={`absolute inset-0 rounded-full transition-all duration-500 ${
+                index === currentIndex
+                  ? "bg-gradient-to-r from-cinehub-accent via-cinehub-accent-hover to-cinehub-accent"
+                  : "bg-gradient-to-r from-slate-500/60 to-slate-400/60 hover:from-cinehub-accent/80 hover:to-cinehub-accent-hover/80"
+              }`}
+            />
+
+            {/* Glow Effect */}
+            {index === currentIndex && (
+              <motion.div
+                className="absolute inset-0 rounded-full bg-cinehub-accent/50 blur-sm"
+                animate={{ scale: [1, 1.5, 1] }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            )}
+
+            {/* Inner Light */}
+            <div
+              className={`absolute inset-0.5 rounded-full transition-all duration-300 ${
+                index === currentIndex
+                  ? "bg-gradient-to-r from-white/30 to-transparent"
+                  : "bg-transparent hover:bg-white/20"
+              }`}
+            />
+          </motion.button>
         ))}
       </div>
 

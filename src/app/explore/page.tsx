@@ -89,7 +89,14 @@ export default function ExplorePage() {
       return (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {[...Array(10)].map((_, i) => (
-            <Skeleton key={i} className="aspect-[2/3] rounded-lg" />
+            <div key={i} className="space-y-3">
+              <div className="skeleton aspect-[2/3] w-full rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card animate-pulse" />
+              <div className="space-y-2">
+                <div className="skeleton h-5 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+                <div className="skeleton h-4 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+                <div className="skeleton h-3 w-2/3 rounded-lg bg-gradient-to-r from-bg-card to-border" />
+              </div>
+            </div>
           ))}
         </div>
       );

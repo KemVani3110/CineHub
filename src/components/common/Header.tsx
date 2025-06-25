@@ -179,8 +179,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
   return (
     <>
       <header
-               className={`w-full bg-background/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-40 transition-all duration-300 ${
-
+        className={`w-full bg-gradient-to-r from-slate-900/95 via-cinehub-accent/20 to-slate-800/95 backdrop-blur-md border-b border-cinehub-accent/30 sticky top-0 z-40 transition-all duration-300 shadow-lg shadow-cinehub-accent/10 ${
           isSidebarOpen ? "hidden" : "block"
         }`}
       >
@@ -513,9 +512,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                         </Button>
                       )}
                       <div className="px-4 py-3 text-center">
-                        <p className="text-xs text-slate-400">
-                          CineHub v1.0.0
-                        </p>
+                        <p className="text-xs text-slate-400">CineHub v1.0.0</p>
                       </div>
                     </div>
                   </div>

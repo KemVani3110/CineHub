@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Users,
+  User,
   Camera,
   Award,
   Star,
@@ -75,18 +76,20 @@ export default function MovieCast({
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-card to-bg-card/80 border border-border hover:border-cinehub-accent/30 transition-all duration-300">
           {/* Profile Image */}
           <div className="relative aspect-[3/4] overflow-hidden">
-            <Image
-              src={
-                person.profile_path
-                  ? getImageUrl(person.profile_path, "w500")
-                  : "/images/no-profile.jpg"
-              }
-              alt={person.name}
-              fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
+            {person.profile_path ? (
+              <Image
+                src={getImageUrl(person.profile_path, "w500")}
+                alt={person.name}
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                <User className="w-12 h-12 text-slate-400" />
+              </div>
+            )}
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-bg-main/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -127,16 +130,18 @@ export default function MovieCast({
           <div className="flex items-center gap-4">
             {/* Profile Image */}
             <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 flex-shrink-0 border-2 border-transparent group-hover:border-cinehub-accent/30 transition-all duration-300">
-              <img
-                src={
-                  person.profile_path
-                    ? getImageUrl(person.profile_path, "w500")
-                    : "/images/no-profile.jpg"
-                }
-                alt={person.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                loading="lazy"
-              />
+              {person.profile_path ? (
+                <img
+                  src={getImageUrl(person.profile_path, "w500")}
+                  alt={person.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                  <User className="w-8 h-8 text-slate-400" />
+                </div>
+              )}
               {/* Ring effect */}
               <div className="absolute inset-0 rounded-full ring-2 ring-transparent group-hover:ring-cinehub-accent/20 transition-all duration-300" />
             </div>
@@ -257,7 +262,10 @@ export default function MovieCast({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {displayCrew.map((person, index) => (
-              <CrewCard key={`${person.credit_id}-${person.id}-${index}`} person={person} />
+              <CrewCard
+                key={`${person.credit_id}-${person.id}-${index}`}
+                person={person}
+              />
             ))}
           </div>
         </CardContent>
@@ -352,7 +360,11 @@ function CastSkeleton() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="space-y-4 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
+              <div
+                key={i}
+                className="space-y-4 animate-pulse"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
                 <div className="skeleton aspect-[3/4] w-full rounded-xl bg-gradient-to-br from-bg-card via-border to-bg-card" />
                 <div className="skeleton h-4 w-3/4 rounded-lg bg-gradient-to-r from-bg-card to-border" />
                 <div className="skeleton h-3 w-1/2 rounded-lg bg-gradient-to-r from-bg-card to-border" />

@@ -17,11 +17,23 @@ interface ActorCardProps {
   showRating?: boolean;
 }
 
-const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
+const ImageWithFallback = ({
+  src,
+  alt,
+  hasProfilePath,
+}: {
+  src: string;
+  alt: string;
+  hasProfilePath: boolean;
+}) => {
   const [error, setError] = React.useState(false);
 
-  if (error) {
-    return null;
+  if (error || !hasProfilePath) {
+    return (
+      <div className="relative aspect-[2/3] w-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+        <User className="w-16 h-16 text-slate-400" />
+      </div>
+    );
   }
 
   return (
@@ -51,11 +63,10 @@ export function ActorCard({ actor, showRating = true }: ActorCardProps) {
       <div className="relative overflow-hidden rounded-2xl">
         <ImageWithFallback
           src={
-            actor.profile_path
-              ? getImageUrl(actor.profile_path, "w500")
-              : "/images/no-profile.jpg"
+            actor.profile_path ? getImageUrl(actor.profile_path, "w500") : ""
           }
           alt={actor.name || "Actor profile"}
+          hasProfilePath={!!actor.profile_path}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
@@ -81,4 +92,4 @@ export function ActorCard({ actor, showRating = true }: ActorCardProps) {
       <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#4FD1C5]/0 to-[#4FD1C5]/0 group-hover:from-[#4FD1C5]/10 group-hover:to-[#38B2AC]/10 transition-all duration-500 -z-10 blur-xl" />
     </div>
   );
-} 
+}

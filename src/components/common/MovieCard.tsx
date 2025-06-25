@@ -13,11 +13,23 @@ interface MovieCardProps {
   showCharacter?: boolean;
 }
 
-const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
+const ImageWithFallback = ({
+  src,
+  alt,
+  hasImage,
+}: {
+  src: string;
+  alt: string;
+  hasImage: boolean;
+}) => {
   const [error, setError] = React.useState(false);
 
-  if (error) {
-    return null;
+  if (error || !hasImage) {
+    return (
+      <div className="relative aspect-[2/3] w-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+        <Film className="w-16 h-16 text-slate-400" />
+      </div>
+    );
   }
 
   return (
@@ -35,7 +47,11 @@ const ImageWithFallback = ({ src, alt }: { src: string; alt: string }) => {
   );
 };
 
-export function MovieCard({ movie, showRating = true, showCharacter = false }: MovieCardProps) {
+export function MovieCard({
+  movie,
+  showRating = true,
+  showCharacter = false,
+}: MovieCardProps) {
   const router = useRouter();
   const title = movie.title || movie.name;
   const releaseDate = movie.release_date || movie.first_air_date;
@@ -50,12 +66,9 @@ export function MovieCard({ movie, showRating = true, showCharacter = false }: M
     <div onClick={handleClick} className="group relative cursor-pointer">
       <div className="relative overflow-hidden rounded-2xl">
         <ImageWithFallback
-          src={
-            movie.poster_path
-              ? getImageUrl(movie.poster_path, "w500")
-              : "/images/no-poster.jpg"
-          }
+          src={movie.poster_path ? getImageUrl(movie.poster_path, "w500") : ""}
           alt={title || "Movie poster"}
+          hasImage={!!movie.poster_path}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">

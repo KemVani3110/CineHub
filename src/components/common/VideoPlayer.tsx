@@ -16,8 +16,6 @@ import {
   PictureInPicture,
   Download,
   Share2,
-  BookOpen,
-  Loader2,
   Tv,
   RotateCcw
 } from "lucide-react";
@@ -53,8 +51,6 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration, onTheaterMod
   const [isMobile, setIsMobile] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false);
-  const [bufferedTime, setBufferedTime] = useState(0);
   const [isEnded, setIsEnded] = useState(false);
 
   const {
@@ -183,7 +179,6 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration, onTheaterMod
 
     const handlePlay = () => {
       setPlaying(true);
-      setIsBuffering(false);
     };
 
     const handlePause = () => {
@@ -197,28 +192,11 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration, onTheaterMod
       setShowControls(true);
     };
 
-    const handleWaiting = () => {
-      setIsBuffering(true);
-    };
-
-    const handleCanPlay = () => {
-      setIsBuffering(false);
-    };
-
-    const handleProgress = () => {
-      if (video.buffered.length > 0) {
-        setBufferedTime(video.buffered.end(video.buffered.length - 1));
-      }
-    };
-
     video.addEventListener("timeupdate", handleTimeUpdate);
     video.addEventListener("loadedmetadata", handleLoadedMetadata);
     video.addEventListener("play", handlePlay);
     video.addEventListener("pause", handlePause);
     video.addEventListener("ended", handleEnded);
-    video.addEventListener("waiting", handleWaiting);
-    video.addEventListener("canplay", handleCanPlay);
-    video.addEventListener("progress", handleProgress);
 
     return () => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
@@ -226,9 +204,6 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration, onTheaterMod
       video.removeEventListener("play", handlePlay);
       video.removeEventListener("pause", handlePause);
       video.removeEventListener("ended", handleEnded);
-      video.removeEventListener("waiting", handleWaiting);
-      video.removeEventListener("canplay", handleCanPlay);
-      video.removeEventListener("progress", handleProgress);
     };
   }, [duration, isAutoPlaying]);
 
@@ -424,10 +399,6 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration, onTheaterMod
     return videoDuration > 0 ? (currentTime / videoDuration) * 100 : 0;
   };
 
-  const getBufferedPercentage = () => {
-    return videoDuration > 0 ? (bufferedTime / videoDuration) * 100 : 0;
-  };
-
   return (
     <div
       ref={containerRef}
@@ -521,17 +492,11 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration, onTheaterMod
           </div>
         </div>
         
-        {/* Device indicator & Status */}
+        {/* Device indicator */}
         <div className={cn(
           "flex items-center gap-2 text-slate-400",
           isMobile ? "ml-2" : "ml-4 gap-3"
         )}>
-          {isBuffering && (
-            <div className="flex items-center gap-1 text-cinehub-accent">
-              <Loader2 className={cn("animate-spin", isMobile ? "w-3 h-3" : "w-4 h-4")} />
-              {!isMobile && <span className="text-xs font-medium">Buffering</span>}
-            </div>
-          )}
           {isMobile ? (
             <Smartphone className="w-4 h-4" />
           ) : (
@@ -571,12 +536,6 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration, onTheaterMod
               "relative bg-slate-700/50 rounded-full overflow-hidden backdrop-blur-sm",
               isMobile ? "h-2.5" : "h-2"
             )}>
-              {/* Buffered Track */}
-              <div 
-                className="absolute top-0 left-0 h-full bg-slate-600/70 rounded-full transition-all duration-200"
-                style={{ width: `${getBufferedPercentage()}%` }}
-              />
-              
               {/* Progress Fill with Gradient */}
               <div 
                 className="absolute top-0 left-0 h-full bg-gradient-to-r from-cinehub-accent via-cinehub-accent to-cinehub-accent-hover rounded-full transition-all duration-200 shadow-lg"
@@ -1023,23 +982,8 @@ export function VideoPlayer({ videoUrl, posterUrl, title, duration, onTheaterMod
         )}
       </div>
 
-      {/* Loading/Buffering Overlay */}
-      {(videoDuration === 0 || isBuffering) && (
-        <div className={cn(
-          "absolute inset-0 flex items-center justify-center backdrop-blur-sm z-30",
-          isFullscreen ? "bg-black/85" : "bg-slate-950/90"
-        )}>
-          <div className="text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-slate-700 border-t-cinehub-accent rounded-full animate-spin"></div>
-            <p className="text-white font-medium">
-              {videoDuration === 0 ? "Loading video..." : "Loading buffer..."}
-            </p>
-          </div>
-        </div>
-      )}
-
              {/* Click to play/restart overlay when paused or ended - Only for Desktop */}
-       {!isMobile && (!isPlaying && !isAutoPlaying || isEnded) && videoDuration > 0 && !isBuffering && showControls && (
+       {!isMobile && (!isPlaying && !isAutoPlaying || isEnded) && videoDuration > 0 && showControls && (
          <div 
            className="absolute inset-0 flex items-center justify-center z-15 cursor-pointer group/play"
            onClick={togglePlay}
