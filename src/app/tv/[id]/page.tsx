@@ -107,13 +107,12 @@ export default function TVShowDetail() {
               tvShow.backdrop_path || null,
               "original"
             )})`,
-            filter: "blur(0.5px)",
           }}
         >
           {/* Multi-layer gradient overlays for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/95 to-slate-950/85" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-transparent to-slate-950" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/60 to-slate-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/30 via-transparent to-slate-950/70" />
         </div>
 
         {/* Content Container */}

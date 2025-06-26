@@ -17,10 +17,81 @@ import { getImageUrl, fetchSeasonDetails } from "@/services/tmdb";
 import { useState, useCallback, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
 
 interface TVShowSeasonsProps {
   tvShow: TMDBTVDetails;
 }
+
+// Image fallback component for episode thumbnails
+const EpisodeImageWithFallback = memo(({
+  src,
+  alt,
+  hasImage,
+}: {
+  src: string;
+  alt: string;
+  hasImage: boolean;
+}) => {
+  const [error, setError] = useState(false);
+
+  if (error || !hasImage) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+        <Film className="w-8 h-8 text-slate-400" />
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(max-width: 768px) 90vw, (max-width: 1200px) 45vw, 25vw"
+      className="object-cover"
+      loading="lazy"
+      onError={() => setError(true)}
+    />
+  );
+});
+
+EpisodeImageWithFallback.displayName = 'EpisodeImageWithFallback';
+
+// Image fallback component for season posters
+const SeasonImageWithFallback = memo(({
+  src,
+  alt,
+  hasImage,
+}: {
+  src: string;
+  alt: string;
+  hasImage: boolean;
+}) => {
+  const [error, setError] = useState(false);
+
+  if (error || !hasImage) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+        <Film className="w-12 h-12 text-slate-400" />
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(max-width: 768px) 30vw, 20vw"
+      className="object-cover"
+      loading="lazy"
+      onError={() => setError(true)}
+    />
+  );
+});
+
+SeasonImageWithFallback.displayName = 'SeasonImageWithFallback';
 
 // Memoized Episode Card component for better performance
 const EpisodeCard = memo(({ 
@@ -43,12 +114,12 @@ const EpisodeCard = memo(({
   >
     {/* Episode Thumbnail */}
     <div className="relative w-full aspect-video rounded-t-xl overflow-hidden">
-      <img
+      <EpisodeImageWithFallback
         src={getImageUrl(episode.still_path || null, "w500")}
         alt={episode.name}
-        className="w-full h-full object-cover"
-        loading="lazy"
+        hasImage={!!episode.still_path}
       />
+      
       {/* Play Button Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-center justify-center opacity-0 group-hover/episode:opacity-100 transition-opacity duration-200">
         <div className="w-12 h-12 bg-gradient-to-r from-[#4fd1c5] to-[#36c7b8] rounded-full flex items-center justify-center shadow-lg">
@@ -135,12 +206,13 @@ const SeasonCard = memo(({
       >
         {/* Season Poster */}
         <div className="relative w-24 sm:w-32 h-36 sm:h-48 flex-shrink-0 mx-auto sm:mx-0">
-          <img
-            src={getImageUrl(season.poster_path || null, "w500")}
-            alt={season.name}
-            className="w-full h-full object-cover rounded-xl shadow-lg"
-            loading="lazy"
-          />
+          <div className="relative w-full h-full rounded-xl shadow-lg overflow-hidden">
+            <SeasonImageWithFallback
+              src={getImageUrl(season.poster_path || null, "w500")}
+              alt={season.name}
+              hasImage={!!season.poster_path}
+            />
+          </div>
           {/* Season Number Badge */}
           <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#4fd1c5] to-[#36c7b8] text-[#0d1b2a] text-xs font-bold px-2 py-1 rounded-full shadow-lg">
             S{season.season_number}
