@@ -10,8 +10,6 @@ import {
   Flame,
   Trophy,
   Clock3,
-  ArrowUp,
-  ChevronDown,
 } from "lucide-react";
 import {
   Header,
@@ -91,8 +89,6 @@ const ParallaxBackground = () => {
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {/* Main background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0D1B2A] via-[#0F2027] to-[#203A43] opacity-90" />
 
       {/* Animated floating orbs */}
       <div
@@ -177,7 +173,7 @@ const SectionTitle = ({
   gradient?: boolean;
 }) => (
   <div className="mb-12 group">
-    <div className="flex items-center gap-4 mb-4">
+    <div className="flex items-center gap-6 md:gap-8 mb-4">
       <div className="relative flex-shrink-0">
         <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4FD1C5] to-[#63B3ED] shadow-lg shadow-[#4FD1C5]/20 group-hover:shadow-[#4FD1C5]/40 transition-all duration-500 group-hover:scale-110">
           <Icon className="w-7 h-7 text-white drop-shadow-sm" />
@@ -188,11 +184,11 @@ const SectionTitle = ({
       </div>
       <div className="flex-1 min-w-0">
         <h2
-          className={`text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight ${
+          className={`text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight ${
             gradient
               ? "bg-gradient-to-r from-[#4FD1C5] via-[#63B3ED] to-[#4FD1C5] bg-clip-text text-transparent"
-              : "text-white drop-shadow-sm"
-          } group-hover:text-[#4FD1C5] transition-all duration-500`}
+              : "text-white drop-shadow-sm group-hover:text-[#4FD1C5]"
+          } transition-all duration-500`}
         >
           {children}
         </h2>
@@ -227,7 +223,7 @@ const ToggleButton = ({
 }) => (
   <button
     onClick={onClick}
-    className={`group relative flex items-center gap-4 px-8 py-5 rounded-2xl transition-all duration-500 cursor-pointer transform hover:scale-[1.03] min-w-[160px] overflow-hidden ${
+    className={`group relative flex items-center gap-3 sm:gap-4 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 rounded-2xl transition-all duration-500 cursor-pointer transform hover:scale-[1.03] min-w-[140px] sm:min-w-[160px] flex-1 sm:flex-initial overflow-hidden ${
       active
         ? "bg-gradient-to-br from-[#4FD1C5] to-[#38B2AC] text-white shadow-2xl shadow-[#4FD1C5]/30"
         : "bg-[#1B263B]/90 text-gray-300 hover:bg-[#2D3748]/90 hover:text-white border border-[#2D3748]/50 hover:border-[#4FD1C5]/40 backdrop-blur-md"
@@ -250,9 +246,9 @@ const ToggleButton = ({
     </div>
 
     {/* Text content */}
-    <div className="text-left flex-1 relative z-10">
+    <div className="text-left flex-1 relative z-10 min-w-0">
       <div
-        className={`font-bold text-lg leading-tight ${
+        className={`font-bold text-base sm:text-lg leading-tight truncate ${
           active
             ? "text-white drop-shadow-sm"
             : "text-gray-200 group-hover:text-white"
@@ -262,7 +258,7 @@ const ToggleButton = ({
       </div>
       {count && (
         <div
-          className={`text-sm leading-tight mt-1 ${
+          className={`text-xs sm:text-sm leading-tight mt-1 truncate ${
             active ? "text-white/90" : "text-gray-400 group-hover:text-gray-300"
           }`}
         >
@@ -362,7 +358,6 @@ export default function HomePage() {
               <SectionTitle
                 icon={Star}
                 subtitle="Personalized recommendations based on your watchlist and ratings"
-                gradient
               >
                 Recommended for You
               </SectionTitle>
@@ -375,9 +370,9 @@ export default function HomePage() {
 
             <SectionDivider />
 
-            {/* Section Toggle */}
-            <div className="flex flex-col lg:flex-row gap-8 mb-20 justify-center items-center">
-              <div className="flex gap-6">
+            {/* Enhanced Section Toggle - Mobile Responsive */}
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 mb-20 justify-center items-center px-2">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full max-w-md lg:max-w-none">
                 <ToggleButton
                   active={activeSection === "movies"}
                   onClick={() => setActiveSection("movies")}
@@ -402,7 +397,6 @@ export default function HomePage() {
                   <SectionTitle
                     icon={Flame}
                     subtitle="Discover what everyone's watching right now"
-                    gradient
                   >
                     Trending Movies
                   </SectionTitle>
@@ -472,7 +466,6 @@ export default function HomePage() {
                   <SectionTitle
                     icon={Sparkles}
                     subtitle="Discover what everyone's watching right now"
-                    gradient
                   >
                     Trending TV Shows
                   </SectionTitle>

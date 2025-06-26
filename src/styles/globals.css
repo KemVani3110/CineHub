@@ -193,8 +193,10 @@
   h6 {
     font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
       Roboto, sans-serif;
-    font-weight: 600;
+    font-weight: 700;
     @apply text-white;
+    /* text shadow for better readability */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
   .subheading {
@@ -208,8 +210,9 @@
   .section-title {
     font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
       Roboto, sans-serif;
-    font-weight: 600;
+    font-weight: 700;
     @apply text-2xl md:text-3xl text-white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
   /* Button styles theo BRD */
