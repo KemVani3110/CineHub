@@ -1,5 +1,5 @@
-import Loading from '@/components/common/Loading';
+import DetailSkeleton from "@/components/common/DetailSkeleton";
 
 export default function TVLoading() {
-  return <Loading message="Loading TV shows..." />;
-} 
+  return <DetailSkeleton type="tv" />;
+}

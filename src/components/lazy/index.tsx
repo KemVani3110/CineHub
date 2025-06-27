@@ -2,6 +2,7 @@
 
 import React, { lazy, Suspense } from "react";
 import Loading from "@/components/common/Loading";
+import TabContentSkeleton from "@/components/common/TabContentSkeleton";
 
 // Error boundary for lazy loaded components
 class LazyLoadErrorBoundary extends React.Component<
@@ -65,6 +66,19 @@ class LazyLoadErrorBoundary extends React.Component<
     return this.props.children;
   }
 }
+
+// Wrapper for tab components with lightweight skeleton
+const withTabLoading = (Component: React.ComponentType<any>) => {
+  return function TabLoadedComponent(props: any) {
+    return (
+      <LazyLoadErrorBoundary>
+        <Suspense fallback={<TabContentSkeleton />}>
+          <Component {...props} />
+        </Suspense>
+      </LazyLoadErrorBoundary>
+    );
+  };
+};
 
 // Common components
 export const Header = lazy(() => import("@/components/common/Header"));
@@ -158,35 +172,42 @@ export const TopRatedTVShows = lazy(
 export const OnTheAirTVShows = lazy(
   () => import("@/components/sections/OnTheAirTVShows")
 );
-
-// TV Show components
-export const TVShowOverview = lazy(
-  () => import("@/components/tv/TVShowOverview")
-);
-export const TVShowCast = lazy(() => import("@/components/tv/TVShowCast"));
-export const TVShowSeasons = lazy(
-  () => import("@/components/tv/TVShowSeasons")
-);
-export const TVShowMedia = lazy(() => import("@/components/tv/TVShowMedia"));
-export const SimilarTVShows = lazy(
-  () => import("@/components/tv/SimilarTVShows")
-);
-export const TVShowReviews = lazy(
-  () => import("@/components/tv/TVShowReviews")
+export const HotTVShows = lazy(
+  () => import("@/components/sections/HotTVShows")
 );
 
-// Movie components
-export const MovieOverview = lazy(
+// TV Show components with custom loading
+const BaseTVShowOverview = lazy(() => import("@/components/tv/TVShowOverview"));
+const BaseTVShowCast = lazy(() => import("@/components/tv/TVShowCast"));
+const BaseTVShowSeasons = lazy(() => import("@/components/tv/TVShowSeasons"));
+const BaseTVShowMedia = lazy(() => import("@/components/tv/TVShowMedia"));
+const BaseSimilarTVShows = lazy(() => import("@/components/tv/SimilarTVShows"));
+const BaseTVShowReviews = lazy(() => import("@/components/tv/TVShowReviews"));
+
+// Movie components with custom loading
+const BaseMovieOverview = lazy(
   () => import("@/components/movie/MovieOverview")
 );
-export const MovieCast = lazy(() => import("@/components/movie/MovieCast"));
-export const MovieMedia = lazy(() => import("@/components/movie/MovieMedia"));
-export const SimilarMovies = lazy(
+const BaseMovieCast = lazy(() => import("@/components/movie/MovieCast"));
+const BaseMovieMedia = lazy(() => import("@/components/movie/MovieMedia"));
+const BaseSimilarMovies = lazy(
   () => import("@/components/movie/SimilarMovies")
 );
-export const MovieReviews = lazy(
-  () => import("@/components/movie/MovieReviews")
-);
+const BaseMovieReviews = lazy(() => import("@/components/movie/MovieReviews"));
+
+// Export wrapped components for tabs
+export const TVShowOverview = withTabLoading(BaseTVShowOverview);
+export const TVShowCast = withTabLoading(BaseTVShowCast);
+export const TVShowSeasons = withTabLoading(BaseTVShowSeasons);
+export const TVShowMedia = withTabLoading(BaseTVShowMedia);
+export const SimilarTVShows = withTabLoading(BaseSimilarTVShows);
+export const TVShowReviews = withTabLoading(BaseTVShowReviews);
+
+export const MovieOverview = withTabLoading(BaseMovieOverview);
+export const MovieCast = withTabLoading(BaseMovieCast);
+export const MovieMedia = withTabLoading(BaseMovieMedia);
+export const SimilarMovies = withTabLoading(BaseSimilarMovies);
+export const MovieReviews = withTabLoading(BaseMovieReviews);
 
 // Actor components
 export const ActorDetail = lazy(() => import("@/components/actor/ActorDetail"));
@@ -327,4 +348,5 @@ export {
   TVShowCardSkeleton,
   ActorCardSkeleton,
   SectionSkeleton,
+  TabContentSkeleton,
 };

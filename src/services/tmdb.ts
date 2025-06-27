@@ -293,4 +293,54 @@ export async function getActorDetails(id: string) {
     console.error("Error fetching actor details:", error);
     return null;
   }
-} 
+}
+
+export const fetchTrendingMovies = async (page: number = 1): Promise<TMDBResponse<TMDBMovie>> => {
+  try {
+    const response = await tmdbApi.get(`/trending/movie/day`, {
+      params: { page },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching trending movies:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: {
+        url: error.config?.url,
+        params: error.config?.params,
+      }
+    });
+    return {
+      page: 1,
+      results: [],
+      total_pages: 0,
+      total_results: 0,
+    };
+  }
+};
+
+export const fetchTrendingTVShows = async (page: number = 1): Promise<TMDBResponse<TMDBTVShow>> => {
+  try {
+    const response = await tmdbApi.get(`/trending/tv/day`, {
+      params: { page },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching trending TV shows:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: {
+        url: error.config?.url,
+        params: error.config?.params,
+      }
+    });
+    return {
+      page: 1,
+      results: [],
+      total_pages: 0,
+      total_results: 0,
+    };
+  }
+}; 

@@ -1,5 +1,5 @@
-import Loading from '@/components/common/Loading';
+import DetailSkeleton from "@/components/common/DetailSkeleton";
 
 export default function MovieLoading() {
-  return <Loading message="Loading movies..." />;
-} 
+  return <DetailSkeleton type="movie" />;
+}

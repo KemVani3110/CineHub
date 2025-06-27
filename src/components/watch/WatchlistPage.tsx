@@ -26,13 +26,13 @@ export function WatchlistPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'carousel'>('grid');
   const [movieEmblaRef] = useEmblaCarousel({
     align: 'start',
-    loop: true,
+    loop: false,
     skipSnaps: false,
     dragFree: true,
   });
   const [tvEmblaRef] = useEmblaCarousel({
     align: 'start',
-    loop: true,
+    loop: false,
     skipSnaps: false,
     dragFree: true,
   });

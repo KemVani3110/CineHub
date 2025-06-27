@@ -22,6 +22,7 @@ import {
   PopularTVShows,
   TopRatedTVShows,
   OnTheAirTVShows,
+  HotTVShows,
   withLazyLoading,
   MovieCard,
 } from "@/components/lazy";
@@ -66,6 +67,10 @@ const LazyTopRatedTVShows = withLazyLoading(
 const LazyOnTheAirTVShows = withLazyLoading(
   OnTheAirTVShows,
   "Loading on the air TV shows..."
+);
+const LazyHotTVShows = withLazyLoading(
+  HotTVShows,
+  "Loading hot TV shows..."
 );
 
 const queryClient = new QueryClient({
@@ -493,6 +498,22 @@ export default function HomePage() {
                     }
                   >
                     <LazyTopRatedTVShows />
+                  </React.Suspense>
+                </section>
+
+                <SectionDivider />
+
+                <section className="relative">
+                  <SectionTitle
+                    icon={Flame}
+                    subtitle="What's trending right now"
+                  >
+                    Hot TV Shows
+                  </SectionTitle>
+                  <React.Suspense
+                    fallback={<Loading message="Loading hot TV shows..." />}
+                  >
+                    <LazyHotTVShows />
                   </React.Suspense>
                 </section>
 

@@ -15,6 +15,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   fetchMovies,
   fetchTVShows,
+  fetchTrendingMovies,
+  fetchTrendingTVShows,
   getImageUrl,
   fetchGenres,
   fetchMovieDetails,
@@ -28,11 +30,27 @@ import {
   TMDBTVDetails,
 } from "@/types/tmdb";
 import { motion } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
 import useEmblaCarousel from "embla-carousel-react";
 import { Button } from "@/components/ui/button";
 
 const MAX_ITEMS = 10;
+
+// Available movie categories for random selection
+const MOVIE_CATEGORIES = [
+  { key: "popular", label: "Popular", fetchFn: fetchMovies },
+  { key: "top_rated", label: "Top Rated", fetchFn: fetchMovies },
+  { key: "now_playing", label: "Now Playing", fetchFn: fetchMovies },
+  { key: "upcoming", label: "Upcoming", fetchFn: fetchMovies },
+  { key: "trending", label: "Trending", fetchFn: fetchTrendingMovies },
+] as const;
+
+// Available TV show categories for random selection
+const TV_CATEGORIES = [
+  { key: "popular", label: "Popular", fetchFn: fetchTVShows },
+  { key: "top_rated", label: "Top Rated", fetchFn: fetchTVShows },
+  { key: "on_the_air", label: "On The Air", fetchFn: fetchTVShows },
+  { key: "trending", label: "Trending", fetchFn: fetchTrendingTVShows },
+] as const;
 
 const HeroSection = () => {
   const router = useRouter();
@@ -40,14 +58,50 @@ const HeroSection = () => {
   const [activeTab, setActiveTab] = useState<"movies" | "tv">("movies");
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
+  // Random select a movie category on component mount
+  const [selectedMovieCategory, setSelectedMovieCategory] = useState(() => {
+    const randomIndex = Math.floor(Math.random() * MOVIE_CATEGORIES.length);
+    return MOVIE_CATEGORIES[randomIndex];
+  });
+
+  // Random select a TV category on component mount
+  const [selectedTVCategory, setSelectedTVCategory] = useState(() => {
+    const randomIndex = Math.floor(Math.random() * TV_CATEGORIES.length);
+    return TV_CATEGORIES[randomIndex];
+  });
+
+  // Function to randomly select a new movie category
+  const randomizeMovieCategory = () => {
+    const randomIndex = Math.floor(Math.random() * MOVIE_CATEGORIES.length);
+    setSelectedMovieCategory(MOVIE_CATEGORIES[randomIndex]);
+  };
+
+  // Function to randomly select a new TV category
+  const randomizeTVCategory = () => {
+    const randomIndex = Math.floor(Math.random() * TV_CATEGORIES.length);
+    setSelectedTVCategory(TV_CATEGORIES[randomIndex]);
+  };
+
   const { data: moviesData } = useQuery({
-    queryKey: ["movies", "now_playing"],
-    queryFn: () => fetchMovies("now_playing", 1),
+    queryKey: ["movies", selectedMovieCategory.key],
+    queryFn: () => {
+      if (selectedMovieCategory.key === "trending") {
+        return fetchTrendingMovies(1);
+      } else {
+        return fetchMovies(selectedMovieCategory.key as any, 1);
+      }
+    },
   });
 
   const { data: tvData } = useQuery({
-    queryKey: ["tv", "top_rated"],
-    queryFn: () => fetchTVShows("top_rated", 1),
+    queryKey: ["tv", selectedTVCategory.key],
+    queryFn: () => {
+      if (selectedTVCategory.key === "trending") {
+        return fetchTrendingTVShows(1);
+      } else {
+        return fetchTVShows(selectedTVCategory.key as any, 1);
+      }
+    },
   });
 
   const { data: movieGenres } = useQuery({
@@ -348,10 +402,48 @@ const HeroSection = () => {
                                 (currentItemDetails as TMDBMovieDetails)
                                   ?.runtime || 0
                               } min`
-                            : `${
-                                (currentItemDetails as TMDBTVDetails)
-                                  ?.episode_run_time?.[0] || 0
-                              } min/ep`}
+                            : (() => {
+                                const tvDetails =
+                                  currentItemDetails as TMDBTVDetails;
+                                const episodeRuntime =
+                                  tvDetails?.episode_run_time;
+
+                                if (!tvDetails) {
+                                  return "...";
+                                }
+
+                                if (
+                                  episodeRuntime &&
+                                  episodeRuntime.length > 0 &&
+                                  episodeRuntime[0] > 0
+                                ) {
+                                  return `${episodeRuntime[0]} min/ep`;
+                                }
+
+                                if (
+                                  tvDetails.last_episode_to_air?.runtime &&
+                                  tvDetails.last_episode_to_air.runtime > 0
+                                ) {
+                                  return `${tvDetails.last_episode_to_air.runtime} min/ep`;
+                                }
+
+                                const genres = tvDetails.genres || [];
+                                const isAnimation = genres.some((g) =>
+                                  g.name.toLowerCase().includes("animation")
+                                );
+                                const isComedy = genres.some((g) =>
+                                  g.name.toLowerCase().includes("comedy")
+                                );
+                                const isDrama = genres.some((g) =>
+                                  g.name.toLowerCase().includes("drama")
+                                );
+
+                                if (isAnimation) return "~25 min/ep";
+                                if (isComedy) return "~30 min/ep";
+                                if (isDrama) return "~45 min/ep";
+
+                                return "~40 min/ep";
+                              })()}
                         </span>
                       </motion.div>
 
@@ -419,6 +511,41 @@ const HeroSection = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-cinehub-accent/0 to-cinehub-accent/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
           <ChevronRight className="relative w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 group-hover:translate-x-0.5 group-hover:drop-shadow-lg" />
+
+          {/* Ripple effect */}
+          <div className="absolute inset-0 bg-cinehub-accent/20 rounded-full scale-0 group-hover:scale-100 transition-transform duration-500 opacity-50" />
+        </motion.button>
+
+        {/* Random Category Button - Show for both tabs */}
+        <motion.button
+          onClick={() => {
+            if (activeTab === "movies") {
+              randomizeMovieCategory();
+            } else {
+              randomizeTVCategory();
+            }
+          }}
+          className="relative bg-gradient-to-br from-bg-card/40 via-bg-card/30 to-bg-card/40 backdrop-blur-md border border-border/50 hover:border-cinehub-accent/60 text-white hover:text-cinehub-accent p-2 sm:p-2.5 rounded-full transition-all duration-300 hover:shadow-xl cursor-pointer group overflow-hidden"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          title={`Random ${
+            activeTab === "movies" ? "Movie" : "TV Show"
+          } Category`}
+        >
+          {/* Inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-cinehub-accent/0 to-cinehub-accent/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+          <svg
+            className="relative w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 group-hover:rotate-180 group-hover:drop-shadow-lg"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+              clipRule="evenodd"
+            />
+          </svg>
 
           {/* Ripple effect */}
           <div className="absolute inset-0 bg-cinehub-accent/20 rounded-full scale-0 group-hover:scale-100 transition-transform duration-500 opacity-50" />

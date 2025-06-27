@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Star, StarHalf, Trash2, Edit3, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import useRatingStore from "@/store/ratingStore";
@@ -44,6 +44,7 @@ export default function TVShowRating({
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewContent, setReviewContent] = useState("");
   const [isReviewing, setIsReviewing] = useState(false);
+  const [showReviewSection, setShowReviewSection] = useState(false);
 
   // Use the rating and review from the store (which is updated by the hook)
   const currentRating = userRating;
@@ -58,6 +59,7 @@ export default function TVShowRating({
   useEffect(() => {
     if (currentReview) {
       setReviewContent(currentReview.content);
+      setShowReviewSection(true);
     } else {
       setReviewContent("");
     }
@@ -170,6 +172,7 @@ export default function TVShowRating({
       setLoadingAndError(true, null);
       await deleteRating();
       setReviewContent("");
+      setShowReviewSection(false);
       toast({
         title: "Rating deleted",
         description: "Your rating and review have been removed",
@@ -179,6 +182,37 @@ export default function TVShowRating({
       toast({
         title: "Error",
         description: "Failed to delete rating. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAndError(false, null);
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    if (!currentRating) return;
+
+    try {
+      setLoadingAndError(true, null);
+      // Submit rating without review content to delete only the review
+      await submitRating(currentRating.rating, "");
+      setReviewContent("");
+      setUserReview(null);
+      setShowReviewSection(false);
+
+      toast({
+        title: "Review deleted",
+        description: "Your review has been removed while keeping your rating",
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to delete review. Please try again.";
+      setLoadingAndError(false, errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -202,18 +236,18 @@ export default function TVShowRating({
               type={isInteractive ? "button" : undefined}
               className={`${
                 isInteractive ? "hover:scale-110 active:scale-95" : ""
-              } text-2xl transition-all duration-200 transform`}
+              } text-xl transition-all duration-200 transform`}
               onMouseEnter={() => isInteractive && setHoverRating(star)}
               onMouseLeave={() => isInteractive && setHoverRating(0)}
               onClick={() => isInteractive && handleRatingClick(star)}
               disabled={!isInteractive || isSubmitting}
             >
               {filled ? (
-                <Star className="w-6 h-6 sm:w-7 sm:h-7 fill-primary text-primary hover:text-primary/80" />
+                <Star className="w-5 h-5 fill-[#4fd1c5] text-[#4fd1c5] hover:text-[#4fd1c5]/80" />
               ) : halfFilled ? (
-                <StarHalf className="w-6 h-6 sm:w-7 sm:h-7 fill-primary text-primary hover:text-primary/80" />
+                <StarHalf className="w-5 h-5 fill-[#4fd1c5] text-[#4fd1c5] hover:text-[#4fd1c5]/80" />
               ) : (
-                <Star className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground hover:text-primary" />
+                <Star className="w-5 h-5 text-slate-400 hover:text-[#4fd1c5]" />
               )}
             </button>
           );
@@ -224,169 +258,194 @@ export default function TVShowRating({
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Card className="gradient-card">
-          <CardContent className="p-6">
-            <div className="animate-pulse space-y-4">
-              <div className="h-6 bg-muted rounded w-32" />
-              <div className="h-8 bg-muted rounded w-48" />
-              <div className="h-24 bg-muted rounded" />
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-4 bg-slate-600 rounded w-20 animate-pulse"></div>
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-5 h-5 bg-slate-600 rounded-full animate-pulse"
+                ></div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-5 bg-slate-600 rounded-full w-12 animate-pulse"></div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Rating Card */}
-      <Card className="gradient-card border-border/50 shadow-xl backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-3">
-            <div className="w-2 h-2 bg-primary rounded-full shadow-sm"></div>
-            Your Rating
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              {renderStars(currentRating?.rating || 0, true)}
-              {currentRating && (
-                <Badge
-                  variant="outline"
-                  className="border-primary text-primary bg-primary/10 shadow-sm"
-                >
-                  {currentRating.rating.toFixed(1)}/5.0
-                </Badge>
-              )}
-            </div>
+    <div className="space-y-4">
+      {/* Compact Rating Section */}
+      <div className="space-y-3">
+        {/* Your Rating Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-[#4fd1c5] flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-[#4fd1c5] rounded-full"></div>
+              Your Rating
+            </span>
+            {renderStars(currentRating?.rating || 0, true)}
+            {currentRating && (
+              <Badge
+                variant="outline"
+                className="border-[#4fd1c5] text-[#4fd1c5] bg-[#4fd1c5]/10 text-xs"
+              >
+                {currentRating.rating.toFixed(1)}/5.0
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
             {currentRating && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 cursor-pointer"
+                className="text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 h-8 px-3 text-xs cursor-pointer"
                 onClick={handleDeleteRating}
                 disabled={isSubmitting}
               >
-                <Trash2 className="w-4 h-4 mr-2" />
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                 Remove
               </Button>
             )}
+            {session?.user && currentRating && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-[#4fd1c5] hover:text-[#4fd1c5]/80 hover:bg-[#4fd1c5]/10 transition-all duration-200 h-8 px-3 text-xs cursor-pointer"
+                onClick={() => setShowReviewSection(!showReviewSection)}
+              >
+                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                {currentReview ? "View Review" : "Add Review"}
+              </Button>
+            )}
           </div>
-          {!session?.user && (
-            <p className="text-sm text-muted-foreground mt-3 italic">
-              Sign in to rate this {mediaType}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* User Review Card */}
-      {session?.user &&
-        (currentRating ||
-          (currentReview && currentReview.userId === session.user.id)) && (
-          <Card className="gradient-card border-border/50 shadow-xl backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-3">
-                  <MessageSquare className="w-5 h-5 text-primary" />
-                  Your Review
-                </CardTitle>
-                {!isReviewing && (
+        {!session?.user && (
+          <p className="text-xs text-slate-400 italic">
+            Sign in to rate this {mediaType}
+          </p>
+        )}
+      </div>
+
+      {/* Expandable Review Section */}
+      {session?.user && showReviewSection && currentRating && (
+        <Card className="border-slate-700/50 bg-slate-800/30">
+          <CardContent className="p-4">
+            {isReviewing ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="w-4 h-4 text-[#4fd1c5]" />
+                  <span className="text-sm font-medium text-[#4fd1c5]">
+                    Your Review
+                  </span>
+                </div>
+                <Textarea
+                  value={reviewContent}
+                  onChange={(e) => setReviewContent(e.target.value)}
+                  placeholder={`Share your thoughts about this ${mediaType}...`}
+                  className="min-h-[80px] bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-[#4fd1c5] focus:ring-[#4fd1c5]/20 resize-none text-sm"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-[#4fd1c5] hover:bg-[#4fd1c5]/90 text-slate-900 h-8 px-3 text-xs cursor-pointer"
+                    onClick={handleReviewSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit"}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-primary border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 cursor-pointer"
-                    onClick={() => setIsReviewing(true)}
+                    className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-[#4fd1c5] hover:text-[#4fd1c5] h-8 px-3 text-xs cursor-pointer"
+                    onClick={() => {
+                      setIsReviewing(false);
+                      setReviewContent(currentReview?.content || "");
+                    }}
+                    disabled={isSubmitting}
                   >
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    {currentReview ? "Edit Review" : "Write Review"}
+                    Cancel
                   </Button>
-                )}
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {isReviewing ? (
-                <div className="space-y-4">
-                  <Textarea
-                    value={reviewContent}
-                    onChange={(e) => setReviewContent(e.target.value)}
-                    placeholder={`Share your thoughts about this ${mediaType}...`}
-                    className="min-h-[120px] bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 resize-none"
-                  />
-                  <div className="flex flex-col sm:flex-row gap-3">
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-[#4fd1c5]" />
+                    <span className="text-sm font-medium text-[#4fd1c5]">
+                      Your Review
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
                     <Button
-                      variant="default"
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 flex-1 sm:flex-none cursor-pointer"
-                      onClick={handleReviewSubmit}
-                      disabled={isSubmitting}
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#4fd1c5] hover:text-[#4fd1c5]/80 hover:bg-[#4fd1c5]/10 h-8 px-3 text-xs cursor-pointer"
+                      onClick={() => setIsReviewing(true)}
                     >
-                      {isSubmitting ? "Submitting..." : "Submit Review"}
+                      <Edit3 className="w-3.5 h-3.5 mr-1.5" />
+                      {currentReview ? "Edit" : "Write"}
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="border-border text-foreground hover:bg-muted hover:border-primary hover:text-primary transition-all duration-200 flex-1 sm:flex-none cursor-pointer"
-                      onClick={() => {
-                        setIsReviewing(false);
-                        setReviewContent(currentReview?.content || "");
-                      }}
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
+                    {currentReview && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-400 hover:text-red-400 hover:bg-red-400/10 h-8 px-2 text-xs cursor-pointer"
+                        onClick={handleDeleteReview}
+                        disabled={isSubmitting}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <>
-                  {currentReview ? (
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-lg bg-muted border border-border relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50 group-hover:opacity-70 transition-opacity"></div>
-                        <p className="text-foreground whitespace-pre-wrap leading-relaxed relative z-10">
-                          {currentReview.content}
-                        </p>
-                      </div>
-                      <div className="flex items-center text-xs text-muted-foreground">
-                        <span>
-                          Last updated:{" "}
-                          {new Date(
-                            currentReview.updatedAt
-                          ).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                      <p className="text-muted-foreground mb-4">
-                        No review yet
-                      </p>
-                      <Button
-                        variant="outline"
-                        className="text-primary border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 cursor-pointer"
-                        onClick={() => setIsReviewing(true)}
-                      >
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Write your first review
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
-      {error && (
-        <Card className="bg-destructive/10 border-destructive/30 shadow-lg">
-          <CardContent className="p-4">
-            <p className="text-destructive text-sm flex items-center gap-2">
-              <div className="w-2 h-2 bg-destructive rounded-full shadow-sm"></div>
-              {error}
-            </p>
+                {currentReview ? (
+                  <div className="space-y-2">
+                    <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
+                      <p className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
+                        {currentReview.content}
+                      </p>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Updated:{" "}
+                      {new Date(currentReview.updatedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-slate-400 text-sm mb-2">No review yet</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-[#4fd1c5] border-[#4fd1c5] hover:bg-[#4fd1c5] hover:text-slate-900 h-8 px-3 text-xs cursor-pointer"
+                      onClick={() => setIsReviewing(true)}
+                    >
+                      <Edit3 className="w-3.5 h-3.5 mr-1.5" />
+                      Write your first review
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {error && (
+        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <p className="text-red-400 text-sm flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+            {error}
+          </p>
+        </div>
       )}
     </div>
   );
