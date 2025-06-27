@@ -88,12 +88,37 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   changePassword: async () => {
     const { formData } = get();
     try {
+      // Validate form data
+      if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+        throw new Error("All password fields are required");
+      }
+
+      if (formData.newPassword !== formData.confirmPassword) {
+        throw new Error("New password and confirm password do not match");
+      }
+
+      if (formData.newPassword.length < 8) {
+        throw new Error("New password must be at least 8 characters long");
+      }
+
+      if (!/[A-Z]/.test(formData.newPassword)) {
+        throw new Error("New password must contain at least one uppercase letter");
+      }
+
+      if (!/[0-9]/.test(formData.newPassword)) {
+        throw new Error("New password must contain at least one number");
+      }
+
       const response = await fetch("/api/profile/password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword
+        }),
       });
 
       if (!response.ok) {
@@ -101,14 +126,22 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         throw new Error(error.message || "Failed to change password");
       }
 
+      const result = await response.json();
+
+      // Clear password fields after successful change
       set({ 
         isEditing: false,
         formData: {
           name: get().user?.name || "",
           email: get().user?.email || "",
-          avatar: get().user?.avatar || ""
+          avatar: get().user?.avatar || "",
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: ""
         }
       });
+
+      return result;
     } catch (error) {
       throw error;
     }

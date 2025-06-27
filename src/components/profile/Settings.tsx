@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useProfileStore } from "@/store/profileStore";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Settings() {
   const {
@@ -30,6 +31,8 @@ export default function Settings() {
     changePassword,
   } = useProfileStore();
 
+  const { toast } = useToast();
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -59,6 +62,34 @@ export default function Settings() {
       name: user?.name,
       email: user?.email,
     });
+  };
+
+  const handleChangePassword = async () => {
+    try {
+      setIsChangingPassword(true);
+      await changePassword();
+      
+      toast({
+        title: "Success",
+        description: "Password updated successfully. Your current session will remain active until you log out.",
+        variant: "default",
+      });
+
+      // Clear password fields
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to change password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   return (
@@ -297,14 +328,94 @@ export default function Settings() {
           </div>
         </div>
 
+        {/* Password Strength Indicator */}
+        {formData.newPassword && (
+          <div className="space-y-3 animate-fade-in p-4 bg-[var(--bg-main)]/40 rounded-xl border border-[var(--border)]/30">
+            <div className="text-[var(--text-main)] font-semibold text-sm mb-3">Password Strength</div>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-3 text-sm">
+                <div
+                  className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                    formData.newPassword.length >= 8 ? "bg-[var(--success)]" : "bg-[var(--border)]"
+                  }`}
+                />
+                <span
+                  className={`transition-colors duration-200 ${
+                    formData.newPassword.length >= 8
+                      ? "text-[var(--success)]"
+                      : "text-[var(--text-sub)]"
+                  }`}
+                >
+                  At least 8 characters
+                </span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <div
+                  className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                    /[A-Z]/.test(formData.newPassword) ? "bg-[var(--success)]" : "bg-[var(--border)]"
+                  }`}
+                />
+                <span
+                  className={`transition-colors duration-200 ${
+                    /[A-Z]/.test(formData.newPassword)
+                      ? "text-[var(--success)]"
+                      : "text-[var(--text-sub)]"
+                  }`}
+                >
+                  One uppercase letter
+                </span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <div
+                  className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                    /[0-9]/.test(formData.newPassword) ? "bg-[var(--success)]" : "bg-[var(--border)]"
+                  }`}
+                />
+                <span
+                  className={`transition-colors duration-200 ${
+                    /[0-9]/.test(formData.newPassword)
+                      ? "text-[var(--success)]"
+                      : "text-[var(--text-sub)]"
+                  }`}
+                >
+                  One number
+                </span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <div
+                  className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                    formData.newPassword === formData.confirmPassword && formData.confirmPassword
+                      ? "bg-[var(--success)]" 
+                      : "bg-[var(--border)]"
+                  }`}
+                />
+                <span
+                  className={`transition-colors duration-200 ${
+                    formData.newPassword === formData.confirmPassword && formData.confirmPassword
+                      ? "text-[var(--success)]"
+                      : "text-[var(--text-sub)]"
+                  }`}
+                >
+                  Passwords match
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Update Password Button */}
         <div className="pt-4">
           <Button
-            onClick={changePassword}
+            onClick={handleChangePassword}
             disabled={
+              isChangingPassword ||
               !formData.currentPassword ||
               !formData.newPassword ||
-              !formData.confirmPassword
+              !formData.confirmPassword ||
+              formData.newPassword !== formData.confirmPassword ||
+              formData.newPassword.length < 8 ||
+              !/[A-Z]/.test(formData.newPassword) ||
+              !/[0-9]/.test(formData.newPassword)
             }
             className="w-full h-14 bg-gradient-to-r from-[var(--warning)] to-[var(--warning)]/90 
               hover:from-[var(--warning)]/90 hover:to-[var(--warning)]/80 
@@ -314,7 +425,7 @@ export default function Settings() {
               border-2 border-[var(--warning)]/30"
           >
             <Lock className="w-6 h-6 mr-3" />
-            Update Password
+            {isChangingPassword ? "Updating..." : "Update Password"}
           </Button>
         </div>
       </CardContent>
