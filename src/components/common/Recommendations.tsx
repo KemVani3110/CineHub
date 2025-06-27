@@ -3,10 +3,10 @@ import { MovieCard } from './MovieCard';
 import { TVShowCard } from './TVShowCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Sparkles } from 'lucide-react';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { RefreshCw, Sparkles, Play, Pause, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TMDBMovie, TMDBTVShow } from '@/types/tmdb';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
 
 interface Recommendation {
   movie?: TMDBMovie;
@@ -16,10 +16,20 @@ interface Recommendation {
 
 export function Recommendations() {
   const { recommendations, isLoading, error, refreshRecommendations } = useRecommendations();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const animationFrameRef = useRef<number>(0);
-  const isHovering = useRef(false);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'start',
+    containScroll: false,
+    slidesToScroll: 1,
+    skipSnaps: false,
+    dragFree: false,
+    inViewThreshold: 0.7
+  });
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const autoScrollInterval = useRef<NodeJS.Timeout | null>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -27,53 +37,85 @@ export function Recommendations() {
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
-  useEffect(() => {
-    if (!scrollRef.current || recommendations.length === 0) return;
+  const toggleAutoScroll = () => {
+    setIsAutoScrolling(!isAutoScrolling);
+  };
 
-    const scrollContainer = scrollRef.current;
-    const scrollWidth = scrollContainer.scrollWidth;
-    const clientWidth = scrollContainer.clientWidth;
-    let scrollPosition = 0;
-    const scrollSpeed = 1; // pixels per frame
-
-    const animate = () => {
-      if (!isHovering.current) {
-        scrollPosition += scrollSpeed;
-        
-        // If we've scrolled to the end, reset to the beginning
-        if (scrollPosition >= scrollWidth - clientWidth) {
-          scrollPosition = 0;
-        }
-        
-        scrollContainer.scrollLeft = scrollPosition;
+  const scrollPrev = useCallback(() => {
+    if (emblaApi && !isScrolling) {
+      setIsScrolling(true);
+      emblaApi.scrollPrev();
+      
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
       }
       
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
+      // Set timeout to enable next scroll
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 600); // 600ms debounce
+    }
+  }, [emblaApi, isScrolling]);
 
-    // Start animation
-    animationFrameRef.current = requestAnimationFrame(animate);
+  const scrollNext = useCallback(() => {
+    if (emblaApi && !isScrolling) {
+      setIsScrolling(true);
+      emblaApi.scrollNext();
+      
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      // Set timeout to enable next scroll
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 600); // 600ms debounce
+    }
+  }, [emblaApi, isScrolling]);
 
-    // Pause scrolling when hovering
-    const handleMouseEnter = () => {
-      isHovering.current = true;
-    };
+    // Auto-scroll functionality like HeroSection
+  useEffect(() => {
+    if (!emblaApi || !isAutoScrolling || recommendations.length === 0 || isScrolling) {
+      if (autoScrollInterval.current) {
+        clearInterval(autoScrollInterval.current);
+        autoScrollInterval.current = null;
+      }
+      return;
+    }
 
-    const handleMouseLeave = () => {
-      isHovering.current = false;
-    };
-
-    scrollContainer.addEventListener('mouseenter', handleMouseEnter);
-    scrollContainer.addEventListener('mouseleave', handleMouseLeave);
+    autoScrollInterval.current = setInterval(() => {
+      if (!isScrolling) {
+        scrollNext();
+      }
+    }, 2500); // Auto-scroll every 2.5 seconds for smoother effect
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (autoScrollInterval.current) {
+        clearInterval(autoScrollInterval.current);
+        autoScrollInterval.current = null;
       }
-      scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
-      scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [recommendations]);
+  }, [emblaApi, isAutoScrolling, recommendations.length, scrollNext, isScrolling]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Pause auto-scroll on hover
+  const handleMouseEnter = () => {
+    setIsAutoScrolling(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsAutoScrolling(true);
+  };
 
   if (error) {
     return (
@@ -129,6 +171,10 @@ export function Recommendations() {
     <Card className="bg-card-custom border-custom backdrop-blur-sm overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-cinehub-accent" />
+            <CardTitle className="text-slate-200">Recommended for You</CardTitle>
+          </div>
           <div>
             <p className="text-sm text-slate-400 mt-1">
               {recommendations.length} personalized picks
@@ -140,9 +186,42 @@ export function Recommendations() {
           <Button
             variant="ghost"
             size="icon"
+            onClick={scrollPrev}
+            disabled={isScrolling}
+            className="h-8 w-8 hover:bg-cinehub-accent/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            title="Previous"
+          >
+            <ChevronLeft className={`h-4 w-4 transition-opacity ${isScrolling ? 'opacity-50' : ''}`} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleAutoScroll}
+            className="h-8 w-8 hover:bg-cinehub-accent/10 cursor-pointer"
+            title={isAutoScrolling ? "Pause auto-scroll" : "Resume auto-scroll"}
+          >
+            {isAutoScrolling ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={scrollNext}
+            disabled={isScrolling}
+            className="h-8 w-8 hover:bg-cinehub-accent/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            title="Next"
+          >
+            <ChevronRight className={`h-4 w-4 transition-opacity ${isScrolling ? 'opacity-50' : ''}`} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="h-8 w-8 hover:bg-cinehub-accent/10 group"
+            className="h-8 w-8 hover:bg-cinehub-accent/10 group cursor-pointer"
           >
             <RefreshCw className={`h-4 w-4 transition-transform duration-500 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
           </Button>
@@ -150,21 +229,72 @@ export function Recommendations() {
       </CardHeader>
       
       <CardContent className="px-6 pb-6">
-        <ScrollArea className="w-full">
-          <div 
-            ref={scrollRef}
-            className="flex gap-4 pb-4 md:gap-6 overflow-x-auto scrollbar-hide"
-            style={{ scrollBehavior: 'smooth' }}
-          >
+        <div 
+          className="embla overflow-hidden cursor-pointer"
+          ref={emblaRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="embla__container flex gap-4 md:gap-6">
             {recommendations.map(({ movie, tvShow, reason }, index) => (
               <div 
-                key={movie?.id || tvShow?.id} 
-                className="w-[150px] md:w-[180px] flex-shrink-0 animate-fadeInUp"
+                key={`${movie?.id || tvShow?.id}-${index}`} 
+                className="embla__slide w-[150px] md:w-[180px] flex-shrink-0 animate-fadeInUp"
                 style={{ 
                   animationDelay: `${index * 0.1}s`
                 }}
               >
-                <div className="space-y-2">
+                <div className="space-y-2 h-full">
+                  {movie ? (
+                    <MovieCard movie={movie} />
+                  ) : tvShow ? (
+                    <TVShowCard show={tvShow} />
+                  ) : null}
+                  
+                  <div className="space-y-1">
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-2 border border-slate-700/30">
+                      <div className="flex items-start gap-1.5">
+                        <div className="w-1 h-1 rounded-full bg-cinehub-accent mt-1.5 flex-shrink-0" />
+                        <p className="text-xs text-slate-300 leading-relaxed">{reason}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Duplicate items for seamless infinite loop */}
+            {recommendations.map(({ movie, tvShow, reason }, index) => (
+              <div 
+                key={`duplicate-1-${movie?.id || tvShow?.id}-${index}`} 
+                className="embla__slide w-[150px] md:w-[180px] flex-shrink-0"
+              >
+                <div className="space-y-2 h-full">
+                  {movie ? (
+                    <MovieCard movie={movie} />
+                  ) : tvShow ? (
+                    <TVShowCard show={tvShow} />
+                  ) : null}
+                  
+                  <div className="space-y-1">
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-2 border border-slate-700/30">
+                      <div className="flex items-start gap-1.5">
+                        <div className="w-1 h-1 rounded-full bg-cinehub-accent mt-1.5 flex-shrink-0" />
+                        <p className="text-xs text-slate-300 leading-relaxed">{reason}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Second set of duplicates for even smoother loop */}
+            {recommendations.map(({ movie, tvShow, reason }, index) => (
+              <div 
+                key={`duplicate-2-${movie?.id || tvShow?.id}-${index}`} 
+                className="embla__slide w-[150px] md:w-[180px] flex-shrink-0"
+              >
+                <div className="space-y-2 h-full">
                   {movie ? (
                     <MovieCard movie={movie} />
                   ) : tvShow ? (
@@ -183,8 +313,7 @@ export function Recommendations() {
               </div>
             ))}
           </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        </div>
       </CardContent>
       
       <style jsx>{`
@@ -198,18 +327,22 @@ export function Recommendations() {
             transform: translateY(0);
           }
         }
-        
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
 
         :global(.animate-fadeInUp) {
           animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .embla {
+          overflow: hidden;
+        }
+        
+        .embla__container {
+          display: flex;
+        }
+        
+        .embla__slide {
+          flex: 0 0 auto;
+          min-width: 0;
         }
       `}</style>
     </Card>
