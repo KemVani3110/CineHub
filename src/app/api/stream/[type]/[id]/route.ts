@@ -14,12 +14,36 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
+// Free streaming services configuration
+const STREAMING_SERVICES = {
+  autoembed: {
+    movie: (id: string) => `https://autoembed.co/movie/tmdb/${id}`,
+    tv: (id: string, season: string, episode: string) => 
+      `https://autoembed.co/tv/tmdb/${id}-${season}-${episode}`,
+  },
+  vidsrc: {
+    movie: (id: string) => `https://vidsrc.net/embed/movie/${id}`,
+    tv: (id: string, season: string, episode: string) => 
+      `https://vidsrc.net/embed/tv/${id}/${season}/${episode}`,
+  },
+  movies111: {
+    movie: (id: string) => `https://111movies.com/movie/${id}`,
+    tv: (id: string, season: string, episode: string) => 
+      `https://111movies.com/tv/${id}/${season}/${episode}`,
+  }
+};
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
     const { type, id } = await context.params;
+    const url = new URL(request.url);
+    const season = url.searchParams.get('season') || '1';
+    const episode = url.searchParams.get('episode') || '1';
+    const service = url.searchParams.get('service') || 'autoembed';
+
     if (!type || !id || typeof type !== 'string' || typeof id !== 'string') {
       return NextResponse.json(
         { message: "Type and ID are required" },
@@ -79,21 +103,92 @@ export async function GET(
       );
     }
 
-    // Return video sources (placeholder)
+    // Generate streaming URLs from multiple services
+    const streamingSources = [];
+    
+    // Add AutoEmbed source
+    if (type === 'movie') {
+      streamingSources.push({
+        name: 'AutoEmbed',
+        url: STREAMING_SERVICES.autoembed.movie(id),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    } else {
+      streamingSources.push({
+        name: 'AutoEmbed',
+        url: STREAMING_SERVICES.autoembed.tv(id, season, episode),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    }
+
+    // Add VidSrc source
+    if (type === 'movie') {
+      streamingSources.push({
+        name: 'VidSrc',
+        url: STREAMING_SERVICES.vidsrc.movie(id),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    } else {
+      streamingSources.push({
+        name: 'VidSrc',
+        url: STREAMING_SERVICES.vidsrc.tv(id, season, episode),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    }
+
+    // Add 111Movies source
+    if (type === 'movie') {
+      streamingSources.push({
+        name: '111Movies',
+        url: STREAMING_SERVICES.movies111.movie(id),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    } else {
+      streamingSources.push({
+        name: '111Movies',
+        url: STREAMING_SERVICES.movies111.tv(id, season, episode),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    }
+
+    // Return multiple streaming sources
     return NextResponse.json({
-      sources: [
-        {
-          url: `https://example.com/stream/${type}/${id}/source1`,
-          quality: "1080p",
-          type: "video/mp4",
-        },
-        {
-          url: `https://example.com/stream/${type}/${id}/source2`,
-          quality: "720p",
-          type: "video/mp4",
-        },
-      ],
-      mediaInfo: mediaData,
+      success: true,
+      sources: streamingSources,
+      mediaInfo: {
+        id: mediaData.id,
+        title: mediaData.title || mediaData.name,
+        overview: mediaData.overview,
+        poster_path: mediaData.poster_path,
+        backdrop_path: mediaData.backdrop_path,
+        release_date: mediaData.release_date || mediaData.first_air_date,
+        vote_average: mediaData.vote_average,
+        genres: mediaData.genres,
+        runtime: mediaData.runtime || mediaData.episode_run_time?.[0],
+        ...(type === 'tv' && {
+          season_number: parseInt(season),
+          episode_number: parseInt(episode),
+          number_of_seasons: mediaData.number_of_seasons,
+          number_of_episodes: mediaData.number_of_episodes
+        })
+      },
+      streamingInfo: {
+        type,
+        id,
+        ...(type === 'tv' && { season, episode })
+      }
     });
   } catch (error) {
     console.error("Stream API error:", error);

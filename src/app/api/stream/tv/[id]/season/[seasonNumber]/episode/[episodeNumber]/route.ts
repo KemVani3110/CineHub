@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import mysql from "mysql2/promise";
 
-// Create MySQL connection pool
+// Create MySQL connection pool for local development
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -14,19 +14,38 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
+// Free streaming services configuration
+const STREAMING_SERVICES = {
+  autoembed: {
+    tv: (id: string, season: string, episode: string) => 
+      `https://autoembed.co/tv/tmdb/${id}-${season}-${episode}`,
+  },
+  vidsrc: {
+    tv: (id: string, season: string, episode: string) => 
+      `https://vidsrc.net/embed/tv/${id}/${season}/${episode}`,
+  },
+  movies111: {
+    tv: (id: string, season: string, episode: string) => 
+      `https://111movies.com/tv/${id}/${season}/${episode}`,
+  }
+};
+
 export async function GET(
   request: Request,
-  context: { params: Promise<{ id: string; seasonNumber: string; episodeNumber: string }> }
+  context: { 
+    params: Promise<{ 
+      id: string; 
+      seasonNumber: string; 
+      episodeNumber: string; 
+    }> 
+  }
 ) {
   try {
     const { id, seasonNumber, episodeNumber } = await context.params;
-    
-    if (!id || !seasonNumber || !episodeNumber || 
-        typeof id !== 'string' || 
-        typeof seasonNumber !== 'string' || 
-        typeof episodeNumber !== 'string') {
+
+    if (!id || !seasonNumber || !episodeNumber) {
       return NextResponse.json(
-        { message: "TV show ID, season number, and episode number are required" },
+        { message: "ID, season number, and episode number are required" },
         { status: 400 }
       );
     }
@@ -45,80 +64,115 @@ export async function GET(
     }
 
     // Get TV show details from TMDB
-    const tmdbUrl = `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbApiKey}`;
-    const tmdbResponse = await fetch(tmdbUrl);
-    
-    if (!tmdbResponse.ok) {
-      throw new Error(`TMDB API error: ${tmdbResponse.statusText}`);
+    const tvShowUrl = `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbApiKey}`;
+    const episodeUrl = `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}?api_key=${tmdbApiKey}`;
+
+    const [tvShowResponse, episodeResponse] = await Promise.all([
+      fetch(tvShowUrl),
+      fetch(episodeUrl)
+    ]);
+
+    if (!tvShowResponse.ok || !episodeResponse.ok) {
+      throw new Error(`TMDB API error: ${tvShowResponse.statusText || episodeResponse.statusText}`);
     }
 
-    const showData = await tmdbResponse.json();
-
-    // Get season details from TMDB to get episode info
-    const seasonUrl = `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${tmdbApiKey}`;
-    const seasonResponse = await fetch(seasonUrl);
-    
-    if (!seasonResponse.ok) {
-      throw new Error(`TMDB Season API error: ${seasonResponse.statusText}`);
-    }
-
-    const seasonData = await seasonResponse.json();
-    
-    // Find the specific episode
-    const episode = seasonData.episodes.find((ep: any) => ep.episode_number === Number(episodeNumber));
-    
-    if (!episode) {
-      return NextResponse.json(
-        { error: "Episode not found" },
-        { status: 404 }
-      );
-    }
+    const [tvShowData, episodeData] = await Promise.all([
+      tvShowResponse.json(),
+      episodeResponse.json()
+    ]);
 
     // Add to watch history (only if user is logged in)
     if (session?.user?.id) {
       await pool.execute(
         `INSERT INTO watch_history 
-          (user_id, media_type, tv_id, title, poster_path, watched_at)
-         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          (user_id, media_type, tv_id, title, poster_path, watched_at, current_season, current_episode)
+         VALUES (?, 'tv', ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
          ON DUPLICATE KEY UPDATE 
            watched_at = CURRENT_TIMESTAMP,
            title = VALUES(title),
-           poster_path = VALUES(poster_path)`,
+           poster_path = VALUES(poster_path),
+           current_season = VALUES(current_season),
+           current_episode = VALUES(current_episode)`,
         [
           session.user.id,
-          'tv',
           id,
-          `${showData.name} - S${seasonNumber}E${episodeNumber}: ${episode.name}`,
-          episode.still_path || showData.poster_path
+          `${tvShowData.name} - S${seasonNumber}E${episodeNumber}`,
+          tvShowData.poster_path,
+          parseInt(seasonNumber),
+          parseInt(episodeNumber)
         ]
       );
     }
 
-    // Return video sources (placeholder - you would integrate with actual streaming service)
+    // Generate streaming URLs from multiple services
+    const streamingSources = [];
+    
+    // Add AutoEmbed source
+    streamingSources.push({
+      name: 'AutoEmbed',
+      url: STREAMING_SERVICES.autoembed.tv(id, seasonNumber, episodeNumber),
+      quality: 'HD',
+      type: 'iframe',
+      embed: true
+    });
+
+    // Add VidSrc source
+    streamingSources.push({
+      name: 'VidSrc',
+      url: STREAMING_SERVICES.vidsrc.tv(id, seasonNumber, episodeNumber),
+      quality: 'HD',
+      type: 'iframe',
+      embed: true
+    });
+
+    // Add 111Movies source
+    streamingSources.push({
+      name: '111Movies',
+      url: STREAMING_SERVICES.movies111.tv(id, seasonNumber, episodeNumber),
+      quality: 'HD',
+      type: 'iframe',
+      embed: true
+    });
+
+    // Return multiple streaming sources with comprehensive episode info
     return NextResponse.json({
-      sources: [
-        {
-          url: `https://example.com/stream/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}/source1`,
-          quality: "1080p",
-          type: "video/mp4",
-        },
-        {
-          url: `https://example.com/stream/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}/source2`,
-          quality: "720p",
-          type: "video/mp4",
-        },
-      ],
-      mediaInfo: {
-        show: showData,
-        season: seasonData,
-        episode: episode,
-        streamInfo: {
-          showId: id,
-          seasonNumber: Number(seasonNumber),
-          episodeNumber: Number(episodeNumber),
-          title: `${showData.name} - S${seasonNumber}E${episodeNumber}: ${episode.name}`
-        }
+      success: true,
+      sources: streamingSources,
+      tvShowInfo: {
+        id: tvShowData.id,
+        name: tvShowData.name,
+        overview: tvShowData.overview,
+        poster_path: tvShowData.poster_path,
+        backdrop_path: tvShowData.backdrop_path,
+        first_air_date: tvShowData.first_air_date,
+        vote_average: tvShowData.vote_average,
+        genres: tvShowData.genres,
+        number_of_seasons: tvShowData.number_of_seasons,
+        number_of_episodes: tvShowData.number_of_episodes,
+        episode_run_time: tvShowData.episode_run_time,
+        networks: tvShowData.networks,
+        created_by: tvShowData.created_by
       },
+      episodeInfo: {
+        id: episodeData.id,
+        name: episodeData.name,
+        overview: episodeData.overview,
+        air_date: episodeData.air_date,
+        episode_number: episodeData.episode_number,
+        season_number: episodeData.season_number,
+        still_path: episodeData.still_path,
+        vote_average: episodeData.vote_average,
+        runtime: episodeData.runtime,
+        crew: episodeData.crew,
+        guest_stars: episodeData.guest_stars
+      },
+      streamingInfo: {
+        type: 'tv',
+        id,
+        season: seasonNumber,
+        episode: episodeNumber,
+        title: `${tvShowData.name} - S${seasonNumber}E${episodeNumber}: ${episodeData.name}`
+      }
     });
   } catch (error) {
     console.error("TV Episode Stream API error:", error);

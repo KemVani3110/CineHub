@@ -38,11 +38,15 @@ interface EpisodeActionsProps {
     season_number: number;
     name?: string;
     episode_count?: number;
+    air_date?: string;
+    earliest_episode_air_date?: string;
   }>;
   onSeasonChange: (seasonNumber: string) => void;
   onEpisodeChange: (direction: "next" | "prev") => void;
   hasNextEpisode: boolean;
   hasPreviousEpisode: boolean;
+  nextEpisodeAirDate?: string;
+  previousEpisodeAirDate?: string;
 }
 
 export function EpisodeActions({
@@ -63,16 +67,61 @@ export function EpisodeActions({
   onEpisodeChange,
   hasNextEpisode,
   hasPreviousEpisode,
+  nextEpisodeAirDate,
+  previousEpisodeAirDate,
 }: EpisodeActionsProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isRated, setIsRated] = useState(false);
 
+  // Check if current episode is available (aired)
+  const isCurrentEpisodeAvailable = !airDate || new Date(airDate) <= new Date();
+  const isCurrentEpisodeComingSoon = airDate && new Date(airDate) > new Date();
+
+  // Check if next/previous episodes are available
+  const isNextEpisodeAvailable =
+    !nextEpisodeAirDate || new Date(nextEpisodeAirDate) <= new Date();
+  const isPreviousEpisodeAvailable =
+    !previousEpisodeAirDate || new Date(previousEpisodeAirDate) <= new Date();
+
+  // Helper function to check if a season has available episodes
+  const isSeasonAvailable = (season: any) => {
+    // If no air date info, assume available
+    if (!season.earliest_episode_air_date && !season.air_date) return true;
+
+    // Check the earliest episode air date or season air date
+    const checkDate = season.earliest_episode_air_date || season.air_date;
+    return new Date(checkDate) <= new Date();
+  };
+
+  // Helper function to check if a season is coming soon
+  const isSeasonComingSoon = (season: any) => {
+    if (!season.earliest_episode_air_date && !season.air_date) return false;
+
+    const checkDate = season.earliest_episode_air_date || season.air_date;
+    return new Date(checkDate) > new Date();
+  };
+
   const handleLike = () => {
-    setIsLiked(!isLiked);
+    if (isCurrentEpisodeAvailable) {
+      setIsLiked(!isLiked);
+    }
   };
 
   const handleRate = () => {
-    setIsRated(!isRated);
+    if (isCurrentEpisodeAvailable) {
+      setIsRated(!isRated);
+    }
+  };
+
+  const handleSeasonChange = (seasonNumberString: string) => {
+    const selectedSeason = seasons.find(
+      (s) => s.season_number.toString() === seasonNumberString
+    );
+
+    // Only allow season change if the season is available
+    if (selectedSeason && isSeasonAvailable(selectedSeason)) {
+      onSeasonChange(seasonNumberString);
+    }
   };
 
   return (
@@ -103,7 +152,7 @@ export function EpisodeActions({
         <div className="w-full sm:hidden">
           <Select
             value={seasonNumber.toString()}
-            onValueChange={onSeasonChange}
+            onValueChange={handleSeasonChange}
           >
             <SelectTrigger className="w-full h-12 px-4 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-purple-500/20 hover:to-purple-600/20 hover:text-purple-400 hover:border-purple-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-purple-500/20 data-[state=open]:scale-105 data-[state=open]:border-purple-400/50">
               <div className="flex items-center justify-center gap-2 w-full">
@@ -111,19 +160,54 @@ export function EpisodeActions({
                 <span className="text-sm font-semibold">
                   Season {seasonNumber}
                 </span>
+                {(() => {
+                  const currentSeason = seasons.find(
+                    (s) => s.season_number === seasonNumber
+                  );
+                  const currentSeasonComingSoon = currentSeason
+                    ? isSeasonComingSoon(currentSeason)
+                    : false;
+                  return (
+                    currentSeasonComingSoon && (
+                      <span className="text-[#f4b400] text-xs font-medium ml-1">
+                        (Coming Soon)
+                      </span>
+                    )
+                  );
+                })()}
               </div>
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-700 min-w-[200px]">
-              {seasons.map((s) => (
-                <SelectItem
-                  key={s.season_number}
-                  value={s.season_number.toString()}
-                  className="text-slate-300 hover:bg-cinehub-accent/20 cursor-pointer transition-colors duration-200 focus:bg-cinehub-accent/20 focus:text-cinehub-accent"
-                >
-                  Season {s.season_number}{" "}
-                  {s.episode_count && `(${s.episode_count} eps)`}
-                </SelectItem>
-              ))}
+              {seasons.map((s) => {
+                const seasonAvailable = isSeasonAvailable(s);
+                const seasonComingSoon = isSeasonComingSoon(s);
+
+                return (
+                  <SelectItem
+                    key={s.season_number}
+                    value={s.season_number.toString()}
+                    disabled={!seasonAvailable}
+                    className={cn(
+                      "transition-colors duration-200",
+                      seasonAvailable
+                        ? "text-slate-300 hover:bg-cinehub-accent/20 cursor-pointer focus:bg-cinehub-accent/20 focus:text-cinehub-accent"
+                        : "text-slate-500 opacity-60 cursor-not-allowed"
+                    )}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span>
+                        Season {s.season_number}{" "}
+                        {s.episode_count && `(${s.episode_count} eps)`}
+                      </span>
+                      {seasonComingSoon && (
+                        <span className="text-[#f4b400] text-xs font-medium ml-2">
+                          Coming Soon
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -133,10 +217,10 @@ export function EpisodeActions({
           <Button
             variant="ghost"
             onClick={() => onEpisodeChange("prev")}
-            disabled={!hasPreviousEpisode}
+            disabled={!hasPreviousEpisode || !isPreviousEpisodeAvailable}
             className={cn(
               "flex items-center justify-center gap-2 h-12 px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl",
-              !hasPreviousEpisode
+              !hasPreviousEpisode || !isPreviousEpisodeAvailable
                 ? "opacity-50 cursor-not-allowed hover:scale-100"
                 : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
             )}
@@ -148,10 +232,10 @@ export function EpisodeActions({
           <Button
             variant="ghost"
             onClick={() => onEpisodeChange("next")}
-            disabled={!hasNextEpisode}
+            disabled={!hasNextEpisode || !isNextEpisodeAvailable}
             className={cn(
               "flex items-center justify-center gap-2 h-12 px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl",
-              !hasNextEpisode
+              !hasNextEpisode || !isNextEpisodeAvailable
                 ? "opacity-50 cursor-not-allowed hover:scale-100"
                 : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
             )}
@@ -168,10 +252,10 @@ export function EpisodeActions({
             <Button
               variant="ghost"
               onClick={() => onEpisodeChange("prev")}
-              disabled={!hasPreviousEpisode}
+              disabled={!hasPreviousEpisode || !isPreviousEpisodeAvailable}
               className={cn(
                 "flex items-center gap-3 h-14 px-8 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl min-w-[140px]",
-                !hasPreviousEpisode
+                !hasPreviousEpisode || !isPreviousEpisodeAvailable
                   ? "opacity-50 cursor-not-allowed hover:scale-100"
                   : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
               )}
@@ -185,7 +269,7 @@ export function EpisodeActions({
           <div className="flex justify-center">
             <Select
               value={seasonNumber.toString()}
-              onValueChange={onSeasonChange}
+              onValueChange={handleSeasonChange}
             >
               <SelectTrigger className="w-full max-w-[280px] h-14 px-6 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-purple-500/20 hover:to-purple-600/20 hover:text-purple-400 hover:border-purple-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-purple-500/20 data-[state=open]:scale-105 data-[state=open]:border-purple-400/50">
                 <div className="flex items-center justify-center gap-3 w-full">
@@ -193,19 +277,54 @@ export function EpisodeActions({
                   <span className="text-base font-semibold">
                     Season {seasonNumber}
                   </span>
+                  {(() => {
+                    const currentSeason = seasons.find(
+                      (s) => s.season_number === seasonNumber
+                    );
+                    const currentSeasonComingSoon = currentSeason
+                      ? isSeasonComingSoon(currentSeason)
+                      : false;
+                    return (
+                      currentSeasonComingSoon && (
+                        <span className="text-[#f4b400] text-sm font-medium ml-1">
+                          (Coming Soon)
+                        </span>
+                      )
+                    );
+                  })()}
                 </div>
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700 min-w-[280px]">
-                {seasons.map((s) => (
-                  <SelectItem
-                    key={s.season_number}
-                    value={s.season_number.toString()}
-                    className="text-slate-300 hover:bg-cinehub-accent/20 cursor-pointer transition-colors duration-200 focus:bg-cinehub-accent/20 focus:text-cinehub-accent"
-                  >
-                    Season {s.season_number}{" "}
-                    {s.episode_count && `(${s.episode_count} eps)`}
-                  </SelectItem>
-                ))}
+                {seasons.map((s) => {
+                  const seasonAvailable = isSeasonAvailable(s);
+                  const seasonComingSoon = isSeasonComingSoon(s);
+
+                  return (
+                    <SelectItem
+                      key={s.season_number}
+                      value={s.season_number.toString()}
+                      disabled={!seasonAvailable}
+                      className={cn(
+                        "transition-colors duration-200",
+                        seasonAvailable
+                          ? "text-slate-300 hover:bg-cinehub-accent/20 cursor-pointer focus:bg-cinehub-accent/20 focus:text-cinehub-accent"
+                          : "text-slate-500 opacity-60 cursor-not-allowed"
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span>
+                          Season {s.season_number}{" "}
+                          {s.episode_count && `(${s.episode_count} eps)`}
+                        </span>
+                        {seasonComingSoon && (
+                          <span className="text-[#f4b400] text-xs font-medium ml-2">
+                            Coming Soon
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -215,10 +334,10 @@ export function EpisodeActions({
             <Button
               variant="ghost"
               onClick={() => onEpisodeChange("next")}
-              disabled={!hasNextEpisode}
+              disabled={!hasNextEpisode || !isNextEpisodeAvailable}
               className={cn(
                 "flex items-center gap-3 h-14 px-8 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl min-w-[140px]",
-                !hasNextEpisode
+                !hasNextEpisode || !isNextEpisodeAvailable
                   ? "opacity-50 cursor-not-allowed hover:scale-100"
                   : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
               )}
@@ -236,11 +355,17 @@ export function EpisodeActions({
           variant="ghost"
           size="sm"
           onClick={handleLike}
+          disabled={!isCurrentEpisodeAvailable}
           className={cn(
-            "flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl",
-            isLiked
+            "flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-lg",
+            !isCurrentEpisodeAvailable
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:from-slate-700/70 hover:to-slate-800/70 hover:scale-105 cursor-pointer hover:shadow-xl",
+            isLiked && isCurrentEpisodeAvailable
               ? "text-red-400 border-red-400/40 bg-gradient-to-br from-red-500/20 to-red-600/20 shadow-red-500/20"
-              : "text-slate-300 hover:text-red-400 hover:border-red-400/40"
+              : isCurrentEpisodeAvailable
+              ? "text-slate-300 hover:text-red-400 hover:border-red-400/40"
+              : "text-slate-500"
           )}
         >
           <Heart
@@ -250,7 +375,7 @@ export function EpisodeActions({
             )}
           />
           <span className="text-[10px] sm:text-xs font-semibold">
-            {isLiked ? "Liked" : "Like"}
+            {!isCurrentEpisodeAvailable ? "N/A" : isLiked ? "Liked" : "Like"}
           </span>
         </Button>
 
@@ -258,11 +383,17 @@ export function EpisodeActions({
           variant="ghost"
           size="sm"
           onClick={handleRate}
+          disabled={!isCurrentEpisodeAvailable}
           className={cn(
-            "flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl",
-            isRated
+            "flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-lg",
+            !isCurrentEpisodeAvailable
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:from-slate-700/70 hover:to-slate-800/70 hover:scale-105 cursor-pointer hover:shadow-xl",
+            isRated && isCurrentEpisodeAvailable
               ? "text-yellow-400 border-yellow-400/40 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 shadow-yellow-500/20"
-              : "text-slate-300 hover:text-yellow-400 hover:border-yellow-400/40"
+              : isCurrentEpisodeAvailable
+              ? "text-slate-300 hover:text-yellow-400 hover:border-yellow-400/40"
+              : "text-slate-500"
           )}
         >
           <Star
@@ -272,17 +403,25 @@ export function EpisodeActions({
             )}
           />
           <span className="text-[10px] sm:text-xs font-semibold">
-            {isRated ? "Rated" : "Rate"}
+            {!isCurrentEpisodeAvailable ? "N/A" : isRated ? "Rated" : "Rate"}
           </span>
         </Button>
 
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-blue-500/20 hover:to-blue-600/20 hover:text-blue-400 hover:border-blue-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-blue-500/20"
+          disabled={!isCurrentEpisodeAvailable}
+          className={cn(
+            "flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-lg",
+            !isCurrentEpisodeAvailable
+              ? "opacity-50 cursor-not-allowed text-slate-500"
+              : "text-slate-300 hover:from-blue-500/20 hover:to-blue-600/20 hover:text-blue-400 hover:border-blue-400/40 hover:scale-105 cursor-pointer hover:shadow-xl hover:shadow-blue-500/20"
+          )}
         >
           <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2" />
-          <span className="text-[10px] sm:text-xs font-semibold">Review</span>
+          <span className="text-[10px] sm:text-xs font-semibold">
+            {!isCurrentEpisodeAvailable ? "N/A" : "Review"}
+          </span>
         </Button>
 
         <Button
@@ -355,7 +494,15 @@ export function EpisodeActions({
         </div>
 
         <div className="flex items-center justify-center gap-1.5 sm:gap-3 flex-wrap">
-          {popularity > 50 && (
+          {isCurrentEpisodeComingSoon && (
+            <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-[#f4b400]/20 to-[#e6a800]/20 px-2 sm:px-4 py-1 sm:py-2.5 rounded-full border border-[#f4b400]/40 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[#f4b400]/25">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#f4b400] flex-shrink-0" />
+              <span className="text-[10px] sm:text-sm font-bold text-[#f4b400] whitespace-nowrap">
+                Coming Soon
+              </span>
+            </div>
+          )}
+          {popularity > 50 && isCurrentEpisodeAvailable && (
             <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-cinehub-accent/20 to-cinehub-accent-hover/20 px-2 sm:px-4 py-1 sm:py-2.5 rounded-full border border-cinehub-accent/40 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-cinehub-accent/25">
               <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-cinehub-accent flex-shrink-0" />
               <span className="text-[10px] sm:text-sm font-bold text-cinehub-accent whitespace-nowrap">
@@ -363,7 +510,7 @@ export function EpisodeActions({
               </span>
             </div>
           )}
-          {voteAverage >= 7.0 && (
+          {voteAverage >= 7.0 && isCurrentEpisodeAvailable && (
             <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-green-500/20 to-green-600/20 px-2 sm:px-4 py-1 sm:py-2.5 rounded-full border border-green-500/40 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-green-500/25">
               <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 flex-shrink-0" />
               <span className="text-[10px] sm:text-sm font-bold text-green-400 whitespace-nowrap">
