@@ -12,7 +12,6 @@ import { ArrowLeft, Calendar, Clock, Star, Globe, Play } from "lucide-react";
 import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { MovieActions } from "@/components/watch/MovieActions";
 import { SimilarMovies } from "@/components/watch/SimilarMovies";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export default function WatchMoviePage() {

@@ -3,7 +3,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TVShowCard } from "@/components/common/TVShowCard";
-import { Skeleton } from "@/components/ui/skeleton";
 import { fetchTVShows } from "@/services/tmdb";
 import { TMDBTVShow } from "@/types/tmdb";
 

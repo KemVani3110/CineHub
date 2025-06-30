@@ -43,8 +43,8 @@ const DetailSkeleton = ({ type = "movie" }: DetailSkeletonProps) => {
             {/* Poster Skeleton */}
             <div className="lg:col-span-4 xl:col-span-3 flex justify-center lg:justify-start">
               <div className="relative w-full max-w-sm">
-                <div className="absolute -inset-1 bg-gradient-to-r from-slate-700 to-slate-600 rounded-2xl blur opacity-25 animate-pulse" />
                 <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border border-slate-700/50 bg-slate-800">
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-700/30 to-slate-600/30 rounded-xl blur-sm opacity-50 animate-pulse" />
                   <Skeleton className="w-full h-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-700" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-6xl text-slate-600 animate-pulse">

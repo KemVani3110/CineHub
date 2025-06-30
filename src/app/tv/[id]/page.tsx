@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Share2, Star, Clock, Calendar } from "lucide-react";
 import { getImageUrl } from "@/services/tmdb";
 import { TMDBGenre } from "@/types/tmdb";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { WatchlistButton } from "@/components/common/WatchlistButton";
 import { WatchButton } from "@/components/common/WatchButton";

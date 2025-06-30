@@ -8,7 +8,6 @@ import { MovieCard } from "@/components/common/MovieCard";
 import { TVShowCard } from "@/components/common/TVShowCard";
 import { Button } from "@/components/ui/button";
 import { fetchMovieDetails, fetchTVShowDetails } from "@/services/tmdb";
-import { Skeleton } from "@/components/ui/skeleton";
 import useEmblaCarousel from 'embla-carousel-react';
 import BackToTop from "@/components/common/BackToTop";
 

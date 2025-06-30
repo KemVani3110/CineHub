@@ -7,7 +7,6 @@ import { MovieCard } from "@/components/common/MovieCard";
 import { TVShowCard } from "@/components/common/TVShowCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Film, Tv, X } from "lucide-react";
 import { TMDBMovie, TMDBTVShow } from "@/types/tmdb";
 import Header from "@/components/common/Header";

@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { getImageUrl } from "@/services/tmdb";
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
