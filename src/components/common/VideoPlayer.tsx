@@ -12,10 +12,7 @@ import {
   SkipBack,
   SkipForward,
   Monitor,
-  Smartphone,
   PictureInPicture,
-  Download,
-  Share2,
   Tv,
   RotateCcw,
   ExternalLink,
@@ -432,7 +429,7 @@ export function VideoPlayer({
     }
   };
 
-  const handleTouchStart = () => {
+    const handleTouchStart = () => {
     setShowControls(true);
   };
 
@@ -443,8 +440,17 @@ export function VideoPlayer({
 
     if (isPlaying || isAutoPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false);
-      }, 3000);
+          setShowControls(false);
+      }, 4000); // Longer timeout for mobile
+    }
+  };
+
+  const handleVideoClick = () => {
+    // On mobile, single tap toggles controls, double tap toggles play
+    if (isMobile) {
+      setShowControls(!showControls);
+    } else {
+      togglePlay();
     }
   };
 
@@ -518,6 +524,7 @@ export function VideoPlayer({
       onMouseMove={handleMouseMove}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onClick={handleVideoClick}
     >
       {renderPlayer()}
 
@@ -541,24 +548,42 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Source selector for iframe mode */}
+      {/* Source selector for iframe mode - Hidden when playing */}
       {isIframeMode && (
-        <div className="absolute top-0 left-0 right-0 z-50 p-6">
+        <div className={cn(
+          "absolute top-0 left-0 right-0 z-50 transition-all duration-300",
+          isMobile ? "p-3" : "p-6",
+          (isPlaying || isAutoPlaying) && !showControls 
+            ? "opacity-0 pointer-events-none -translate-y-4" 
+            : "opacity-100 translate-y-0"
+        )}>
           <div className="flex justify-between items-start">
             {/* Movie Title & Info */}
             <div className="flex-1 mr-4">
-              <h1 className="text-white font-bold text-xl sm:text-2xl mb-3 drop-shadow-2xl">
+              <h1 className={cn(
+                "text-white font-bold mb-3 drop-shadow-2xl transition-all duration-300",
+                isMobile ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"
+              )}>
                 {title}
               </h1>
               {selectedSource && (
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="flex items-center gap-2 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 backdrop-blur-sm px-4 py-2 rounded-2xl border border-teal-400/30 shadow-lg">
+                <div className={cn(
+                  "flex items-center gap-3",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>
+                  <div className={cn(
+                    "flex items-center gap-2 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 backdrop-blur-sm rounded-2xl border border-teal-400/30 shadow-lg",
+                    isMobile ? "px-3 py-1.5" : "px-4 py-2"
+                  )}>
                     <div className="w-2.5 h-2.5 bg-teal-400 rounded-full animate-pulse shadow-lg shadow-teal-400/50"></div>
                     <span className="text-teal-100 font-semibold">
                       {selectedSource.name}
                     </span>
                   </div>
-                  <div className="bg-gradient-to-r from-slate-700/80 to-slate-600/80 backdrop-blur-sm px-4 py-2 rounded-2xl border border-slate-500/40 shadow-lg">
+                  <div className={cn(
+                    "bg-gradient-to-r from-slate-700/80 to-slate-600/80 backdrop-blur-sm rounded-2xl border border-slate-500/40 shadow-lg",
+                    isMobile ? "px-3 py-1.5" : "px-4 py-2"
+                  )}>
                     <span className="text-slate-100 font-semibold text-xs uppercase tracking-wider">
                       {selectedSource.quality}
                     </span>
@@ -567,25 +592,41 @@ export function VideoPlayer({
               )}
             </div>
 
-            {/* Source Selector */}
+                        {/* Source Selector */}
             {sources.length > 1 && (
               <div className="pointer-events-auto">
                 <DropdownMenu onOpenChange={handleMenuInteraction}>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="bg-gradient-to-r from-slate-800/90 to-slate-700/90 hover:from-slate-700/90 hover:to-slate-600/90 text-white border border-slate-500/40 backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-xl cursor-pointer rounded-2xl px-6 py-3"
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={cn(
+                        "bg-gradient-to-r from-slate-800/90 to-slate-700/90 hover:from-slate-700/90 hover:to-slate-600/90 text-white border border-slate-500/40 backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-xl cursor-pointer rounded-2xl",
+                        isMobile 
+                          ? "px-3 py-2 min-w-[44px] min-h-[44px] active:scale-95" 
+                          : "px-6 py-3"
+                      )}
                     >
-                      <Settings className="w-4 h-4 mr-2" />
-                      <span className="hidden sm:inline font-semibold">
-                        Sources
-                      </span>
+                      <Settings className={cn(
+                        isMobile ? "w-4 h-4" : "w-4 h-4",
+                        !isMobile && "mr-2"
+                      )} />
+                      {!isMobile && (
+                        <span className="hidden sm:inline font-semibold">
+                          Sources
+                        </span>
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-gradient-to-b from-slate-900/95 to-slate-800/95 backdrop-blur-xl border-slate-600/40 shadow-2xl min-w-[220px] rounded-2xl">
-                    <div className="p-3">
-                      <h4 className="text-slate-300 text-xs font-bold mb-3 px-3 uppercase tracking-wider">
+                  <DropdownMenuContent className={cn(
+                    "bg-gradient-to-b from-slate-900/95 to-slate-800/95 backdrop-blur-xl border-slate-600/40 shadow-2xl rounded-2xl",
+                    isMobile ? "min-w-[180px]" : "min-w-[220px]"
+                  )}>
+                    <div className={cn(isMobile ? "p-2" : "p-3")}>
+                      <h4 className={cn(
+                        "text-slate-300 font-bold mb-3 px-3 uppercase tracking-wider",
+                        isMobile ? "text-xs" : "text-xs"
+                      )}>
                         Available Sources
                       </h4>
                       {sources.map((source, index) => (
@@ -644,14 +685,26 @@ export function VideoPlayer({
               : "opacity-0 pointer-events-none"
           )}
         >
-          {/* Top controls */}
-          <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start">
+          {/* Top controls - Hidden when video is playing */}
+          <div className={cn(
+            "absolute top-0 left-0 right-0 z-20 flex justify-between items-start transition-all duration-300",
+            isMobile ? "p-3" : "p-6",
+            (isPlaying || isAutoPlaying) && !showControls 
+              ? "opacity-0 pointer-events-none -translate-y-4" 
+              : "opacity-100 translate-y-0"
+          )}>
             <div className="flex-1">
-              <h3 className="text-white font-bold text-xl truncate drop-shadow-lg">
+              <h3 className={cn(
+                "text-white font-bold truncate drop-shadow-lg transition-all duration-300",
+                isMobile ? "text-base sm:text-lg" : "text-xl"
+              )}>
                 {title}
               </h3>
               {selectedSource && (
-                <p className="text-slate-300 text-sm mt-1 font-medium">
+                <p className={cn(
+                  "text-slate-300 mt-1 font-medium transition-all duration-300",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>
                   Streaming from {selectedSource.name} •{" "}
                   {selectedSource.quality}
                 </p>
@@ -665,10 +718,15 @@ export function VideoPlayer({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 bg-slate-800/60 backdrop-blur-sm rounded-2xl px-4 py-2 cursor-pointer transition-all duration-300 hover:scale-105"
+                    className={cn(
+                      "text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 bg-slate-800/60 backdrop-blur-sm rounded-2xl cursor-pointer transition-all duration-300 hover:scale-105",
+                      isMobile 
+                        ? "px-3 py-2 min-w-[44px] min-h-[44px] active:scale-95" 
+                        : "px-4 py-2"
+                    )}
                   >
-                    <Settings className="w-4 h-4 mr-2" />
-                    <span className="font-semibold">Sources</span>
+                    <Settings className={cn(isMobile ? "w-4 h-4" : "w-4 h-4", !isMobile && "mr-2")} />
+                    {!isMobile && <span className="font-semibold">Sources</span>}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-gradient-to-b from-slate-900/95 to-slate-800/95 border-slate-600/40 backdrop-blur-xl rounded-2xl">
@@ -709,17 +767,22 @@ export function VideoPlayer({
 
           {/* Center play button - Only show for non-iframe mode */}
           {!isIframeMode && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center z-30">
               {!isPlaying && !isAutoPlaying && (
                 <Button
                   onClick={togglePlay}
                   size="lg"
-                  className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white rounded-full p-8 shadow-2xl transform hover:scale-110 transition-all duration-300 cursor-pointer border-4 border-white/20"
+                  className={cn(
+                    "bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 cursor-pointer border-4 border-white/20",
+                    isMobile 
+                      ? "p-6 sm:p-8 min-w-[72px] min-h-[72px] sm:min-w-[96px] sm:min-h-[96px] active:scale-95" 
+                      : "p-8"
+                  )}
                 >
                   {isEnded ? (
-                    <RotateCcw className="w-10 h-10" />
+                    <RotateCcw className={cn("ml-0", isMobile ? "w-8 h-8 sm:w-10 sm:h-10" : "w-10 h-10")} />
                   ) : (
-                    <Play className="w-10 h-10 ml-1" />
+                    <Play className={cn("ml-1", isMobile ? "w-8 h-8 sm:w-10 sm:h-10" : "w-10 h-10")} />
                   )}
                 </Button>
               )}
@@ -727,7 +790,10 @@ export function VideoPlayer({
           )}
 
           {/* Bottom controls */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 space-y-4">
+          <div className={cn(
+            "absolute bottom-0 left-0 right-0 z-20 space-y-3 sm:space-y-4",
+            isMobile ? "p-4 pb-6" : "p-6"
+          )}>
             {/* Progress bar */}
             {!isIframeMode && (
               <div className="space-y-2">
@@ -747,19 +813,27 @@ export function VideoPlayer({
 
             {/* Control buttons */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className={cn(
+                "flex items-center",
+                isMobile ? "space-x-2" : "space-x-3"
+              )}>
                 <Button
                   onClick={togglePlay}
                   variant="ghost"
                   size="sm"
-                  className="text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 p-3 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110"
+                  className={cn(
+                    "text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110",
+                    isMobile 
+                      ? "p-2.5 min-w-[44px] min-h-[44px] active:scale-95" 
+                      : "p-3"
+                  )}
                 >
                   {isPlaying || isAutoPlaying ? (
-                    <Pause className="w-5 h-5" />
+                    <Pause className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                   ) : isEnded ? (
-                    <RotateCcw className="w-5 h-5" />
+                    <RotateCcw className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                   ) : (
-                    <Play className="w-5 h-5" />
+                    <Play className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                   )}
                 </Button>
 
@@ -769,39 +843,57 @@ export function VideoPlayer({
                       onClick={() => skipTime(-10)}
                       variant="ghost"
                       size="sm"
-                      className="text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 p-3 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110"
+                      className={cn(
+                        "text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110",
+                        isMobile 
+                          ? "p-2.5 min-w-[44px] min-h-[44px] active:scale-95" 
+                          : "p-3"
+                      )}
                     >
-                      <SkipBack className="w-5 h-5" />
+                      <SkipBack className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                     </Button>
 
                     <Button
                       onClick={() => skipTime(10)}
                       variant="ghost"
                       size="sm"
-                      className="text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 p-3 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110"
+                      className={cn(
+                        "text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110",
+                        isMobile 
+                          ? "p-2.5 min-w-[44px] min-h-[44px] active:scale-95" 
+                          : "p-3"
+                      )}
                     >
-                      <SkipForward className="w-5 h-5" />
+                      <SkipForward className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                     </Button>
                   </>
                 )}
 
                 {/* Volume controls */}
-                <div className="flex items-center space-x-3">
+                <div className={cn(
+                  "flex items-center",
+                  isMobile ? "space-x-2" : "space-x-3"
+                )}>
                   <Button
                     onClick={toggleMute}
                     variant="ghost"
                     size="sm"
-                    className="text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 p-3 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110"
+                    className={cn(
+                      "text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110",
+                      isMobile 
+                        ? "p-2.5 min-w-[44px] min-h-[44px] active:scale-95" 
+                        : "p-3"
+                    )}
                   >
                     {isMuted || volume === 0 ? (
-                      <VolumeX className="w-5 h-5" />
+                      <VolumeX className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                     ) : (
-                      <Volume2 className="w-5 h-5" />
+                      <Volume2 className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                     )}
                   </Button>
 
                   {!isMobile && (
-                    <div className="w-24">
+                    <div className="w-20 sm:w-24">
                       <Slider
                         value={[volume]}
                         max={100}
@@ -814,7 +906,10 @@ export function VideoPlayer({
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3">
+              <div className={cn(
+                "flex items-center",
+                isMobile ? "space-x-1.5" : "space-x-3"
+              )}>
                 {!isIframeMode && !isMobile && (
                   <Button
                     onClick={togglePictureInPicture}
@@ -826,25 +921,32 @@ export function VideoPlayer({
                   </Button>
                 )}
 
-                <Button
-                  onClick={toggleTheaterMode}
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 p-3 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110"
-                >
-                  <Monitor className="w-5 h-5" />
-                </Button>
+                {!isMobile && (
+                  <Button
+                    onClick={toggleTheaterMode}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 p-3 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110"
+                  >
+                    <Monitor className="w-5 h-5" />
+                  </Button>
+                )}
 
                 <Button
                   onClick={toggleFullscreen}
                   variant="ghost"
                   size="sm"
-                  className="text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 p-3 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110"
+                  className={cn(
+                    "text-white hover:bg-gradient-to-r hover:from-slate-700/60 hover:to-slate-600/60 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110",
+                    isMobile 
+                      ? "p-2.5 min-w-[44px] min-h-[44px] active:scale-95" 
+                      : "p-3"
+                  )}
                 >
                   {isFullscreen ? (
-                    <Minimize className="w-5 h-5" />
+                    <Minimize className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                   ) : (
-                    <Maximize className="w-5 h-5" />
+                    <Maximize className={cn(isMobile ? "w-4 h-4" : "w-5 h-5")} />
                   )}
                 </Button>
               </div>
