@@ -1,12 +1,19 @@
-import { useRecommendations } from '@/hooks/useRecommendations';
-import { MovieCard } from './MovieCard';
-import { TVShowCard } from './TVShowCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, Sparkles, Play, Pause, ChevronLeft, ChevronRight } from 'lucide-react';
-import { TMDBMovie, TMDBTVShow } from '@/types/tmdb';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
+import { useRecommendations } from "@/hooks/useRecommendations";
+import { MovieCard } from "./MovieCard";
+import { TVShowCard } from "./TVShowCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  RefreshCw,
+  Sparkles,
+  Play,
+  Pause,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { TMDBMovie, TMDBTVShow } from "@/types/tmdb";
+import { useEffect, useRef, useState, useCallback } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 
 interface Recommendation {
   movie?: TMDBMovie;
@@ -15,15 +22,16 @@ interface Recommendation {
 }
 
 export function Recommendations() {
-  const { recommendations, isLoading, error, refreshRecommendations } = useRecommendations();
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+  const { recommendations, isLoading, error, refreshRecommendations } =
+    useRecommendations();
+  const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
-    align: 'start',
+    align: "start",
     containScroll: false,
     slidesToScroll: 1,
     skipSnaps: false,
     dragFree: false,
-    inViewThreshold: 0.7
+    inViewThreshold: 0.7,
   });
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -45,12 +53,12 @@ export function Recommendations() {
     if (emblaApi && !isScrolling) {
       setIsScrolling(true);
       emblaApi.scrollPrev();
-      
+
       // Clear existing timeout
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
-      
+
       // Set timeout to enable next scroll
       scrollTimeoutRef.current = setTimeout(() => {
         setIsScrolling(false);
@@ -62,12 +70,12 @@ export function Recommendations() {
     if (emblaApi && !isScrolling) {
       setIsScrolling(true);
       emblaApi.scrollNext();
-      
+
       // Clear existing timeout
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
-      
+
       // Set timeout to enable next scroll
       scrollTimeoutRef.current = setTimeout(() => {
         setIsScrolling(false);
@@ -75,9 +83,14 @@ export function Recommendations() {
     }
   }, [emblaApi, isScrolling]);
 
-    // Auto-scroll functionality like HeroSection
+  // Auto-scroll functionality like HeroSection
   useEffect(() => {
-    if (!emblaApi || !isAutoScrolling || recommendations.length === 0 || isScrolling) {
+    if (
+      !emblaApi ||
+      !isAutoScrolling ||
+      recommendations.length === 0 ||
+      isScrolling
+    ) {
       if (autoScrollInterval.current) {
         clearInterval(autoScrollInterval.current);
         autoScrollInterval.current = null;
@@ -97,7 +110,13 @@ export function Recommendations() {
         autoScrollInterval.current = null;
       }
     };
-  }, [emblaApi, isAutoScrolling, recommendations.length, scrollNext, isScrolling]);
+  }, [
+    emblaApi,
+    isAutoScrolling,
+    recommendations.length,
+    scrollNext,
+    isScrolling,
+  ]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -137,16 +156,24 @@ export function Recommendations() {
           <div className="flex items-center gap-3">
             <div className="flex gap-1">
               <div className="w-2 h-2 rounded-full bg-cinehub-accent animate-bounce" />
-              <div className="w-2 h-2 rounded-full bg-cinehub-accent animate-bounce" style={{ animationDelay: '0.1s' }} />
-              <div className="w-2 h-2 rounded-full bg-cinehub-accent animate-bounce" style={{ animationDelay: '0.2s' }} />
+              <div
+                className="w-2 h-2 rounded-full bg-cinehub-accent animate-bounce"
+                style={{ animationDelay: "0.1s" }}
+              />
+              <div
+                className="w-2 h-2 rounded-full bg-cinehub-accent animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              />
             </div>
-            <p className="text-slate-300">Crafting your perfect recommendations...</p>
+            <p className="text-slate-300">
+              Crafting your perfect recommendations...
+            </p>
           </div>
         </CardContent>
       </Card>
     );
   }
-  
+
   if (!recommendations.length) {
     return (
       <Card className="bg-card-custom border-custom backdrop-blur-sm">
@@ -156,9 +183,12 @@ export function Recommendations() {
               <Sparkles className="w-8 h-8 text-cinehub-accent" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-medium text-slate-200">No recommendations yet</h3>
+              <h3 className="text-lg font-medium text-slate-200">
+                No recommendations yet
+              </h3>
               <p className="text-slate-400 max-w-md mx-auto">
-                Add some movies and TV shows to your watchlist and rate them to unlock your personalized recommendations!
+                Add some movies and TV shows to your watchlist and rate them to
+                unlock your personalized recommendations!
               </p>
             </div>
           </div>
@@ -169,20 +199,18 @@ export function Recommendations() {
 
   return (
     <Card className="bg-card-custom border-custom backdrop-blur-sm overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <div className="flex items-center gap-3">
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between pb-4 gap-3 md:gap-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 w-full">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-cinehub-accent" />
-            <CardTitle className="text-slate-200">Recommended for You</CardTitle>
+            <CardTitle className="text-slate-200 text-base md:text-lg whitespace-normal break-words">
+              Recommended for You
+            </CardTitle>
           </div>
-          <div>
-            <p className="text-sm text-slate-400 mt-1">
-              {recommendations.length} personalized picks
-            </p>
-          </div>
+          <p className="text-sm text-slate-400 mt-1 md:mt-0 md:ml-2">
+            {recommendations.length} personalized picks
+          </p>
         </div>
-        
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
           <Button
             variant="ghost"
             size="icon"
@@ -191,7 +219,11 @@ export function Recommendations() {
             className="h-8 w-8 hover:bg-cinehub-accent/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             title="Previous"
           >
-            <ChevronLeft className={`h-4 w-4 transition-opacity ${isScrolling ? 'opacity-50' : ''}`} />
+            <ChevronLeft
+              className={`h-4 w-4 transition-opacity ${
+                isScrolling ? "opacity-50" : ""
+              }`}
+            />
           </Button>
           <Button
             variant="ghost"
@@ -214,7 +246,11 @@ export function Recommendations() {
             className="h-8 w-8 hover:bg-cinehub-accent/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             title="Next"
           >
-            <ChevronRight className={`h-4 w-4 transition-opacity ${isScrolling ? 'opacity-50' : ''}`} />
+            <ChevronRight
+              className={`h-4 w-4 transition-opacity ${
+                isScrolling ? "opacity-50" : ""
+              }`}
+            />
           </Button>
           <Button
             variant="ghost"
@@ -223,13 +259,17 @@ export function Recommendations() {
             disabled={isRefreshing}
             className="h-8 w-8 hover:bg-cinehub-accent/10 group cursor-pointer"
           >
-            <RefreshCw className={`h-4 w-4 transition-transform duration-500 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+            <RefreshCw
+              className={`h-4 w-4 transition-transform duration-500 ${
+                isRefreshing ? "animate-spin" : "group-hover:rotate-180"
+              }`}
+            />
           </Button>
         </div>
       </CardHeader>
-      
+
       <CardContent className="px-6 pb-6">
-        <div 
+        <div
           className="embla overflow-hidden cursor-pointer"
           ref={emblaRef}
           onMouseEnter={handleMouseEnter}
@@ -237,11 +277,11 @@ export function Recommendations() {
         >
           <div className="embla__container flex gap-4 md:gap-6">
             {recommendations.map(({ movie, tvShow, reason }, index) => (
-              <div 
-                key={`${movie?.id || tvShow?.id}-${index}`} 
+              <div
+                key={`${movie?.id || tvShow?.id}-${index}`}
                 className="embla__slide w-[150px] md:w-[180px] flex-shrink-0 animate-fadeInUp"
-                style={{ 
-                  animationDelay: `${index * 0.1}s`
+                style={{
+                  animationDelay: `${index * 0.1}s`,
                 }}
               >
                 <div className="space-y-2 h-full">
@@ -250,23 +290,25 @@ export function Recommendations() {
                   ) : tvShow ? (
                     <TVShowCard show={tvShow} />
                   ) : null}
-                  
+
                   <div className="space-y-1">
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-2 border border-slate-700/30">
                       <div className="flex items-start gap-1.5">
                         <div className="w-1 h-1 rounded-full bg-cinehub-accent mt-1.5 flex-shrink-0" />
-                        <p className="text-xs text-slate-300 leading-relaxed">{reason}</p>
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          {reason}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
-            
+
             {/* Duplicate items for seamless infinite loop */}
             {recommendations.map(({ movie, tvShow, reason }, index) => (
-              <div 
-                key={`duplicate-1-${movie?.id || tvShow?.id}-${index}`} 
+              <div
+                key={`duplicate-1-${movie?.id || tvShow?.id}-${index}`}
                 className="embla__slide w-[150px] md:w-[180px] flex-shrink-0"
               >
                 <div className="space-y-2 h-full">
@@ -275,23 +317,25 @@ export function Recommendations() {
                   ) : tvShow ? (
                     <TVShowCard show={tvShow} />
                   ) : null}
-                  
+
                   <div className="space-y-1">
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-2 border border-slate-700/30">
                       <div className="flex items-start gap-1.5">
                         <div className="w-1 h-1 rounded-full bg-cinehub-accent mt-1.5 flex-shrink-0" />
-                        <p className="text-xs text-slate-300 leading-relaxed">{reason}</p>
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          {reason}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
-            
+
             {/* Second set of duplicates for even smoother loop */}
             {recommendations.map(({ movie, tvShow, reason }, index) => (
-              <div 
-                key={`duplicate-2-${movie?.id || tvShow?.id}-${index}`} 
+              <div
+                key={`duplicate-2-${movie?.id || tvShow?.id}-${index}`}
                 className="embla__slide w-[150px] md:w-[180px] flex-shrink-0"
               >
                 <div className="space-y-2 h-full">
@@ -300,12 +344,14 @@ export function Recommendations() {
                   ) : tvShow ? (
                     <TVShowCard show={tvShow} />
                   ) : null}
-                  
+
                   <div className="space-y-1">
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-2 border border-slate-700/30">
                       <div className="flex items-start gap-1.5">
                         <div className="w-1 h-1 rounded-full bg-cinehub-accent mt-1.5 flex-shrink-0" />
-                        <p className="text-xs text-slate-300 leading-relaxed">{reason}</p>
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          {reason}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -315,7 +361,7 @@ export function Recommendations() {
           </div>
         </div>
       </CardContent>
-      
+
       <style jsx>{`
         @keyframes fadeInUp {
           from {
@@ -335,11 +381,11 @@ export function Recommendations() {
         .embla {
           overflow: hidden;
         }
-        
+
         .embla__container {
           display: flex;
         }
-        
+
         .embla__slide {
           flex: 0 0 auto;
           min-width: 0;

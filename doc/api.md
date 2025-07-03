@@ -141,4 +141,4 @@ Common error codes:
 - `INVALID_CREDENTIALS` - Invalid login credentials
 - `NOT_FOUND` - Resource not found
 - `VALIDATION_ERROR` - Invalid input data
-- `SERVER_ERROR` - Internal server error
+- `SERVER_ERROR` - Internal server error 

@@ -186,4 +186,4 @@ If you have any questions or issues, please:
 
 ---
 
-Built with ❤️ using Next.js and Firebase
+Built with ❤️ using Next.js and Firebase 

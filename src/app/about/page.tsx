@@ -690,7 +690,7 @@ const AboutPage = () => {
             <p className="text-lg md:text-xl text-[var(--text-sub)] leading-relaxed mb-6 md:mb-8">
               Interested in the project or want to collaborate? Feel free to reach out! 
               I'm always open to feedback and learning opportunities.
-            </p>
+            </p> 
 
             <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
               <a
