@@ -75,7 +75,8 @@ export function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
-  const [showHeader, setShowHeader] = useState(true);
+  const [showHeader, setShowHeader] = useState(false);
+  const [isSourceMenuOpen, setIsSourceMenuOpen] = useState(false);
 
   const {
     isPlaying,
@@ -98,9 +99,9 @@ export function VideoPlayer({
   // Initialize streaming source
   useEffect(() => {
     if (sources.length > 0 && !selectedSource) {
-      // Prefer VidSrc as default
-      const vidSrcSource = sources.find((s) => s.name === "VidSrc");
-      const defaultSource = vidSrcSource || sources[0];
+      // Prefer the first stable source configured by the stream API.
+      const stableSource = sources.find((s) => s.name === "111Movies");
+      const defaultSource = stableSource || sources[0];
       setSelectedSource(defaultSource);
       setIsIframeMode(defaultSource.type === "iframe");
     }
@@ -136,13 +137,28 @@ export function VideoPlayer({
     }
   }, [duration, setVideoDuration]);
 
-  // Show controls and header by default when video is not playing
+  // Show controls and header by default when native video is not playing.
+  // Iframe streams should keep the chrome hidden while playback is visible.
   useEffect(() => {
-    if (!isPlaying && !isAutoPlaying) {
+    if (!isIframeMode && !isPlaying && !isAutoPlaying) {
       setShowControls(true);
       setShowHeader(true);
     }
-  }, [isPlaying, isAutoPlaying, setShowControls]);
+  }, [isIframeMode, isPlaying, isAutoPlaying, setShowControls]);
+
+  useEffect(() => {
+    if (!isIframeMode || !selectedSource) return;
+
+    setShowHeader(true);
+
+    const hideTimer = setTimeout(() => {
+      if (!isSourceMenuOpen) {
+        setShowHeader(false);
+      }
+    }, 1800);
+
+    return () => clearTimeout(hideTimer);
+  }, [isIframeMode, selectedSource, isSourceMenuOpen]);
 
   // Reset state when component unmounts
   useEffect(() => {
@@ -429,12 +445,14 @@ export function VideoPlayer({
       clearTimeout(controlsTimeoutRef.current);
     }
 
-    // Only auto-hide when video is playing and after a delay
-    if (isPlaying || isAutoPlaying) {
+    // Auto-hide stream chrome once playback is visible.
+    if (isIframeMode || isPlaying || isAutoPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false);
-        setShowHeader(false);
-      }, 3000);
+        if (!isSourceMenuOpen) {
+          setShowControls(false);
+          setShowHeader(false);
+        }
+      }, isIframeMode ? 1800 : 3000);
     }
   };
 
@@ -445,11 +463,13 @@ export function VideoPlayer({
     }
 
     // Hide controls and header faster when mouse leaves
-    if (isPlaying || isAutoPlaying) {
+    if (isIframeMode || isPlaying || isAutoPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false);
-        setShowHeader(false);
-      }, 1000); // Shorter delay when mouse leaves
+        if (!isSourceMenuOpen) {
+          setShowControls(false);
+          setShowHeader(false);
+        }
+      }, isIframeMode ? 300 : 1000); // Shorter delay when mouse leaves
     }
   };
 
@@ -470,15 +490,22 @@ export function VideoPlayer({
     }
 
     // Auto-hide after touch ends on mobile
-    if (isPlaying || isAutoPlaying) {
+    if (isIframeMode || isPlaying || isAutoPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false);
-        setShowHeader(false);
+        if (!isSourceMenuOpen) {
+          setShowControls(false);
+          setShowHeader(false);
+        }
       }, 4000); // Longer timeout for mobile
     }
   };
 
   const handleVideoClick = () => {
+    if (isIframeMode) {
+      setShowHeader((current) => !current);
+      return;
+    }
+
     // On mobile, single tap toggles controls, double tap toggles play
     if (isMobile) {
       setShowControls(!showControls);
@@ -487,7 +514,8 @@ export function VideoPlayer({
     }
   };
 
-  const handleMenuInteraction = () => {
+  const handleMenuInteraction = (open: boolean) => {
+    setIsSourceMenuOpen(open);
     setShowControls(true);
     setShowHeader(true);
 
@@ -496,8 +524,8 @@ export function VideoPlayer({
       clearTimeout(controlsTimeoutRef.current);
     }
 
-    // Keep controls visible longer when interacting with menus
-    if (isPlaying || isAutoPlaying) {
+    // Keep controls visible while interacting with menus.
+    if (!open && (isIframeMode || isPlaying || isAutoPlaying)) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
         setShowHeader(false);
@@ -573,6 +601,16 @@ export function VideoPlayer({
     >
       {renderPlayer()}
 
+      {isIframeMode && (
+        <div
+          className="absolute left-0 right-0 top-0 z-40 h-14 md:h-16"
+          onMouseEnter={handleMouseMove}
+          onMouseMove={handleMouseMove}
+          onTouchStart={handleTouchStart}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Loading overlay */}
       {!selectedSource && sources.length === 0 && !videoUrl && (
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -597,69 +635,80 @@ export function VideoPlayer({
       <div
         className={cn(
           "absolute top-0 left-0 right-0 z-50 transition-all duration-300",
-          isMobile ? "p-3" : "p-6",
+          isIframeMode
+            ? "bg-transparent"
+            : "bg-gradient-to-b from-black/80 via-black/35 to-transparent",
+          isMobile ? "px-3 py-3" : "px-4 py-4",
           showHeader
             ? "opacity-100 translate-y-0"
             : "opacity-0 pointer-events-none -translate-y-4"
         )}
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex justify-between items-start">
+        <div
+          className={cn(
+            "flex items-start gap-3",
+            isIframeMode ? "justify-end" : "justify-between"
+          )}
+        >
           {/* Movie Title & Info */}
-          <div className="flex-1 mr-4">
-            <h1
-              className={cn(
-                "text-white font-bold mb-3 drop-shadow-2xl transition-all duration-300",
-                isMobile ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"
-              )}
-            >
-              {title}
-            </h1>
-            {selectedSource && (
-              <div
+          {!isIframeMode && (
+            <div className="min-w-0 flex-1">
+              <h1
                 className={cn(
-                  "flex items-center gap-3",
-                  isMobile ? "text-xs" : "text-sm"
+                  "line-clamp-2 text-white font-bold leading-tight drop-shadow-2xl transition-all duration-300",
+                  isMobile ? "text-lg" : "text-2xl lg:text-3xl"
                 )}
               >
+                {title}
+              </h1>
+              {selectedSource && (
                 <div
                   className={cn(
-                    "flex items-center gap-2 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 backdrop-blur-sm rounded-2xl border border-teal-400/30 shadow-lg",
-                    isMobile ? "px-3 py-1.5" : "px-4 py-2"
+                    "mt-3 flex flex-wrap items-center gap-2 sm:gap-3",
+                    isMobile ? "text-xs" : "text-sm"
                   )}
                 >
-                  <div className="w-2.5 h-2.5 bg-teal-400 rounded-full animate-pulse shadow-lg shadow-teal-400/50"></div>
-                  <span className="text-teal-100 font-semibold">
-                    {selectedSource.name}
-                  </span>
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 rounded-2xl border border-teal-400/45 bg-teal-500/15 backdrop-blur-md shadow-lg",
+                      isMobile ? "px-3 py-1.5" : "px-4 py-2"
+                    )}
+                  >
+                    <div className="w-2.5 h-2.5 bg-teal-400 rounded-full animate-pulse shadow-lg shadow-teal-400/50"></div>
+                    <span className="text-teal-100 font-semibold">
+                      {selectedSource.name}
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "rounded-2xl border border-slate-400/35 bg-slate-700/80 backdrop-blur-md shadow-lg",
+                      isMobile ? "px-3 py-1.5" : "px-4 py-2"
+                    )}
+                  >
+                    <span className="text-slate-100 font-semibold text-xs uppercase tracking-wider">
+                      {selectedSource.quality}
+                    </span>
+                  </div>
                 </div>
-                <div
-                  className={cn(
-                    "bg-gradient-to-r from-slate-700/80 to-slate-600/80 backdrop-blur-sm rounded-2xl border border-slate-500/40 shadow-lg",
-                    isMobile ? "px-3 py-1.5" : "px-4 py-2"
-                  )}
-                >
-                  <span className="text-slate-100 font-semibold text-xs uppercase tracking-wider">
-                    {selectedSource.quality}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Unified Action Buttons */}
-          <div className="pointer-events-auto flex items-center gap-2">
+          <div className="pointer-events-auto flex shrink-0 items-center gap-2">
             {/* Theater Mode Button */}
             <Button
               onClick={toggleTheaterMode}
               variant="ghost"
               size="sm"
               className={cn(
-                "bg-gradient-to-r from-slate-800/90 to-slate-700/90 hover:from-slate-700/90 hover:to-slate-600/90 text-white border border-slate-500/40 backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-xl cursor-pointer rounded-2xl",
+                "rounded-2xl border border-slate-400/35 bg-slate-700/80 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-slate-600/90 cursor-pointer",
                 isMobile
-                  ? "px-3 py-2 min-w-[44px] min-h-[44px] active:scale-95"
-                  : "px-4 py-3",
+                  ? "h-10 min-w-10 px-3 active:scale-95"
+                  : "h-11 px-4",
                 isTheaterMode &&
-                  "from-teal-500/30 to-emerald-500/30 border-teal-400/40"
+                  "border-teal-400/50 bg-teal-500/25 hover:bg-teal-500/35"
               )}
               title={isTheaterMode ? "Exit Theater Mode" : "Enter Theater Mode"}
             >
@@ -669,11 +718,9 @@ export function VideoPlayer({
                   !isMobile && "mr-2"
                 )}
               />
-              {!isMobile && (
-                <span className="hidden sm:inline font-semibold">
-                  {isTheaterMode ? "Exit" : "Theater"}
-                </span>
-              )}
+              <span className="hidden sm:inline font-semibold">
+                {isTheaterMode ? "Exit" : "Theater"}
+              </span>
             </Button>
 
             {/* Unified Source Selector */}
@@ -684,10 +731,10 @@ export function VideoPlayer({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "bg-gradient-to-r from-slate-800/90 to-slate-700/90 hover:from-slate-700/90 hover:to-slate-600/90 text-white border border-slate-500/40 backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-xl cursor-pointer rounded-2xl",
+                      "rounded-2xl border border-slate-400/35 bg-slate-700/80 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-slate-600/90 cursor-pointer",
                       isMobile
-                        ? "px-3 py-2 min-w-[44px] min-h-[44px] active:scale-95"
-                        : "px-4 py-3"
+                        ? "h-10 min-w-10 px-3 active:scale-95"
+                        : "h-11 px-4"
                     )}
                   >
                     <Settings
@@ -696,11 +743,9 @@ export function VideoPlayer({
                         !isMobile && "mr-2"
                       )}
                     />
-                    {!isMobile && (
-                      <span className="hidden sm:inline font-semibold">
-                        Sources
-                      </span>
-                    )}
+                    <span className="hidden sm:inline font-semibold">
+                      Sources
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

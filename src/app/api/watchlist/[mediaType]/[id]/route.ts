@@ -1,36 +1,41 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth-helpers";
+import { adminDb } from "@/lib/firebase-admin";
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ mediaType: string; id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const { user, error } = await getAuthenticatedUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { message: error || "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const { mediaType, id } = await params;
-    if (!mediaType || !id || typeof mediaType !== 'string' || typeof id !== 'string') {
+    const mediaId = Number(id);
+
+    if (!["movie", "tv"].includes(mediaType) || !mediaId) {
       return NextResponse.json(
         { message: "Media type and ID are required" },
         { status: 400 }
       );
     }
 
-    await db.query(
-      `DELETE FROM watchlist 
-       WHERE user_id = ? 
-       AND ${mediaType === 'movie' ? 'movie_id' : 'tv_id'} = ?`,
-      [session.user.id, parseInt(id)]
-    );
+    await adminDb
+      .collection("watchlists")
+      .doc(`${user.id}_${mediaType}_${mediaId}`)
+      .delete();
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error('Error removing from watchlist:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    console.error("Error removing from watchlist:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
   }
-} 
+}

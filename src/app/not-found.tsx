@@ -358,12 +358,12 @@ export default function NotFound() {
                 </Button>
               </Link>
 
-              <Link href="/movies">
+              <Link href="/explore">
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-text-sub hover:text-cinehub-accent hover-scale cursor-pointer p-1"
-                  title="Movie list"
+                  title="Explore"
                 >
                   <Play className="h-4 w-4" />
                 </Button>

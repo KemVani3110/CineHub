@@ -2,36 +2,19 @@
 
 ## Overview
 
-CineHub uses a dual authentication system:
-- **Local Development**: MySQL + NextAuth.js + bcrypt
-- **Production (Vercel)**: Firebase Auth + Firestore
-
-This allows for fast local development while using serverless-compatible auth in production.
+CineHub uses Firebase Auth and Firestore for both local development and Vercel deployment.
 
 ## Local Development Setup
 
 ### Prerequisites
 - Node.js 18+ 
-- MySQL database
-- Firebase project (for testing production auth locally)
+- Firebase project
+- TMDB API key
 
 ### Environment Variables (.env.local)
 
 ```bash
-# Database (MySQL - Local Only)
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=CINEHUB
-
-# NextAuth.js (Local Only)
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-key-generate-with-openssl
-
-# JWT (Local Only)
-JWT_SECRET=your-jwt-secret
-
-# Firebase Configuration (Used in both Local & Production)
+# Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
@@ -39,7 +22,7 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef
 
-# Firebase Admin (Production Auth)
+# Firebase Admin
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-abc@your_project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
 
@@ -59,11 +42,10 @@ NODE_ENV=development
    npm install
    ```
 
-2. **Setup MySQL Database**
-   ```bash
-   # Import the database schema
-   mysql -u root -p < database/cinehub.sql
-   ```
+2. **Setup Firebase**
+   - Enable Firebase Authentication providers
+   - Create a Firestore database
+   - Apply `firestore.rules`
 
 3. **Configure Environment Variables**
    - Copy `.env.example` to `.env.local`
@@ -128,18 +110,6 @@ NODE_ENV=production
 VERCEL_ENV=production
 ```
 
-#### DO NOT INCLUDE in Production
-```bash
-# These are MySQL-specific and not needed for Vercel
-DB_HOST=
-DB_USER=
-DB_PASSWORD=
-DB_NAME=
-NEXTAUTH_URL=
-NEXTAUTH_SECRET=
-JWT_SECRET=
-```
-
 ### Deployment Steps
 
 1. **Push to GitHub**
@@ -199,17 +169,11 @@ vercel env add FIREBASE_PRIVATE_KEY
    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
    ```
 
-3. **Database Migration**: In production, user data is stored in Firestore, not MySQL.
+3. **Database**: User data is stored in Firestore.
 
 ## Authentication Flow
 
-### Local Development
-1. User enters email/password
-2. API validates against MySQL database
-3. NextAuth.js creates session
-4. JWT token stored in HTTP-only cookie
-
-### Production (Vercel)
+### Local Development and Production
 1. User enters email/password
 2. Firebase Auth validates credentials
 3. Firebase ID token generated

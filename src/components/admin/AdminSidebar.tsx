@@ -9,16 +9,13 @@ import {
   LayoutDashboard,
   Users,
   Activity,
-  Settings,
+  BarChart3,
   LogOut,
   ChevronLeft,
   ChevronRight,
   Shield,
-  BarChart3,
-  FileText,
   CircleUser,
   Menu,
-  Film,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,12 +48,6 @@ const navItems = [
     badge: null,
   },
   {
-    title: "Movies",
-    href: "/admin/movies",
-    icon: Film,
-    badge: null,
-  },
-  {
     title: "User Management",
     href: "/admin/users",
     icon: Users,
@@ -69,27 +60,15 @@ const navItems = [
     badge: null,
   },
   {
-    title: "User Avatar",
-    href: "/admin/avatar",
-    icon: CircleUser,
-    badge: null,
-  },
-  {
     title: "Analytics",
     href: "/admin/analytics",
     icon: BarChart3,
     badge: null,
   },
   {
-    title: "Reports",
-    href: "/admin/reports",
-    icon: FileText,
-    badge: null,
-  },
-  {
-    title: "Settings",
-    href: "/admin/settings",
-    icon: Settings,
+    title: "User Avatar",
+    href: "/admin/avatar",
+    icon: CircleUser,
     badge: null,
   },
 ];
@@ -186,6 +165,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                       src="/logo.png"
                       alt="CineHub Logo"
                       fill
+                      sizes="32px"
                       className="object-contain rounded-full ring-2 ring-primary/20"
                       priority
                     />
@@ -206,6 +186,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                       src="/logo.png"
                       alt="CineHub Logo"
                       fill
+                      sizes="32px"
                       className="object-contain rounded-full ring-2 ring-primary/20"
                       priority
                     />

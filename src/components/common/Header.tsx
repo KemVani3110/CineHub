@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import {
   Menu,
   User,
@@ -19,7 +18,6 @@ import {
   BookmarkPlus,
   History,
   Heart,
-  Film,
 } from "lucide-react";
 import {
   Sheet,
@@ -47,8 +45,6 @@ import { useRouter } from "next/navigation";
 import { useHistoryStore } from "@/store/historyStore";
 import { useHeaderStore } from "@/store/headerStore";
 import NotificationBell from "./NotificationBell";
-import { useAdminMovieStore } from "@/store/adminMovieStore";
-import { useEffect } from "react";
 
 interface HeaderProps {
   onSidebarChange?: (isOpen: boolean) => void;
@@ -68,14 +64,11 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
   const router = useRouter();
   const { getRecentHistory } = useHistoryStore();
   const recentHistory = getRecentHistory(5);
-  const { data: session } = useSession();
-  const { fetchMovies } = useAdminMovieStore();
 
   const navItems = [
     { name: "Home", path: "/home", icon: Home },
     { name: "Explore", path: "/explore", icon: Compass },
     { name: "Search", path: "/search", icon: Search },
-    { name: "CineHub's Films", path: "/movie/internal", icon: Film },
     {
       name: "Watchlist",
       path: "/watchlist",
@@ -90,11 +83,6 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
       name: "Dashboard",
       path: "/admin/dashboard",
       icon: PanelLeft,
-    },
-    {
-      name: "Movies",
-      path: "/admin/movies",
-      icon: Film,
     },
     {
       name: "Users",
@@ -121,11 +109,6 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
       });
     }
   };
-
-  // Check if user logged in through social providers
-  const isSocialLogin =
-    session?.user?.image?.includes("googleusercontent.com") ||
-    session?.user?.image?.includes("facebook.com");
 
   const handleNavClick = (item: (typeof navItems)[0]) => {
     if (item.requiresAuth && !authUser) {
@@ -164,17 +147,11 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
       (authUser as any).picture ||
       (authUser as any).photoURL ||
       (authUser as any).image ||
-      (authUser as any).profilePicture;
+      (authUser as any).profilePicture ||
+      authUser.avatar;
 
     return socialAvatar || null;
   };
-
-  // Add useEffect to fetch movies when admin menu is opened
-  useEffect(() => {
-    if (authUser?.role === "admin") {
-      fetchMovies();
-    }
-  }, [authUser?.role, fetchMovies]);
 
   return (
     <>
@@ -196,6 +173,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                     src="/logo.png"
                     alt="CineHub Logo"
                     fill
+                    sizes="(min-width: 1024px) 56px, (min-width: 768px) 48px, (min-width: 640px) 40px, 32px"
                     className="object-contain rounded-full"
                     priority
                   />

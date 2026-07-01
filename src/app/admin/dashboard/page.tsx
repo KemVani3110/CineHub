@@ -1,5 +1,3 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,13 +9,9 @@ import {
   BarChart3,
   Shield,
   Clock,
-  RefreshCw,
-  Download,
   Eye,
   User,
-  Settings,
 } from "lucide-react";
-import pool from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -31,6 +25,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { Metadata } from "next";
 import { DashboardPaginationComponent } from "@/components/admin/DashboardPagination";
+import { cookies } from "next/headers";
+import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { listAdminLogs, listAdminUsers } from "@/lib/admin-firestore";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | CineHub",
@@ -41,74 +38,30 @@ const DASHBOARD_ITEMS_PER_PAGE = 5;
 
 async function getStats() {
   try {
-    // Test individual queries to see which ones work
-    let totalUsers = 0,
-      totalActivities = 0,
-      totalRatings = 0,
-      totalWatchlist = 0,
-      averageRating = 0;
+    const [users, logs, ratingsSnapshot, watchlistSnapshot] = await Promise.all([
+      listAdminUsers(),
+      listAdminLogs(),
+      adminDb.collection("ratings").get(),
+      adminDb.collection("watchlists").get(),
+    ]);
 
-    try {
-      const [usersResult] = await pool.query(
-        "SELECT COUNT(*) as count FROM users"
-      );
-      totalUsers = Array.isArray(usersResult)
-        ? (usersResult[0] as any)?.count || 0
-        : 0;
-    } catch (err) {
-      console.error("Users query failed:", err);
-    }
-
-    try {
-      const [activitiesResult] = await pool.query(
-        "SELECT COUNT(*) as count FROM user_activity_logs"
-      );
-      totalActivities = Array.isArray(activitiesResult)
-        ? (activitiesResult[0] as any)?.count || 0
-        : 0;
-    } catch (err) {
-      console.error("Activities query failed:", err);
-    }
-
-    try {
-      const [ratingsResult] = await pool.query(
-        "SELECT COUNT(*) as count FROM ratings"
-      );
-      totalRatings = Array.isArray(ratingsResult)
-        ? (ratingsResult[0] as any)?.count || 0
-        : 0;
-    } catch (err) {
-      console.error("Ratings query failed:", err);
-    }
-
-    try {
-      const [watchlistResult] = await pool.query(
-        "SELECT COUNT(*) as count FROM watchlist"
-      );
-      totalWatchlist = Array.isArray(watchlistResult)
-        ? (watchlistResult[0] as any)?.count || 0
-        : 0;
-    } catch (err) {
-      console.error("Watchlist query failed:", err);
-    }
-
-    try {
-      const [avgRatingResult] = await pool.query(
-        "SELECT ROUND(AVG(rating), 1) as avg_rating FROM ratings"
-      );
-      averageRating = Array.isArray(avgRatingResult)
-        ? (avgRatingResult[0] as any)?.avg_rating || 0
-        : 0;
-    } catch (err) {
-      console.error("Average rating query failed:", err);
-    }
+    const ratingValues = ratingsSnapshot.docs
+      .map((doc) => Number(doc.data().rating))
+      .filter((rating) => !Number.isNaN(rating));
 
     return {
-      totalUsers,
-      totalActivities,
-      totalRatings,
-      totalWatchlist,
-      averageRating,
+      totalUsers: users.length,
+      totalActivities: logs.length,
+      totalRatings: ratingsSnapshot.size,
+      totalWatchlist: watchlistSnapshot.size,
+      averageRating: ratingValues.length
+        ? Number(
+            (
+              ratingValues.reduce((sum, rating) => sum + rating, 0) /
+              ratingValues.length
+            ).toFixed(1)
+          )
+        : 0,
     };
   } catch (error) {
     console.error("Error in getStats:", error);
@@ -124,28 +77,13 @@ async function getStats() {
 
 async function getUserStats() {
   try {
-    const [userStatsResult] = await pool.query(`
-      SELECT 
-        COUNT(*) as total_users,
-        COUNT(CASE WHEN is_active = 1 THEN 1 END) as active_users,
-        COUNT(CASE WHEN role = 'admin' THEN 1 END) as admin_users,
-        COUNT(CASE WHEN role = 'moderator' THEN 1 END) as moderator_users
-      FROM users
-    `);
-
-    // Extract values properly from MySQL2 result format
-    const stats = Array.isArray(userStatsResult)
-      ? (userStatsResult[0] as any)
-      : null;
-
-    return (
-      stats || {
-        total_users: 0,
-        active_users: 0,
-        admin_users: 0,
-        moderator_users: 0,
-      }
-    );
+    const users = await listAdminUsers();
+    return {
+      total_users: users.length,
+      active_users: users.filter((user) => user.isActive).length,
+      admin_users: users.filter((user) => user.role === "admin").length,
+      moderator_users: users.filter((user) => user.role === "moderator").length,
+    };
   } catch (error) {
     console.error("Error in getUserStats:", error);
     return {
@@ -160,44 +98,12 @@ async function getUserStats() {
 async function getRecentActivityLogs(page: number = 1) {
   try {
     const offset = (page - 1) * DASHBOARD_ITEMS_PER_PAGE;
-
-    const [logsResult] = await pool.query(`
-      SELECT 
-        al.id,
-        al.admin_id,
-        al.action,
-        al.target_user_id,
-        al.description,
-        al.metadata,
-        al.ip_address,
-        al.created_at,
-        u.name as admin_name,
-        u.email as admin_email,
-        u.avatar as admin_avatar,
-        tu.name as target_user_name,
-        tu.email as target_user_email,
-        tu.avatar as target_user_avatar
-      FROM admin_activity_logs al
-      LEFT JOIN users u ON al.admin_id = u.id
-      LEFT JOIN users tu ON al.target_user_id = tu.id
-      ORDER BY al.created_at DESC
-      LIMIT ${DASHBOARD_ITEMS_PER_PAGE} OFFSET ${offset}
-    `);
-
-    const [countResult] = await pool.query(`
-      SELECT COUNT(*) as total
-      FROM admin_activity_logs
-    `);
-
-    // Extract values properly from MySQL2 result format
-    const logs = Array.isArray(logsResult) ? logsResult : [];
-    const total = Array.isArray(countResult)
-      ? (countResult[0] as any)?.total || 0
-      : 0;
+    const logs = await listAdminLogs();
+    const total = logs.length;
     const totalPages = Math.ceil(total / DASHBOARD_ITEMS_PER_PAGE);
 
     return {
-      logs,
+      logs: logs.slice(offset, offset + DASHBOARD_ITEMS_PER_PAGE),
       pagination: {
         currentPage: page,
         totalPages,
@@ -219,6 +125,20 @@ async function getRecentActivityLogs(page: number = 1) {
   }
 }
 
+async function getCurrentAdminName() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("__session")?.value;
+  if (!sessionCookie) return "Admin";
+
+  try {
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const doc = await adminDb.collection("users").doc(decoded.uid).get();
+    return doc.data()?.name || decoded.name || "Admin";
+  } catch {
+    return "Admin";
+  }
+}
+
 function getActionBadgeVariant(action: string) {
   if (action.includes("delete")) return "destructive";
   if (action.includes("create")) return "default";
@@ -231,14 +151,14 @@ export default async function AdminDashboardPage({
 }: {
   searchParams: Promise<{ activityPage?: string }>;
 }) {
-  const session = await getServerSession(authOptions);
   const params = await searchParams;
   const activityPage = parseInt(params.activityPage || "1", 10);
 
-  const [stats, userStats, recentLogsData] = await Promise.all([
+  const [stats, userStats, recentLogsData, adminName] = await Promise.all([
     getStats(),
     getUserStats(),
     getRecentActivityLogs(activityPage),
+    getCurrentAdminName(),
   ]);
 
   const activePercentage =
@@ -267,7 +187,7 @@ export default async function AdminDashboardPage({
                     <p className="text-slate-300 text-lg mt-2">
                       Welcome back,{" "}
                       <span className="font-semibold text-primary">
-                        {session?.user?.name}
+                        {adminName}
                       </span>
                     </p>
                   </div>
@@ -287,32 +207,6 @@ export default async function AdminDashboardPage({
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 hover:bg-white/20 text-white border-0 cursor-pointer backdrop-blur-sm transition-all duration-300"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 hover:bg-white/20 text-white border-0 cursor-pointer backdrop-blur-sm transition-all duration-300"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 hover:bg-white/20 text-white border-0 cursor-pointer backdrop-blur-sm transition-all duration-300"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </Button>
-              </div>
             </div>
           </CardHeader>
         </Card>

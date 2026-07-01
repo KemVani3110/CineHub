@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { Star, StarHalf, Trash2, Edit3, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import useRatingStore from '@/store/ratingStore';
 import { useRating } from '@/hooks/useRating';
+import { useAuth } from '@/hooks/useAuth';
 
 interface MovieRatingProps {
   movieId: number;
@@ -16,7 +16,7 @@ interface MovieRatingProps {
 }
 
 export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }: MovieRatingProps) {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const { toast } = useToast();
   const { 
     userRating, 
@@ -37,10 +37,10 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
   const currentReview = userReview;
 
   useEffect(() => {
-    if (session?.user) {
+    if (user) {
       fetchRating();
     }
-  }, [session?.user, fetchRating]);
+  }, [user, fetchRating]);
 
   useEffect(() => {
     if (currentReview) {
@@ -52,7 +52,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
   }, [currentReview]);
 
   const handleRatingClick = async (rating: number) => {
-    if (!session?.user) {
+    if (!user) {
       toast({
         title: 'Authentication required',
         description: 'Please sign in to rate movies',
@@ -85,7 +85,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
   };
 
   const handleReviewSubmit = async () => {
-    if (!session?.user) {
+    if (!user) {
       toast({
         title: 'Authentication required',
         description: 'Please sign in to review movies',
@@ -282,7 +282,7 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
                 Remove
               </Button>
             )}
-            {session?.user && currentRating && (
+            {user && currentRating && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -296,13 +296,13 @@ export default function MovieRating({ movieId, tmdbRating, mediaType = 'movie' }
           </div>
         </div>
 
-        {!session?.user && (
+        {!user && (
           <p className="text-xs text-slate-400 italic">Sign in to rate this {mediaType}</p>
         )}
       </div>
 
       {/* Expandable Review Section */}
-      {session?.user && showReviewSection && currentRating && (
+      {user && showReviewSection && currentRating && (
         <Card className="border-slate-700/50 bg-slate-800/30">
           <CardContent className="p-4">
             {isReviewing ? (

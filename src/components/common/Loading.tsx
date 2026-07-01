@@ -1,38 +1,44 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
+import Image from "next/image";
 
 interface LoadingProps {
- message?: string;
- showBackdrop?: boolean;
+  message?: string;
+  showBackdrop?: boolean;
 }
 
-const Loading = ({ message = 'Loading...', showBackdrop = true }: LoadingProps) => {
- return (
-   <div className={`${showBackdrop ? 'fixed inset-0 bg-background/80 backdrop-blur-sm z-50' : ''} flex items-center justify-center min-h-[300px]`}>
-     <div className="flex flex-col items-center justify-center gap-6">
-       <div className="relative">
-         {/* Spinner ring outside */}
-         <div className="w-24 h-24 rounded-full border-6 border-primary/30 border-t-primary animate-spin"></div>
-         
-         {/* Middle Logo*/}
-         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-           <Image
-             src="/logo.png"
-             alt="CineHub Logo"
-             width={60}
-             height={60}
-             className="animate-pulse rounded-full"
-           />
-         </div>
-       </div>
-       
-       <p className="text-text-sub text-lg font-medium animate-pulse">
-         {message}
-       </p>
-     </div>
-   </div>
- );
+const Loading = ({ message = "Loading...", showBackdrop = true }: LoadingProps) => {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`${
+        showBackdrop
+          ? "fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+          : ""
+      } flex min-h-[300px] items-center justify-center`}
+    >
+      <div className="flex flex-col items-center justify-center gap-6">
+        <div className="relative h-24 w-24">
+          <div className="absolute inset-0 rounded-full border-[6px] border-primary/30 border-t-primary animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Image
+              src="/logo.png"
+              alt="CineHub Logo"
+              width={60}
+              height={60}
+              priority={showBackdrop}
+              className="h-[60px] w-[60px] rounded-full object-cover animate-pulse"
+            />
+          </div>
+        </div>
+
+        <p className="text-text-sub text-lg font-medium animate-pulse">
+          {message}
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default Loading;

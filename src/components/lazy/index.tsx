@@ -93,12 +93,6 @@ export const TVShowCard = lazy(() =>
     default: mod.TVShowCard,
   }))
 );
-export const InternalMovieCard = lazy(() =>
-  import("@/components/movie/InternalMovieCard").then((mod) => ({
-    default: mod.InternalMovieCard,
-  }))
-);
-
 // Watch components
 export const WatchlistPage = lazy(() =>
   import("@/components/watch/WatchlistPage").then((mod) => ({
@@ -280,38 +274,21 @@ export const withLazyLoading = (
   Component: React.ComponentType,
   loadingMessage?: string,
   options?: {
-    minLoadingTime?: number;
     showBackdrop?: boolean;
     retryCount?: number;
     skeleton?: React.ComponentType;
   }
 ) => {
   return function LazyLoadedComponent(props: any) {
-    const [isLoading, setIsLoading] = React.useState(true);
-    const [showContent, setShowContent] = React.useState(false);
     const [retryCount, setRetryCount] = React.useState(0);
-
-    React.useEffect(() => {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-        setTimeout(() => setShowContent(true), 100);
-      }, options?.minLoadingTime || 300);
-
-      return () => clearTimeout(timer);
-    }, []);
 
     const handleRetry = () => {
       setRetryCount((prev) => prev + 1);
-      setIsLoading(true);
-      setShowContent(false);
     };
-
-    if (isLoading && options?.skeleton) {
-      return <options.skeleton />;
-    }
 
     return (
       <LazyLoadErrorBoundary
+        key={retryCount}
         fallback={
           <div className="flex flex-col items-center justify-center p-4 space-y-4">
             <p className="text-red-500">Failed to load component</p>
@@ -331,11 +308,14 @@ export const withLazyLoading = (
             options?.skeleton ? (
               <options.skeleton />
             ) : (
-              <Loading message={loadingMessage} showBackdrop={false} />
+              <Loading
+                message={loadingMessage}
+                showBackdrop={options?.showBackdrop ?? false}
+              />
             )
           }
         >
-          {showContent ? <Component {...props} /> : null}
+          <Component {...props} />
         </Suspense>
       </LazyLoadErrorBoundary>
     );

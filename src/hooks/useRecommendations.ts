@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { TMDBMovie, TMDBTV, TMDBTVShow } from '@/types/tmdb';
 import { fetchMovieDetails, fetchTVShowDetails } from '@/services/tmdb';
 import { useWatchlistWithUser } from '@/store/watchlistStore';
 import useRatingStore from '@/store/ratingStore';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Recommendation {
   movie?: TMDBMovie;
@@ -19,7 +19,7 @@ interface WatchlistItem {
 }
 
 export function useRecommendations() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const { items: watchlistItems } = useWatchlistWithUser();
   const { userRating } = useRatingStore();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -30,17 +30,17 @@ export function useRecommendations() {
   useEffect(() => {
     setRecommendations([]);
     setError(null);
-  }, [session?.user?.email]);
+  }, [user?.email]);
 
   // Load recommendations when watchlist changes
   useEffect(() => {
-    if (session?.user && watchlistItems.length > 0) {
+    if (user && watchlistItems.length > 0) {
       fetchRecommendations();
     }
-  }, [session?.user, watchlistItems]);
+  }, [user, watchlistItems]);
 
   const fetchRecommendations = async () => {
-    if (!session?.user) return;
+    if (!user) return;
 
     try {
       setIsLoading(true);

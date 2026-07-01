@@ -1,25 +1,35 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { cookies } from "next/headers";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { log } from "console";
+import { adminAuth } from "@/lib/firebase-admin";
+import { getUserFromUid } from "@/lib/firebase-user";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("__session")?.value;
 
-  if (!session?.user) {
+  if (!sessionCookie) {
     redirect("/login");
   }
 
-  if (session.user.role !== "admin") {
-    redirect("/home");
-  }
+  try {
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const user = await getUserFromUid(decodedToken.uid);
 
-  console.log("Admin Layout - Access granted");
+    if (!user) {
+      redirect("/login");
+    }
+
+    if (user.role !== "admin") {
+      redirect("/home");
+    }
+  } catch {
+    redirect("/login");
+  }
 
   return (
     <div className="flex h-screen bg-background">

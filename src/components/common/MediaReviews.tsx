@@ -14,10 +14,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
 import { Review } from "@/types/review";
 import { Badge } from "@/components/ui/badge";
 import useRatingStore from "@/store/ratingStore";
+import { useAuth } from "@/hooks/useAuth";
+import { authenticatedFetch } from "@/lib/firebase-auth-api";
 
 interface MediaReviewsProps {
   reviews: TMDBReviews;
@@ -30,8 +31,8 @@ export default function MediaReviews({
   mediaId,
   mediaType,
 }: MediaReviewsProps) {
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+  const { user } = useAuth();
+  const currentUserId = user?.id?.toString();
   const [page, setPage] = useState(1);
   const [userReviews, setUserReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +48,7 @@ export default function MediaReviews({
   const fetchUserReviews = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/reviews?${mediaType}Id=${mediaId}&mediaType=${mediaType}`
       );
       if (response.ok) {

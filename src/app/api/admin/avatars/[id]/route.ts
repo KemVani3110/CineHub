@@ -1,85 +1,53 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { unlink } from "fs/promises";
-import { join } from "path";
-import { db } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
+import { requireAdminOrModerator, writeAdminActivityLog } from "@/lib/admin-firestore";
+
+async function findAvatarDoc(id: string) {
+  const direct = await adminDb.collection("admin_avatars").doc(id).get();
+  if (direct.exists) return direct;
+
+  const snapshot = await adminDb
+    .collection("admin_avatars")
+    .where("numeric_id", "==", Number(id))
+    .limit(1)
+    .get();
+
+  return snapshot.docs[0] || null;
+}
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin or moderator
-    if (!session.user.role || !["admin", "moderator"].includes(session.user.role)) {
-      return NextResponse.json(
-        { message: "Forbidden" },
-        { status: 403 }
-      );
-    }
-
+    const admin = await requireAdminOrModerator(request);
     const { id } = await params;
-    if (!id || typeof id !== 'string') {
-      return NextResponse.json(
-        { message: "Avatar ID is required" },
-        { status: 400 }
-      );
-    }
-    const avatarId = parseInt(id);
-    if (isNaN(avatarId)) {
-      return NextResponse.json(
-        { message: "Invalid avatar ID" },
-        { status: 400 }
-      );
+
+    if (!id) {
+      return NextResponse.json({ message: "Avatar ID is required" }, { status: 400 });
     }
 
-    // Get avatar info before deleting
-    const [avatars] = await db.query(
-      `SELECT * FROM user_avatars WHERE id = ?`,
-      [avatarId]
-    ) as [any[], any];
-
-    if (!avatars.length) {
-      return NextResponse.json(
-        { message: "Avatar not found" },
-        { status: 404 }
-      );
+    const avatarDoc = await findAvatarDoc(id);
+    if (!avatarDoc?.exists) {
+      return NextResponse.json({ message: "Avatar not found" }, { status: 404 });
     }
 
-    const avatar = avatars[0];
-
-    // Delete file from filesystem
-    const filePath = join(process.cwd(), "public", avatar.file_path);
-    try {
-      await unlink(filePath);
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      // Continue with database deletion even if file deletion fails
-    }
-
-    // Delete from database
-    await db.query(
-      `DELETE FROM user_avatars WHERE id = ?`,
-      [avatarId]
+    const avatar = avatarDoc.data() || {};
+    await avatarDoc.ref.delete();
+    await writeAdminActivityLog(
+      admin,
+      "DELETE_AVATAR",
+      `Deleted avatar: ${avatar.original_name || id}`,
+      request,
+      { metadata: { avatarId: id } }
     );
 
-    return NextResponse.json({
-      message: "Avatar deleted successfully",
-    });
+    return NextResponse.json({ message: "Avatar deleted successfully" });
   } catch (error) {
     console.error("Error deleting avatar:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      { message: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }
-} 
+}

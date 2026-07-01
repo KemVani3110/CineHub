@@ -1,164 +1,140 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import pool from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb, serverTimestamp } from "@/lib/firebase-admin";
+import {
+  deleteFirebaseAuthUser,
+  findUserDocByNumericId,
+  listAdminUsers,
+  requireAdmin,
+  serializeAdminUser,
+  writeAdminActivityLog,
+} from "@/lib/admin-firestore";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    if (session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-    }
-
-    const [rows] = await pool.execute(`
-      SELECT 
-        id, name, email, role, is_active as isActive, 
-        avatar, created_at as createdAt, last_login_at as lastLoginAt
-      FROM users
-      ORDER BY created_at DESC
-    `);
-
-    return NextResponse.json({ users: rows });
+    await requireAdmin(request);
+    const users = await listAdminUsers();
+    return NextResponse.json({ users });
   } catch (error) {
-    console.error('Error fetching users:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : "Unauthorized" },
+      { status: 401 }
     );
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    if (session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-    }
-
+    const admin = await requireAdmin(request);
     const { userId, role, isActive } = await request.json();
 
-    // Prevent admin from changing their own role
-    if (session.user.id === String(userId) && session.user.role === 'admin' && role !== 'admin') {
-      return NextResponse.json({ error: 'Cannot change your own admin role' }, { status: 403 });
+    const targetDoc = await findUserDocByNumericId(userId);
+    if (!targetDoc?.exists) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Prevent promoting users to admin role
-    if (role === 'admin') {
-      return NextResponse.json({ error: 'Cannot promote users to admin role' }, { status: 403 });
+    const targetData = targetDoc.data() || {};
+    if (targetDoc.id === admin.id && role !== "admin") {
+      return NextResponse.json(
+        { error: "Cannot change your own admin role" },
+        { status: 403 }
+      );
     }
 
-    // Prevent deactivating admin accounts
-    if (role === 'admin' && !isActive) {
-      return NextResponse.json({ error: 'Cannot deactivate admin accounts' }, { status: 403 });
+    if (role === "admin" && targetData.role !== "admin") {
+      return NextResponse.json(
+        { error: "Cannot promote users to admin role" },
+        { status: 403 }
+      );
     }
 
-    await pool.execute(
-      'UPDATE users SET role = ?, is_active = ? WHERE id = ?',
-      [role, isActive, userId]
-    );
+    if (targetData.role === "admin" && !isActive) {
+      return NextResponse.json(
+        { error: "Cannot deactivate admin accounts" },
+        { status: 403 }
+      );
+    }
 
-    const [rows] = await pool.execute(
-      `SELECT 
-        id, name, email, role, is_active as isActive, 
-        avatar, created_at as createdAt, last_login_at as lastLoginAt
-      FROM users WHERE id = ?`,
-      [userId]
-    );
-    const updatedUser = (rows as any[])[0];
+    await targetDoc.ref.update({
+      role,
+      is_active: Boolean(isActive),
+      updated_at: serverTimestamp(),
+    });
 
-    // Log the activity
-    await pool.execute(
-      `INSERT INTO admin_activity_logs 
-        (admin_id, action, target_user_id, description, metadata, ip_address, user_agent)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        session.user.id,
-        'UPDATE_USER',
-        userId,
-        `Updated user ${updatedUser.name} (${updatedUser.email})`,
-        JSON.stringify({ role, isActive }),
-        request.headers.get('x-forwarded-for') || 'unknown',
-        request.headers.get('user-agent') || 'unknown',
-      ]
+    const updatedDoc = await targetDoc.ref.get();
+    const updatedUser = serializeAdminUser(updatedDoc.id, updatedDoc.data() || {});
+
+    await writeAdminActivityLog(
+      admin,
+      "UPDATE_USER",
+      `Updated user ${updatedUser.name} (${updatedUser.email})`,
+      request,
+      {
+        targetUserId: updatedUser.id,
+        targetUserName: updatedUser.name,
+        targetUserEmail: updatedUser.email,
+        metadata: { role, isActive },
+      }
     );
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
-    console.error('Error updating user:', error);
+    console.error("Error updating user:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    if (session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-    }
-
+    const admin = await requireAdmin(request);
     const { userId } = await request.json();
 
-    // Get user info before deletion for logging
-    const [userRows] = await pool.execute(
-      'SELECT id, name, email, role FROM users WHERE id = ?',
-      [userId]
-    );
-    const userToDelete = (userRows as any[])[0];
-
-    if (!userToDelete) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    const targetDoc = await findUserDocByNumericId(userId);
+    if (!targetDoc?.exists) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Prevent deletion of admin accounts
-    if (userToDelete.role === 'admin') {
-      return NextResponse.json({ error: 'Cannot delete admin accounts' }, { status: 403 });
+    const userToDelete = serializeAdminUser(targetDoc.id, targetDoc.data() || {});
+    if (userToDelete.role === "admin") {
+      return NextResponse.json(
+        { error: "Cannot delete admin accounts" },
+        { status: 403 }
+      );
     }
 
-    // Log the activity BEFORE deleting user
-    await pool.execute(
-      `INSERT INTO admin_activity_logs 
-        (admin_id, action, target_user_id, description, metadata, ip_address, user_agent)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        session.user.id,
-        'DELETE_USER',
-        userId,
-        `Deleted user ${userToDelete.name} (${userToDelete.email})`,
-        JSON.stringify({ deletedUser: userToDelete }),
-        request.headers.get('x-forwarded-for') || 'unknown',
-        request.headers.get('user-agent') || 'unknown',
-      ]
+    await writeAdminActivityLog(
+      admin,
+      "DELETE_USER",
+      `Deleted user ${userToDelete.name} (${userToDelete.email})`,
+      request,
+      {
+        targetUserId: userToDelete.id,
+        targetUserName: userToDelete.name,
+        targetUserEmail: userToDelete.email,
+        metadata: { deletedUser: userToDelete },
+      }
     );
 
-    // Delete user AFTER logging
-    await pool.execute('DELETE FROM users WHERE id = ?', [userId]);
+    await Promise.all([
+      targetDoc.ref.delete(),
+      deleteFirebaseAuthUser(targetDoc.id),
+      adminDb.collection("users_deleted").doc(targetDoc.id).set({
+        ...userToDelete,
+        deleted_at: serverTimestamp(),
+        deleted_by: admin.id,
+      }),
+    ]);
 
-    return NextResponse.json({ 
-      message: 'User deleted successfully',
-      deletedUser: userToDelete 
+    return NextResponse.json({
+      message: "User deleted successfully",
+      deletedUser: userToDelete,
     });
   } catch (error) {
-    console.error('Error deleting user:', error);
+    console.error("Error deleting user:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }

@@ -196,15 +196,6 @@ export interface DropdownItem {
     description?: string;
 }
 
-// File upload
-export interface FileUpload {
-    file: File;
-    progress: number;
-    status: 'pending' | 'uploading' | 'success' | 'error';
-    error?: string;
-    url?: string;
-}
-
 // Date range
 export interface DateRange {
     from?: Date;

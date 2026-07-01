@@ -1,64 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser, getUserId, logActivity, isProduction, adminDb } from '@/lib/auth-helpers';
-import pool from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth-helpers";
+import { adminDb, serverTimestamp, toIsoString } from "@/lib/firebase-admin";
+
+type MediaType = "movie" | "tv";
+
+function mediaIdFor(mediaType: MediaType, movieId?: number | null, tvId?: number | null) {
+  return mediaType === "movie" ? movieId : tvId;
+}
+
+function watchlistDocId(userId: string, mediaType: MediaType, mediaId: number) {
+  return `${userId}_${mediaType}_${mediaId}`;
+}
+
+function serializeWatchlistItem(data: any) {
+  return {
+    id: data.movie_id || data.tv_id,
+    media_type: data.media_type,
+    title: data.title || "",
+    poster_path: data.poster_path || "",
+    added_at: toIsoString(data.added_at),
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { user, error } = await getAuthenticatedUser(request);
-    
     if (!user) {
       return NextResponse.json(
-        { message: error || 'Unauthorized' },
+        { message: error || "Unauthorized" },
         { status: 401 }
       );
     }
 
-    if (isProduction && adminDb) {
-      // Firestore implementation
-      const watchlistSnapshot = await adminDb
-        .collection('watchlists')
-        .where('userId', '==', user.id)
-        .orderBy('added_at', 'desc')
-        .get();
+    const snapshot = await adminDb
+      .collection("watchlists")
+      .where("userId", "==", user.id)
+      .get();
 
-      const watchlist = watchlistSnapshot.docs.map((doc: any) => {
-        const data = doc.data();
-        return {
-          id: data.movie_id || data.tv_id,
-          media_type: data.media_type,
-          title: data.title,
-          poster_path: data.poster_path,
-          added_at: data.added_at?.toDate()?.toISOString() || new Date().toISOString(),
-        };
-      });
-
-      return NextResponse.json({ watchlist });
-    } else {
-      // MySQL implementation
-      const userId = getUserId(user);
-      
-      const [rows] = await pool.query(
-        `SELECT 
-          CASE 
-            WHEN movie_id IS NOT NULL THEN movie_id 
-            ELSE tv_id 
-          END as id,
-          media_type,
-          title,
-          poster_path,
-          added_at
-         FROM watchlist 
-         WHERE user_id = ? 
-         ORDER BY added_at DESC`,
-        [userId]
+    const watchlist = snapshot.docs
+      .map((doc) => serializeWatchlistItem(doc.data()))
+      .sort(
+        (a, b) =>
+          new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
       );
 
-      return NextResponse.json({ watchlist: rows });
-    }
+    return NextResponse.json({ watchlist });
   } catch (error) {
-    console.error('Error fetching watchlist:', error);
+    console.error("Error fetching watchlist:", error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: "Internal server error" },
       { status: 500 }
     );
   }
@@ -67,150 +57,63 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { user, error } = await getAuthenticatedUser(request);
-    
     if (!user) {
       return NextResponse.json(
-        { message: error || 'Unauthorized' },
+        { message: error || "Unauthorized" },
         { status: 401 }
       );
     }
 
     const body = await request.json();
-    const { movie_id, tv_id, media_type, title, poster_path } = body;
+    const mediaType = body.media_type as MediaType;
+    const movieId = body.movie_id ? Number(body.movie_id) : null;
+    const tvId = body.tv_id ? Number(body.tv_id) : null;
+    const mediaId = Number(mediaIdFor(mediaType, movieId, tvId));
 
-    // Validate required fields
-    if (!media_type || !title) {
+    if (!["movie", "tv"].includes(mediaType) || !mediaId || !body.title) {
       return NextResponse.json(
-        { message: 'Media type and title are required' },
+        { message: "Valid media type, media ID, and title are required" },
         { status: 400 }
       );
     }
 
-    if (!['movie', 'tv'].includes(media_type)) {
+    const id = watchlistDocId(user.id, mediaType, mediaId);
+    const ref = adminDb.collection("watchlists").doc(id);
+    const existing = await ref.get();
+
+    if (existing.exists) {
       return NextResponse.json(
-        { message: 'Invalid media type' },
-        { status: 400 }
+        { message: "Item already in watchlist" },
+        { status: 409 }
       );
     }
 
-    if (media_type === 'movie' && !movie_id) {
-      return NextResponse.json(
-        { message: 'Movie ID is required for movie type' },
-        { status: 400 }
-      );
-    }
+    const now = serverTimestamp();
+    await ref.set({
+      userId: user.id,
+      media_key: `${mediaType}:${mediaId}`,
+      movie_id: mediaType === "movie" ? mediaId : null,
+      tv_id: mediaType === "tv" ? mediaId : null,
+      media_type: mediaType,
+      title: body.title,
+      poster_path: body.poster_path || "",
+      added_at: now,
+      created_at: now,
+      updated_at: now,
+    });
 
-    if (media_type === 'tv' && !tv_id) {
-      return NextResponse.json(
-        { message: 'TV ID is required for TV type' },
-        { status: 400 }
-      );
-    }
-
-    if (isProduction && adminDb) {
-      // Firestore implementation
-      const watchlistData = {
-        userId: user.id,
-        movie_id: movie_id || null,
-        tv_id: tv_id || null,
-        media_type,
-        title,
-        poster_path: poster_path || '',
-        added_at: new Date(),
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-
-      // Check if item already exists
-      const existingSnapshot = await adminDb
-        .collection('watchlists')
-        .where('userId', '==', user.id)
-        .where('media_type', '==', media_type)
-        .where(media_type === 'movie' ? 'movie_id' : 'tv_id', '==', media_type === 'movie' ? movie_id : tv_id)
-        .get();
-
-      if (!existingSnapshot.empty) {
-        return NextResponse.json(
-          { message: 'Item already in watchlist' },
-          { status: 409 }
-        );
-      }
-
-      const docRef = await adminDb.collection('watchlists').add(watchlistData);
-
-      // Log activity
-      await logActivity(
-        user.id,
-        'added_to_watchlist',
-        { media_type },
-        media_type as 'movie' | 'tv',
-        media_type === 'movie' ? movie_id : tv_id,
-        `Added ${title} to watchlist`
-      );
-
-      return NextResponse.json(
-        { 
-          message: 'Successfully added to watchlist',
-          id: docRef.id 
-        },
-        { status: 201 }
-      );
-    } else {
-      // MySQL implementation
-      const userId = getUserId(user);
-
-      // Check if item already exists
-      const [existing] = await pool.query(
-        `SELECT id FROM watchlist 
-         WHERE user_id = ? 
-         AND media_type = ? 
-         AND ${media_type === 'movie' ? 'movie_id' : 'tv_id'} = ?`,
-        [userId, media_type, media_type === 'movie' ? movie_id : tv_id]
-      );
-
-      if ((existing as any[]).length > 0) {
-        return NextResponse.json(
-          { message: 'Item already in watchlist' },
-          { status: 409 }
-        );
-      }
-
-      const [result] = await pool.query(
-        `INSERT INTO watchlist (user_id, movie_id, tv_id, media_type, title, poster_path)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          userId,
-          movie_id,
-          tv_id,
-          media_type,
-          title,
-          poster_path,
-        ]
-      );
-
-      // Log activity
-      await logActivity(
-        user.id,
-        'added_to_watchlist',
-        { media_type },
-        media_type as 'movie' | 'tv',
-        media_type === 'movie' ? movie_id : tv_id,
-        `Added ${title} to watchlist`
-      );
-
-      return NextResponse.json(
-        { 
-          message: 'Successfully added to watchlist',
-          id: (result as any).insertId 
-        },
-        { status: 201 }
-      );
-    }
-  } catch (error) {
-    console.error('Error adding to watchlist:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      {
+        message: "Successfully added to watchlist",
+        id,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error adding to watchlist:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
       { status: 500 }
     );
   }
-} 
+}

@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { fetchMovieDetails, fetchTVShowDetails } from "@/services/tmdb";
+import { authenticatedFetch } from "@/lib/firebase-auth-api";
 
 export const useHistory = () => {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ export const useHistory = () => {
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch("/api/history");
+      const response = await authenticatedFetch("/api/history");
       if (!response.ok) throw new Error("Failed to fetch history");
       const data = await response.json();
       
@@ -76,7 +77,7 @@ export const useHistory = () => {
            (mediaType === 'tv' && item.tvId === tvId))
       );
 
-      const response = await fetch('/api/history', {
+      const response = await authenticatedFetch('/api/history', {
         method: existingItem ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +94,7 @@ export const useHistory = () => {
       if (!response.ok) {
         if (response.status === 409) {
           // If record exists, try updating it
-          const updateResponse = await fetch('/api/history', {
+          const updateResponse = await authenticatedFetch('/api/history', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -130,7 +131,7 @@ export const useHistory = () => {
 
   const removeFromWatchHistory = async (id: number) => {
     try {
-      const response = await fetch(`/api/history?id=${id}`, {
+      const response = await authenticatedFetch(`/api/history?id=${id}`, {
         method: "DELETE",
       });
 
@@ -153,7 +154,7 @@ export const useHistory = () => {
 
   const clearWatchHistory = async () => {
     try {
-      const response = await fetch("/api/history", {
+      const response = await authenticatedFetch("/api/history", {
         method: "DELETE",
       });
 

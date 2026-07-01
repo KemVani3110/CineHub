@@ -1,19 +1,42 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth-helpers";
+import { adminDb, numericIdFromUid, serverTimestamp, toIsoString } from "@/lib/firebase-admin";
 
-export async function GET() {
+function favoriteDocId(userId: string, actorId: number) {
+  return `${userId}_${actorId}`;
+}
+
+function serializeFavorite(id: string, data: any) {
+  return {
+    id: data.numeric_id || numericIdFromUid(id),
+    user_id: data.userId,
+    actor_id: data.actor_id,
+    name: data.name || "",
+    profile_path: data.profile_path || "",
+    added_at: toIsoString(data.added_at),
+    created_at: toIsoString(data.created_at),
+    updated_at: toIsoString(data.updated_at),
+  };
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user, error } = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: error || "Unauthorized" }, { status: 401 });
     }
 
-    const [favorites] = await db.query(
-      "SELECT * FROM favorites WHERE user_id = ? ORDER BY added_at DESC",
-      [session.user.id]
-    );
+    const snapshot = await adminDb
+      .collection("favorite_actors")
+      .where("userId", "==", user.id)
+      .get();
+
+    const favorites = snapshot.docs
+      .map((doc) => serializeFavorite(doc.id, doc.data()))
+      .sort(
+        (a, b) =>
+          new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
+      );
 
     return NextResponse.json(favorites);
   } catch (error) {
@@ -25,16 +48,16 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user, error } = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: error || "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { actorId, name, profilePath } = body;
+    const actorId = Number(body.actorId);
+    const { name, profilePath } = body;
 
     if (!actorId || !name) {
       return NextResponse.json(
@@ -43,31 +66,32 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if actor is already in favorites
-    const [existing] = await db.query(
-      "SELECT id FROM favorites WHERE user_id = ? AND actor_id = ?",
-      [session.user.id, actorId]
-    );
+    const id = favoriteDocId(user.id, actorId);
+    const ref = adminDb.collection("favorite_actors").doc(id);
+    const existing = await ref.get();
 
-    if (Array.isArray(existing) && existing.length > 0) {
+    if (existing.exists) {
       return NextResponse.json(
         { error: "Actor already in favorites" },
         { status: 400 }
       );
     }
 
-    // Add new actor to favorites
-    const [result] = await db.query(
-      "INSERT INTO favorites (user_id, actor_id, name, profile_path) VALUES (?, ?, ?, ?)",
-      [session.user.id, actorId, name, profilePath]
-    ) as [any, any];
+    const now = serverTimestamp();
+    const favoriteData = {
+      userId: user.id,
+      numeric_id: numericIdFromUid(id),
+      actor_id: actorId,
+      name,
+      profile_path: profilePath || "",
+      added_at: now,
+      created_at: now,
+      updated_at: now,
+    };
 
-    const [newFavorite] = await db.query(
-      "SELECT * FROM favorites WHERE id = ?",
-      [(result as any).insertId]
-    ) as [any[], any];
+    await ref.set(favoriteData);
 
-    return NextResponse.json(newFavorite[0] as any);
+    return NextResponse.json(serializeFavorite(id, favoriteData));
   } catch (error) {
     console.error("Error adding to favorites:", error);
     return NextResponse.json(
@@ -77,15 +101,15 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user, error } = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: error || "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const actorId = searchParams.get("actorId");
+    const actorId = Number(searchParams.get("actorId"));
 
     if (!actorId) {
       return NextResponse.json(
@@ -94,10 +118,10 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await db.query(
-      "DELETE FROM favorites WHERE user_id = ? AND actor_id = ?",
-      [session.user.id, actorId]
-    );
+    await adminDb
+      .collection("favorite_actors")
+      .doc(favoriteDocId(user.id, actorId))
+      .delete();
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -107,4 +131,4 @@ export async function DELETE(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

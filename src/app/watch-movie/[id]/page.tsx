@@ -21,6 +21,7 @@ import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { MovieActions } from "@/components/watch/MovieActions";
 import { SimilarMovies } from "@/components/watch/SimilarMovies";
 import { cn } from "@/lib/utils";
+import { authenticatedFetch } from "@/lib/firebase-auth-api";
 
 interface StreamingSource {
   name: string;
@@ -73,7 +74,7 @@ export default function WatchMoviePage() {
       setLoadingStreams(true);
       setStreamError(null);
 
-      const response = await fetch(`/api/stream/movie/${id}`);
+      const response = await authenticatedFetch(`/api/stream/movie/${id}`);
       const data: StreamingResponse = await response.json();
 
       if (data.success && data.sources.length > 0) {

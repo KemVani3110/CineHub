@@ -54,7 +54,7 @@ const AboutPage = () => {
     {
       category: "Frontend",
       technologies: [
-        { name: "Next.js 14", desc: "React framework with App Router" },
+        { name: "Next.js 15", desc: "React framework with App Router" },
         { name: "TypeScript", desc: "Type-safe JavaScript" },
         { name: "Tailwind CSS", desc: "Utility-first CSS framework" },
         { name: "Framer Motion", desc: "Animation library" },
@@ -64,10 +64,10 @@ const AboutPage = () => {
     {
       category: "Backend & Database",
       technologies: [
-        { name: "Firebase", desc: "Authentication & Database" },
+        { name: "Firebase Auth", desc: "Authentication service" },
         { name: "Firestore", desc: "NoSQL cloud database" },
         { name: "TMDB API", desc: "Movie & TV show data" },
-        { name: "NextAuth.js", desc: "Authentication solution" },
+        { name: "Firebase Admin", desc: "Server-side auth verification" },
       ]
     },
     {

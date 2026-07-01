@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { authenticatedFetch } from "@/lib/firebase-auth-api";
 
 interface FavoriteActor {
   id: number;
@@ -31,7 +32,7 @@ export const useFavoriteStore = create<FavoriteState>()(
       addFavoriteActor: async (actor) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await fetch("/api/favorites", {
+          const response = await authenticatedFetch("/api/favorites", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -67,7 +68,7 @@ export const useFavoriteStore = create<FavoriteState>()(
       removeFavoriteActor: async (actorId) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await fetch(`/api/favorites?actorId=${actorId}`, {
+          const response = await authenticatedFetch(`/api/favorites?actorId=${actorId}`, {
             method: "DELETE",
           });
 
@@ -95,7 +96,7 @@ export const useFavoriteStore = create<FavoriteState>()(
       fetchFavoriteActors: async () => {
         try {
           set({ isLoading: true, error: null });
-          const response = await fetch("/api/favorites");
+          const response = await authenticatedFetch("/api/favorites");
 
           if (!response.ok) {
             throw new Error("Failed to fetch favorites");

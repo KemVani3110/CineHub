@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
+import { authenticatedFetch } from '@/lib/firebase-auth-api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface WatchlistItem {
   id: number;
@@ -57,7 +58,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
             poster_path: item.posterPath,
           };
 
-          const response = await fetch('/api/watchlist', {
+          const response = await authenticatedFetch('/api/watchlist', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -90,7 +91,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
         }));
 
         try {
-          const response = await fetch(`/api/watchlist/${mediaType}/${id}`, {
+          const response = await authenticatedFetch(`/api/watchlist/${mediaType}/${id}`, {
             method: 'DELETE',
           });
 
@@ -112,7 +113,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
       fetchWatchlist: async () => {
         try {
           set({ isLoading: true, error: null });
-          const response = await fetch('/api/watchlist');
+          const response = await authenticatedFetch('/api/watchlist');
           
           if (!response.ok) {
             throw new Error('Failed to fetch watchlist');
@@ -158,18 +159,18 @@ export const useWatchlistStore = create<WatchlistStore>()(
 
 // Create a hook to handle user changes
 export const useWatchlistWithUser = () => {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const { fetchWatchlist, setCurrentUser } = useWatchlistStore();
 
   // Reset and fetch watchlist when user changes
   useEffect(() => {
-    const userEmail = session?.user?.email || null;
+    const userEmail = user?.email || null;
     setCurrentUser(userEmail);
     
     if (userEmail) {
       fetchWatchlist();
     }
-  }, [session?.user?.email, fetchWatchlist, setCurrentUser]);
+  }, [user?.email, fetchWatchlist, setCurrentUser]);
 
   return useWatchlistStore();
 }; 

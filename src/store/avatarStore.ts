@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useToast } from '@/components/ui/use-toast';
+import { authenticatedFetch } from '@/lib/firebase-auth-api';
 
 interface UserAvatar {
   id: number;
@@ -49,7 +50,7 @@ export const useAvatarStore = create<AvatarState>((set, get) => ({
   fetchAvatars: async () => {
     try {
       set({ loading: true });
-      const response = await fetch('/api/admin/avatars');
+      const response = await authenticatedFetch('/api/admin/avatars');
       const data = await response.json();
       if (response.ok) {
         set({ avatars: data.avatars });
@@ -70,7 +71,7 @@ export const useAvatarStore = create<AvatarState>((set, get) => ({
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await fetch('/api/admin/avatars/upload', {
+      const response = await authenticatedFetch('/api/admin/avatars/upload', {
         method: 'POST',
         body: formData,
       });
@@ -93,7 +94,7 @@ export const useAvatarStore = create<AvatarState>((set, get) => ({
 
   deleteAvatar: async (id: number) => {
     try {
-      const response = await fetch(`/api/admin/avatars/${id}`, {
+      const response = await authenticatedFetch(`/api/admin/avatars/${id}`, {
         method: 'DELETE',
       });
 

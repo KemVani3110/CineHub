@@ -25,7 +25,7 @@ CineHub is built using a modern web application architecture that follows the pr
 ## Technology Stack
 
 ### Frontend
-- **Framework**: Next.js 18
+- **Framework**: Next.js 15
 - **Language**: TypeScript
 - **State Management**: Zustand
 - **UI Components**: Radix UI
@@ -35,8 +35,8 @@ CineHub is built using a modern web application architecture that follows the pr
 ### Backend
 - **Runtime**: Node.js
 - **API**: Next.js API Routes
-- **Authentication**: NextAuth.js, Firebase Auth
-- **Database**: MySQL, Firebase
+- **Authentication**: Firebase Auth
+- **Database**: Firestore
 - **External APIs**: TMDB API
 
 ## Directory Structure
@@ -61,8 +61,9 @@ cinehub/
 │   │   └── utils/        # Utility hooks
 │   │
 │   ├── lib/              # Utility functions
-│   │   ├── auth.ts       # Authentication utilities
-│   │   ├── db.ts         # Database utilities
+│   │   ├── auth-helpers.ts       # Authentication helpers
+│   │   ├── firebase-admin.ts     # Firebase Admin SDK
+│   │   ├── firebase-user.ts      # Firestore user helpers
 │   │   └── utils.ts      # General utilities
 │   │
 │   ├── services/         # External services
@@ -91,15 +92,14 @@ cinehub/
 ## Key Components
 
 ### 1. Authentication System
-- NextAuth.js for session management
 - Firebase Auth for authentication providers
-- JWT for secure token handling
+- Firebase Admin for server-side token verification
+- Firestore-backed user profiles and activity data
 - Protected routes and API endpoints
 
 ### 2. Data Management
 - Zustand for client-side state management
-- MySQL for persistent data storage
-- Firebase for real-time data
+- Firestore for persistent user data
 - TMDB API for movie and TV show data
 
 ### 3. API Layer
@@ -118,10 +118,10 @@ cinehub/
 
 ### Authentication Flow
 1. User initiates login/register
-2. NextAuth.js handles authentication
-3. Firebase Auth processes the request
-4. JWT token is generated
-5. User session is established
+2. Firebase Auth validates credentials
+3. Firebase ID token is generated
+4. API routes verify the token with Firebase Admin
+5. User data is loaded from Firestore
 
 ### Movie Data Flow
 1. User requests movie data
@@ -210,7 +210,7 @@ cinehub/
 ### Development
 - Local development environment
 - Hot reloading
-- Development database
+- Firebase/Firestore environment
 - Mock services
 
 ### Staging
@@ -221,7 +221,7 @@ cinehub/
 
 ### Production
 - Vercel deployment
-- Database migration
+- Firestore rules and environment configuration
 - Environment configuration
 - Monitoring setup
 

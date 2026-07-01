@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useSession } from 'next-auth/react';
 import useRatingStore from '@/store/ratingStore';
 import { Rating } from '@/types/review';
+import { useAuth } from '@/hooks/useAuth';
+import { authenticatedFetch } from '@/lib/firebase-auth-api';
 
 interface RatingResponse {
   id: number;
@@ -17,7 +18,7 @@ interface RatingResponse {
 }
 
 export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 'tv' = 'movie') {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const { 
     setUserRating, 
     setUserReview, 
@@ -32,14 +33,14 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
   const currentMediaId = useRef<string>('');
 
   const fetchRating = useCallback(async () => {
-    if (!session?.user) {
+    if (!user) {
       clearRatingAndReview();
       return;
     }
 
     try {
       setLoadingAndError(true, null);
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/ratings?${mediaType}Id=${mediaType === 'movie' ? movieId : tvId}&mediaType=${mediaType}`
       );
 
@@ -94,16 +95,16 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
     } finally {
       setLoadingAndError(false, null);
     }
-  }, [session?.user, movieId, tvId, mediaType, setUserRating, setUserReview, setLoadingAndError, clearRatingAndReview]);
+  }, [user, movieId, tvId, mediaType, setUserRating, setUserReview, setLoadingAndError, clearRatingAndReview]);
 
   const submitRating = useCallback(async (rating: number, review?: string) => {
-    if (!session?.user) {
+    if (!user) {
       throw new Error('You must be logged in to submit a rating');
     }
 
     try {
       setLoadingAndError(true, null);
-      const response = await fetch('/api/ratings', {
+      const response = await authenticatedFetch('/api/ratings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,16 +163,16 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
     } finally {
       setLoadingAndError(false, null);
     }
-  }, [session?.user, movieId, tvId, mediaType, setUserRating, setUserReview, setLoadingAndError]);
+  }, [user, movieId, tvId, mediaType, setUserRating, setUserReview, setLoadingAndError]);
 
   const deleteRating = useCallback(async () => {
-    if (!session?.user) {
+    if (!user) {
       throw new Error('You must be logged in to delete a rating');
     }
 
     try {
       setLoadingAndError(true, null);
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/ratings?${mediaType}Id=${mediaType === 'movie' ? movieId : tvId}&mediaType=${mediaType}`,
         { method: 'DELETE' }
       );
@@ -189,7 +190,7 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
     } finally {
       setLoadingAndError(false, null);
     }
-  }, [session?.user, movieId, tvId, mediaType, setLoadingAndError, clearRatingAndReview]);
+  }, [user, movieId, tvId, mediaType, setLoadingAndError, clearRatingAndReview]);
 
   // Check if media ID has changed and clear state if needed
   useEffect(() => {
@@ -214,22 +215,22 @@ export function useRating(movieId?: number, tvId?: number, mediaType: 'movie' | 
   // Fetch rating when component mounts or when dependencies change
   useEffect(() => {
   
-    if (session?.user) {
+    if (user) {
       fetchRating();
     } else {
       
       clearRatingAndReview();
     }
-  }, [session?.user, fetchRating, clearRatingAndReview]);
+  }, [user, fetchRating, clearRatingAndReview]);
 
   // Clear store when user changes
   useEffect(() => {
-    const currentUserId = session?.user?.id;
+    const currentUserId = user?.id;
     if (currentUserId && userRating && userRating.userId !== currentUserId.toString()) {
       
       clearRatingAndReview();
     }
-  }, [session?.user?.id, userRating, clearRatingAndReview]);
+  }, [user?.id, userRating, clearRatingAndReview]);
 
   return {
     fetchRating,

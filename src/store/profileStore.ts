@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { AuthProvider } from '@/types/auth';
+import { authenticatedFetch } from '@/lib/firebase-auth-api';
 
 interface User {
   id: number;
@@ -57,7 +58,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   updateProfile: async () => {
     const { formData } = get();
     try {
-      const response = await fetch("/api/profile", {
+      const response = await authenticatedFetch("/api/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -109,7 +110,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         throw new Error("New password must contain at least one number");
       }
 
-      const response = await fetch("/api/profile/password", {
+      const response = await authenticatedFetch("/api/profile/password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -149,7 +150,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   updateAvatar: async (avatarPath: string) => {
     try {
-      const response = await fetch("/api/profile/avatar", {
+      const response = await authenticatedFetch("/api/profile/avatar", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +172,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   fetchUserData: async () => {
     try {
-      const response = await fetch("/api/auth/me");
+      const response = await authenticatedFetch("/api/auth/me");
       if (!response.ok) {
         throw new Error("Failed to fetch user data");
       }
@@ -193,7 +194,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   fetchAvatars: async () => {
     try {
-      const response = await fetch("/api/profile/avatars");
+      const response = await authenticatedFetch("/api/profile/avatars");
       if (!response.ok) {
         throw new Error("Failed to fetch avatars");
       }

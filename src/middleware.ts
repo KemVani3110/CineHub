@@ -1,36 +1,15 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-
-// Environment detection
-const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
 async function getAuthState(request: NextRequest) {
-  if (isProduction) {
-    // For production, check if there's a Firebase session
-    // We'll look for Firebase auth cookies or custom auth headers
-    const authHeader = request.headers.get('authorization');
-    const firebaseSession = request.cookies.get('__session');
-    
-    if (authHeader?.startsWith('Bearer ') || firebaseSession) {
-      // In production, we trust the client-side auth state
-      // The actual verification happens in API routes
-      return { authenticated: true, role: 'user' }; // Default role, will be verified in API
-    }
-    
-    return { authenticated: false, role: null };
-  } else {
-    // For development, use NextAuth JWT
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET
-    });
-    
-    return {
-      authenticated: !!token,
-      role: token?.role || null
-    };
+  const authHeader = request.headers.get('authorization');
+  const firebaseSession = request.cookies.get('__session');
+
+  if (authHeader?.startsWith('Bearer ') || firebaseSession) {
+    return { authenticated: true, role: 'user' };
   }
+
+  return { authenticated: false, role: null };
 }
 
 export async function middleware(request: NextRequest) {
@@ -57,13 +36,6 @@ export async function middleware(request: NextRequest) {
     if (!authState.authenticated) {
       console.log('Middleware - No authentication found, redirecting to login');
       return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // For production, we'll do role verification in the admin pages themselves
-    // since we can't easily verify Firebase tokens in middleware
-    if (!isProduction && authState.role !== 'admin') {
-      console.log('Middleware - User is not admin, redirecting to home');
-      return NextResponse.redirect(new URL('/home', request.url));
     }
 
     console.log('Middleware - Access granted');

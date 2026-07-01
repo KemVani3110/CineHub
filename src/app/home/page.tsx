@@ -82,6 +82,13 @@ const queryClient = new QueryClient({
   },
 });
 
+const backgroundParticles = Array.from({ length: 20 }, (_, index) => ({
+  left: `${(index * 37) % 100}%`,
+  top: `${(index * 53) % 100}%`,
+  animationDelay: `${((index * 17) % 30) / 10}s`,
+  speed: 0.05 + ((index * 13) % 10) / 100,
+}));
+
 // Parallax Background Component
 const ParallaxBackground = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -115,17 +122,15 @@ const ParallaxBackground = () => {
 
       {/* Floating particles */}
       <div className="absolute inset-0">
-        {[...Array(20)].map((_, i) => (
+        {backgroundParticles.map((particle, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-[#4FD1C5]/20 rounded-full animate-pulse"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              transform: `translateY(${
-                scrollY * (0.05 + Math.random() * 0.1)
-              }px)`,
+              left: particle.left,
+              top: particle.top,
+              animationDelay: particle.animationDelay,
+              transform: `translateY(${scrollY * particle.speed}px)`,
             }}
           />
         ))}
@@ -367,7 +372,12 @@ export default function HomePage() {
                 Recommended for You
               </SectionTitle>
               <React.Suspense
-                fallback={<Loading message="Loading recommendations..." />}
+                fallback={
+                  <Loading
+                    message="Loading recommendations..."
+                    showBackdrop={false}
+                  />
+                }
               >
                 <LazyRecommendations />
               </React.Suspense>
@@ -406,7 +416,12 @@ export default function HomePage() {
                     Trending Movies
                   </SectionTitle>
                   <React.Suspense
-                    fallback={<Loading message="Loading trending movies..." />}
+                    fallback={
+                      <Loading
+                        message="Loading trending movies..."
+                        showBackdrop={false}
+                      />
+                    }
                   >
                     <LazyPopularMovies />
                   </React.Suspense>
@@ -422,7 +437,12 @@ export default function HomePage() {
                     Top Rated Movies
                   </SectionTitle>
                   <React.Suspense
-                    fallback={<Loading message="Loading top rated movies..." />}
+                    fallback={
+                      <Loading
+                        message="Loading top rated movies..."
+                        showBackdrop={false}
+                      />
+                    }
                   >
                     <LazyTopRatedMovies />
                   </React.Suspense>
@@ -439,7 +459,10 @@ export default function HomePage() {
                   </SectionTitle>
                   <React.Suspense
                     fallback={
-                      <Loading message="Loading now playing movies..." />
+                      <Loading
+                        message="Loading now playing movies..."
+                        showBackdrop={false}
+                      />
                     }
                   >
                     <LazyNowPlayingMovies />
@@ -456,7 +479,12 @@ export default function HomePage() {
                     Upcoming Releases
                   </SectionTitle>
                   <React.Suspense
-                    fallback={<Loading message="Loading upcoming movies..." />}
+                    fallback={
+                      <Loading
+                        message="Loading upcoming movies..."
+                        showBackdrop={false}
+                      />
+                    }
                   >
                     <LazyUpcomingMovies />
                   </React.Suspense>
@@ -476,7 +504,10 @@ export default function HomePage() {
                   </SectionTitle>
                   <React.Suspense
                     fallback={
-                      <Loading message="Loading trending TV shows..." />
+                      <Loading
+                        message="Loading trending TV shows..."
+                        showBackdrop={false}
+                      />
                     }
                   >
                     <LazyPopularTVShows />
@@ -494,7 +525,10 @@ export default function HomePage() {
                   </SectionTitle>
                   <React.Suspense
                     fallback={
-                      <Loading message="Loading top rated TV shows..." />
+                      <Loading
+                        message="Loading top rated TV shows..."
+                        showBackdrop={false}
+                      />
                     }
                   >
                     <LazyTopRatedTVShows />
@@ -511,7 +545,12 @@ export default function HomePage() {
                     Hot TV Shows
                   </SectionTitle>
                   <React.Suspense
-                    fallback={<Loading message="Loading hot TV shows..." />}
+                    fallback={
+                      <Loading
+                        message="Loading hot TV shows..."
+                        showBackdrop={false}
+                      />
+                    }
                   >
                     <LazyHotTVShows />
                   </React.Suspense>
@@ -525,7 +564,10 @@ export default function HomePage() {
                   </SectionTitle>
                   <React.Suspense
                     fallback={
-                      <Loading message="Loading on the air TV shows..." />
+                      <Loading
+                        message="Loading on the air TV shows..."
+                        showBackdrop={false}
+                      />
                     }
                   >
                     <LazyOnTheAirTVShows />

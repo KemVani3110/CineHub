@@ -1,405 +1,475 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { Metadata } from "next";
+import {
+  Activity,
+  BarChart3,
+  BookmarkPlus,
+  Clock,
+  Heart,
+  MessageSquare,
+  Shield,
+  Star,
+  Users,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
-  Users,
-  Eye,
-  Heart,
-  Star,
-  TrendingUp,
-  Calendar,
-  Activity,
-  Download,
-  RefreshCw,
-  BarChart3,
-  PieChart,
-  Film,
-  Tv,
-  UserPlus,
-  Clock,
-} from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { adminDb, toIsoString } from "@/lib/firebase-admin";
+import { listAdminLogs, listAdminUsers } from "@/lib/admin-firestore";
 
-interface AnalyticsData {
-  users: {
-    total: number;
-    active: number;
-    newThisMonth: number;
-    growth: number;
-  };
-  content: {
-    totalMovies: number;
-    totalTVShows: number;
-    totalViews: number;
-    totalRatings: number;
-  };
-  activity: {
-    dailyActiveUsers: number;
-    avgSessionTime: number;
-    topGenres: Array<{ name: string; count: number; percentage: number }>;
-    recentActivities: Array<{
-      id: number;
-      user: string;
-      action: string;
-      timestamp: string;
-    }>;
-  };
-  engagement: {
-    totalWatchlist: number;
-    totalFavorites: number;
-    avgRating: number;
-    totalComments: number;
+export const metadata: Metadata = {
+  title: "Admin Analytics | CineHub",
+  description: "Real Firestore analytics for CineHub admin",
+};
+
+type CountItem = {
+  label: string;
+  count: number;
+};
+
+type TopMediaItem = {
+  key: string;
+  title: string;
+  mediaType: string;
+  count: number;
+};
+
+type RatingMediaItem = {
+  key: string;
+  mediaType: string;
+  count: number;
+  average: number;
+};
+
+function percentage(value: number, total: number) {
+  if (!total) return 0;
+  return Math.round((value / total) * 100);
+}
+
+function countBy<T>(items: T[], getKey: (item: T) => string) {
+  return items.reduce((acc: Record<string, number>, item) => {
+    const key = getKey(item) || "unknown";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function toCountItems(record: Record<string, number>): CountItem[] {
+  return Object.entries(record)
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function timestampToDate(value: any) {
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate();
+  const date = new Date(toIsoString(value));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function lastDaysLabels(days: number) {
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - (days - 1 - index));
+    return date.toISOString().slice(0, 10);
+  });
+}
+
+function topMediaFromDocs(docs: FirebaseFirestore.QueryDocumentSnapshot[]) {
+  const map = new Map<string, TopMediaItem>();
+
+  docs.forEach((doc) => {
+    const data = doc.data();
+    const mediaType = data.media_type || "unknown";
+    const mediaId = data.movie_id || data.tv_id || data.media_id || "unknown";
+    const key = data.media_key || `${mediaType}:${mediaId}`;
+    const item = map.get(key) || {
+      key,
+      title: data.title || key,
+      mediaType,
+      count: 0,
+    };
+
+    item.count += 1;
+    if (!item.title || item.title === key) {
+      item.title = data.title || key;
+    }
+    map.set(key, item);
+  });
+
+  return Array.from(map.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+}
+
+function ratingMediaFromDocs(docs: FirebaseFirestore.QueryDocumentSnapshot[]) {
+  const map = new Map<string, { key: string; mediaType: string; count: number; total: number }>();
+
+  docs.forEach((doc) => {
+    const data = doc.data();
+    const rating = Number(data.rating);
+    if (Number.isNaN(rating)) return;
+
+    const mediaType = data.media_type || "unknown";
+    const mediaId = data.movie_id || data.tv_id || data.media_id || "unknown";
+    const key = data.media_key || `${mediaType}:${mediaId}`;
+    const item = map.get(key) || { key, mediaType, count: 0, total: 0 };
+
+    item.count += 1;
+    item.total += rating;
+    map.set(key, item);
+  });
+
+  return Array.from(map.values())
+    .map((item): RatingMediaItem => ({
+      key: item.key,
+      mediaType: item.mediaType,
+      count: item.count,
+      average: Number((item.total / item.count).toFixed(1)),
+    }))
+    .sort((a, b) => b.count - a.count || b.average - a.average)
+    .slice(0, 8);
+}
+
+async function getAnalyticsData() {
+  const [
+    users,
+    adminLogs,
+    ratingsSnapshot,
+    reviewsSnapshot,
+    watchlistsSnapshot,
+    historySnapshot,
+    favoriteActorsSnapshot,
+    userActivitySnapshot,
+  ] = await Promise.all([
+    listAdminUsers(),
+    listAdminLogs(),
+    adminDb.collection("ratings").get(),
+    adminDb.collection("reviews").get(),
+    adminDb.collection("watchlists").get(),
+    adminDb.collection("watch_history").get(),
+    adminDb.collection("favorite_actors").get(),
+    adminDb.collection("user_activity_logs").get(),
+  ]);
+
+  const ratings = ratingsSnapshot.docs.map((doc) => doc.data());
+  const ratingValues = ratings
+    .map((rating) => Number(rating.rating))
+    .filter((rating) => !Number.isNaN(rating));
+  const averageRating = ratingValues.length
+    ? Number((ratingValues.reduce((sum, value) => sum + value, 0) / ratingValues.length).toFixed(1))
+    : 0;
+  const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => ({
+    label: `${rating} star`,
+    count: ratingValues.filter((value) => value === rating).length,
+  }));
+
+  const dayLabels = lastDaysLabels(7);
+  const activityDocs = [...userActivitySnapshot.docs, ...adminLogs.map((log) => ({ data: () => ({ created_at: log.created_at }) })) as any[]];
+  const activityByDay = dayLabels.map((day) => {
+    const count = activityDocs.filter((doc) => {
+      const data = doc.data();
+      const date = timestampToDate(data.timestamp || data.created_at);
+      return date?.toISOString().slice(0, 10) === day;
+    }).length;
+
+    return {
+      label: day.slice(5),
+      count,
+    };
+  });
+
+  return {
+    totals: {
+      users: users.length,
+      activeUsers: users.filter((user) => user.isActive).length,
+      inactiveUsers: users.filter((user) => !user.isActive).length,
+      verifiedUsers: users.filter((user) => user.emailVerified).length,
+      ratings: ratingsSnapshot.size,
+      reviews: reviewsSnapshot.size,
+      watchlistItems: watchlistsSnapshot.size,
+      historyItems: historySnapshot.size,
+      favoriteActors: favoriteActorsSnapshot.size,
+      adminLogs: adminLogs.length,
+      userActivities: userActivitySnapshot.size,
+      averageRating,
+    },
+    usersByRole: toCountItems(countBy(users, (user) => user.role || "user")),
+    usersByProvider: toCountItems(countBy(users, (user) => user.provider || "local")),
+    ratingDistribution,
+    activityByDay,
+    topWatchlist: topMediaFromDocs(watchlistsSnapshot.docs),
+    topHistory: topMediaFromDocs(historySnapshot.docs),
+    topRatedMedia: ratingMediaFromDocs(ratingsSnapshot.docs),
+    recentAdminLogs: adminLogs.slice(0, 6),
   };
 }
 
-export default function AnalyticsPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [timeRange, setTimeRange] = useState("7d");
-
-  useEffect(() => {
-    fetchAnalyticsData();
-  }, [timeRange]);
-
-  const fetchAnalyticsData = async () => {
-    try {
-      setLoading(true);
-      // Simulate API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setData({
-        users: {
-          total: 12450,
-          active: 8230,
-          newThisMonth: 892,
-          growth: 12.5,
-        },
-        content: {
-          totalMovies: 15420,
-          totalTVShows: 8950,
-          totalViews: 245680,
-          totalRatings: 89430,
-        },
-        activity: {
-          dailyActiveUsers: 3420,
-          avgSessionTime: 24,
-          topGenres: [
-            { name: "Action", count: 4520, percentage: 28 },
-            { name: "Drama", count: 3890, percentage: 24 },
-            { name: "Comedy", count: 3210, percentage: 20 },
-            { name: "Thriller", count: 2340, percentage: 15 },
-            { name: "Horror", count: 2040, percentage: 13 },
-          ],
-          recentActivities: [
-            { id: 1, user: "John Doe", action: "Added movie to watchlist", timestamp: "2 minutes ago" },
-            { id: 2, user: "Jane Smith", action: "Rated a movie 5 stars", timestamp: "5 minutes ago" },
-            { id: 3, user: "Mike Johnson", action: "Left a review", timestamp: "8 minutes ago" },
-            { id: 4, user: "Sarah Wilson", action: "Started watching TV show", timestamp: "12 minutes ago" },
-            { id: 5, user: "Tom Brown", action: "Updated profile", timestamp: "15 minutes ago" },
-          ],
-        },
-        engagement: {
-          totalWatchlist: 45230,
-          totalFavorites: 23890,
-          avgRating: 4.2,
-          totalComments: 12340,
-        },
-      });
-    } catch (error) {
-      console.error("Failed to fetch analytics data:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchAnalyticsData();
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-slate-700 rounded w-1/4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-32 bg-slate-700 rounded-lg"></div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="h-96 bg-slate-700 rounded-lg"></div>
-              ))}
-            </div>
-          </div>
+function MetricCard({
+  title,
+  value,
+  detail,
+  icon: Icon,
+}: {
+  title: string;
+  value: string | number;
+  detail: string;
+  icon: typeof Users;
+}) {
+  return (
+    <Card className="bg-slate-900 border-slate-700">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-sm font-medium text-slate-300">{title}</CardTitle>
+        <div className="rounded-lg bg-primary/10 p-2">
+          <Icon className="h-5 w-5 text-primary" />
         </div>
-      </div>
-    );
-  }
+      </CardHeader>
+      <CardContent>
+        <div className="text-3xl font-bold text-white">{value}</div>
+        <p className="mt-2 text-xs text-slate-400">{detail}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DistributionCard({
+  title,
+  items,
+  total,
+}: {
+  title: string;
+  items: CountItem[];
+  total: number;
+}) {
+  return (
+    <Card className="bg-slate-900 border-slate-700">
+      <CardHeader>
+        <CardTitle className="text-white">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {items.length ? (
+          items.map((item) => (
+            <div key={item.label} className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="capitalize text-slate-300">{item.label}</span>
+                <span className="text-slate-400">{item.count}</span>
+              </div>
+              <Progress value={percentage(item.count, total)} className="h-2 bg-slate-800" />
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-slate-400">No data yet</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TopMediaTable({
+  title,
+  items,
+  countLabel,
+}: {
+  title: string;
+  items: TopMediaItem[];
+  countLabel: string;
+}) {
+  return (
+    <Card className="bg-slate-900 border-slate-700">
+      <CardHeader>
+        <CardTitle className="text-white">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-slate-700">
+              <TableHead className="text-slate-300">Title</TableHead>
+              <TableHead className="text-slate-300">Type</TableHead>
+              <TableHead className="text-right text-slate-300">{countLabel}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.length ? (
+              items.map((item) => (
+                <TableRow key={item.key} className="border-slate-800">
+                  <TableCell className="font-medium text-white">{item.title}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="capitalize border-slate-600 text-slate-300">
+                      {item.mediaType}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right text-slate-300">{item.count}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} className="py-8 text-center text-slate-400">
+                  No data yet
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default async function AnalyticsPage() {
+  const data = await getAnalyticsData();
+  const totalActivities = data.totals.adminLogs + data.totals.userActivities;
+  const highestDailyActivity = Math.max(...data.activityByDay.map((item) => item.count), 1);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Analytics Dashboard</h1>
-            <p className="text-slate-400">Comprehensive insights into your platform performance</p>
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-primary/10 p-3">
+            <BarChart3 className="h-7 w-7 text-primary" />
           </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Analytics</h1>
+            <p className="text-slate-400">Real-time Firestore metrics from the current app data.</p>
           </div>
         </div>
-
-        {/* Time Range Selector */}
-        <Tabs value={timeRange} onValueChange={setTimeRange} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto bg-slate-800 border-slate-700">
-            <TabsTrigger value="1d" className="cursor-pointer text-slate-300 data-[state=active]:bg-primary data-[state=active]:text-white">
-              1 Day
-            </TabsTrigger>
-            <TabsTrigger value="7d" className="cursor-pointer text-slate-300 data-[state=active]:bg-primary data-[state=active]:text-white">
-              7 Days
-            </TabsTrigger>
-            <TabsTrigger value="30d" className="cursor-pointer text-slate-300 data-[state=active]:bg-primary data-[state=active]:text-white">
-              30 Days
-            </TabsTrigger>
-            <TabsTrigger value="90d" className="cursor-pointer text-slate-300 data-[state=active]:bg-primary data-[state=active]:text-white">
-              90 Days
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value={timeRange} className="space-y-6 mt-6">
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20 cursor-pointer hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-300">Total Users</CardTitle>
-                  <Users className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">{data?.users.total.toLocaleString()}</div>
-                  <div className="flex items-center mt-2">
-                    <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-                    <span className="text-xs text-green-500">+{data?.users.growth}%</span>
-                    <span className="text-xs text-slate-400 ml-2">from last month</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20 cursor-pointer hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-300">Active Users</CardTitle>
-                  <Activity className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">{data?.users.active.toLocaleString()}</div>
-                  <div className="flex items-center mt-2">
-                    <Progress value={66} className="flex-1 mr-2" />
-                    <span className="text-xs text-slate-400">66% active</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20 cursor-pointer hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-300">Total Views</CardTitle>
-                  <Eye className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">{data?.content.totalViews.toLocaleString()}</div>
-                  <div className="flex items-center mt-2">
-                    <Clock className="h-3 w-3 text-blue-500 mr-1" />
-                    <span className="text-xs text-slate-400">Avg {data?.activity.avgSessionTime}m session</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20 cursor-pointer hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-300">Avg Rating</CardTitle>
-                  <Star className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">{data?.engagement.avgRating}/5.0</div>
-                  <div className="flex items-center mt-2">
-                    <span className="text-xs text-slate-400">{data?.content.totalRatings.toLocaleString()} total ratings</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Content & Engagement */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    Content Statistics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-slate-700/50 rounded-lg">
-                      <Film className="h-8 w-8 text-primary mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-white">{data?.content.totalMovies.toLocaleString()}</div>
-                      <div className="text-sm text-slate-400">Movies</div>
-                    </div>
-                    <div className="text-center p-4 bg-slate-700/50 rounded-lg">
-                      <Tv className="h-8 w-8 text-primary mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-white">{data?.content.totalTVShows.toLocaleString()}</div>
-                      <div className="text-sm text-slate-400">TV Shows</div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-slate-700/50 rounded-lg">
-                      <Heart className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-white">{data?.engagement.totalFavorites.toLocaleString()}</div>
-                      <div className="text-sm text-slate-400">Favorites</div>
-                    </div>
-                    <div className="text-center p-4 bg-slate-700/50 rounded-lg">
-                      <Calendar className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-white">{data?.engagement.totalWatchlist.toLocaleString()}</div>
-                      <div className="text-sm text-slate-400">Watchlist Items</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <PieChart className="h-5 w-5 text-primary" />
-                    Top Genres
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {data?.activity.topGenres.map((genre, index) => (
-                      <div key={genre.name} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-300 font-medium">{genre.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-400">{genre.count.toLocaleString()}</span>
-                            <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
-                              {genre.percentage}%
-                            </Badge>
-                          </div>
-                        </div>
-                        <Progress value={genre.percentage} className="h-2" />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* User Activity Chart */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  User Activity Trends
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {/* Activity Chart */}
-                  <div className="w-full h-64 p-4">
-                    <div className="grid grid-cols-7 gap-3 h-full">
-                      {[
-                        { day: 'Mon', value: 85, label: '1.2k' },
-                        { day: 'Tue', value: 72, label: '980' },
-                        { day: 'Wed', value: 95, label: '1.4k' },
-                        { day: 'Thu', value: 68, label: '890' },
-                        { day: 'Fri', value: 88, label: '1.3k' },
-                        { day: 'Sat', value: 92, label: '1.5k' },
-                        { day: 'Sun', value: 78, label: '1.1k' },
-                      ].map((item, index) => (
-                        <div key={item.day} className="flex flex-col items-center h-full">
-                          <div className="flex flex-col justify-end h-48 w-full mb-2">
-                            <div className="relative group cursor-pointer w-full">
-                              <div 
-                                className="w-full bg-gradient-to-t from-primary/80 to-primary rounded-t-md transition-all duration-300 hover:from-primary hover:to-primary/90 hover:scale-105 min-h-[8px]"
-                                style={{ height: `${(item.value / 100) * 192}px` }}
-                              ></div>
-                              {/* Tooltip */}
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                                {item.label} users
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-xs text-slate-400 font-medium">{item.day}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Activity Metrics */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-700">
-                    <div className="text-center p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors cursor-pointer">
-                      <div className="flex items-center justify-center mb-2">
-                        <UserPlus className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm text-slate-300 font-medium">New Users</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white mb-1">
-                        {data?.users.newThisMonth.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-slate-400">This month</div>
-                    </div>
-
-                    <div className="text-center p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors cursor-pointer">
-                      <div className="flex items-center justify-center mb-2">
-                        <Activity className="h-5 w-5 text-blue-500 mr-2" />
-                        <span className="text-sm text-slate-300 font-medium">Daily Active</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white mb-1">
-                        {data?.activity.dailyActiveUsers.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-slate-400">Today</div>
-                    </div>
-
-                    <div className="text-center p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors cursor-pointer">
-                      <div className="flex items-center justify-center mb-2">
-                        <Clock className="h-5 w-5 text-purple-500 mr-2" />
-                        <span className="text-sm text-slate-300 font-medium">Avg Session</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white mb-1">
-                        {data?.activity.avgSessionTime}m
-                      </div>
-                      <div className="text-xs text-slate-400">Duration</div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
+
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          title="Users"
+          value={data.totals.users.toLocaleString()}
+          detail={`${data.totals.activeUsers} active, ${data.totals.inactiveUsers} inactive`}
+          icon={Users}
+        />
+        <MetricCard
+          title="Engagement"
+          value={totalActivities.toLocaleString()}
+          detail={`${data.totals.userActivities} user events, ${data.totals.adminLogs} admin logs`}
+          icon={Activity}
+        />
+        <MetricCard
+          title="Ratings"
+          value={data.totals.ratings.toLocaleString()}
+          detail={`Average rating ${data.totals.averageRating || 0}/5`}
+          icon={Star}
+        />
+        <MetricCard
+          title="Reviews"
+          value={data.totals.reviews.toLocaleString()}
+          detail="Community reviews saved in Firestore"
+          icon={MessageSquare}
+        />
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          title="Watchlist Items"
+          value={data.totals.watchlistItems.toLocaleString()}
+          detail="Movies and TV shows saved by users"
+          icon={BookmarkPlus}
+        />
+        <MetricCard
+          title="Watch History"
+          value={data.totals.historyItems.toLocaleString()}
+          detail="Media entries watched by users"
+          icon={Clock}
+        />
+        <MetricCard
+          title="Favorite Actors"
+          value={data.totals.favoriteActors.toLocaleString()}
+          detail="Actors saved by users"
+          icon={Heart}
+        />
+        <MetricCard
+          title="Verified Users"
+          value={data.totals.verifiedUsers.toLocaleString()}
+          detail={`${percentage(data.totals.verifiedUsers, data.totals.users)}% of all users`}
+          icon={Shield}
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <DistributionCard title="Users By Role" items={data.usersByRole} total={data.totals.users} />
+        <DistributionCard title="Users By Provider" items={data.usersByProvider} total={data.totals.users} />
+        <DistributionCard title="Rating Distribution" items={data.ratingDistribution} total={data.totals.ratings} />
+      </div>
+
+      <Card className="bg-slate-900 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white">Activity In The Last 7 Days</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-7 items-end gap-3 h-48">
+            {data.activityByDay.map((item) => {
+              const height = Math.max(8, percentage(item.count, highestDailyActivity));
+              return (
+                <div key={item.label} className="flex h-full flex-col justify-end gap-2">
+                  <div className="text-center text-xs text-slate-400">{item.count}</div>
+                  <div
+                    className="rounded-t-md bg-primary/80"
+                    style={{ height: `${height}%` }}
+                    title={`${item.label}: ${item.count} activities`}
+                  />
+                  <div className="text-center text-xs text-slate-500">{item.label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <TopMediaTable title="Most Saved Watchlist Items" items={data.topWatchlist} countLabel="Saves" />
+        <TopMediaTable title="Most Watched Items" items={data.topHistory} countLabel="Views" />
+      </div>
+
+      <Card className="bg-slate-900 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white">Most Rated Media</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-slate-700">
+                <TableHead className="text-slate-300">Media</TableHead>
+                <TableHead className="text-slate-300">Type</TableHead>
+                <TableHead className="text-right text-slate-300">Ratings</TableHead>
+                <TableHead className="text-right text-slate-300">Average</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.topRatedMedia.length ? (
+                data.topRatedMedia.map((item) => (
+                  <TableRow key={item.key} className="border-slate-800">
+                    <TableCell className="font-medium text-white">{item.key}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize border-slate-600 text-slate-300">
+                        {item.mediaType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-slate-300">{item.count}</TableCell>
+                    <TableCell className="text-right text-slate-300">{item.average}/5</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 text-center text-slate-400">
+                    No ratings yet
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
-} 
+}

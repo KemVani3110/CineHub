@@ -1,40 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import mysql from "mysql2/promise";
+import { adminAuth, adminDb, numericIdFromUid, serverTimestamp } from "@/lib/firebase-admin";
 
-// Create MySQL connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
-
-// Free streaming services configuration
 const STREAMING_SERVICES = {
-  autoembed: {
-    movie: (id: string) => `https://autoembed.co/movie/tmdb/${id}`,
-    tv: (id: string, season: string, episode: string) => 
-      `https://autoembed.co/tv/tmdb/${id}-${season}-${episode}`,
-  },
-  vidsrc: {
-    movie: (id: string) => `https://vidsrc.net/embed/movie/${id}`,
-    tv: (id: string, season: string, episode: string) => 
-      `https://vidsrc.net/embed/tv/${id}/${season}/${episode}`,
-  },
   movies111: {
-    movie: (id: string) => `https://111movies.com/movie/${id}`,
+    movie: (id: string) => `https://111movies.net/movie/${id}`,
     tv: (id: string, season: string, episode: string) => 
-      `https://111movies.com/tv/${id}/${season}/${episode}`,
-  }
+      `https://111movies.net/tv/${id}/${season}/${episode}`,
+  },
+  videasy: {
+    movie: (id: string) => `https://player.videasy.net/movie/${id}`,
+    tv: (id: string, season: string, episode: string) =>
+      `https://player.videasy.net/tv/${id}/${season}/${episode}`,
+  },
+  multiembed: {
+    movie: (id: string) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    tv: (id: string, season: string, episode: string) =>
+      `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`,
+  },
+  embed2: {
+    movie: (id: string) => `https://www.2embed.cc/embed/${id}`,
+    tv: (id: string, season: string, episode: string) =>
+      `https://www.2embed.cc/embedtv/${id}&s=${season}&e=${episode}`,
+  },
 };
 
+async function getOptionalFirebaseUid(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  const sessionCookie = request.cookies.get("__session")?.value;
+
+  try {
+    if (authHeader?.startsWith("Bearer ")) {
+      const decoded = await adminAuth.verifyIdToken(authHeader.split(" ")[1]);
+      return decoded.uid;
+    }
+
+    if (sessionCookie) {
+      const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+      return decoded.uid;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+async function upsertWatchHistory(
+  userId: string,
+  type: "movie" | "tv",
+  id: string,
+  title: string,
+  posterPath: string | null
+) {
+  const mediaId = Number(id);
+  const docId = `${userId}_${type}_${mediaId}`;
+  const now = serverTimestamp();
+
+  await adminDb.collection("watch_history").doc(docId).set(
+    {
+      userId,
+      numeric_id: numericIdFromUid(docId),
+      media_key: `${type}:${mediaId}`,
+      media_type: type,
+      movie_id: type === "movie" ? mediaId : null,
+      tv_id: type === "tv" ? mediaId : null,
+      title,
+      poster_path: posterPath || "",
+      watched_at: now,
+      updated_at: now,
+      created_at: now,
+    },
+    { merge: true }
+  );
+}
+
 export async function GET(
-  request: Request,
+  request: NextRequest,
   context: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
@@ -42,17 +83,12 @@ export async function GET(
     const url = new URL(request.url);
     const season = url.searchParams.get('season') || '1';
     const episode = url.searchParams.get('episode') || '1';
-    const service = url.searchParams.get('service') || 'autoembed';
-
     if (!type || !id || typeof type !== 'string' || typeof id !== 'string') {
       return NextResponse.json(
         { message: "Type and ID are required" },
         { status: 400 }
       );
     }
-
-    // Get session (optional for streaming)
-    const session = await getServerSession(authOptions);
 
     // Validate media type
     if (!["movie", "tv"].includes(type)) {
@@ -82,69 +118,21 @@ export async function GET(
 
     const mediaData = await tmdbResponse.json();
 
-    // Add to watch history (only if user is logged in)
-    if (session?.user?.id) {
-      await pool.execute(
-        `INSERT INTO watch_history 
-          (user_id, media_type, movie_id, tv_id, title, poster_path, watched_at)
-         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-         ON DUPLICATE KEY UPDATE 
-           watched_at = CURRENT_TIMESTAMP,
-           title = VALUES(title),
-           poster_path = VALUES(poster_path)`,
-        [
-          session.user.id,
-          type,
-          type === 'movie' ? id : null,
-          type === 'tv' ? id : null,
-          mediaData.title || mediaData.name,
-          mediaData.poster_path
-        ]
+    const uid = await getOptionalFirebaseUid(request);
+    if (uid) {
+      await upsertWatchHistory(
+        uid,
+        type as "movie" | "tv",
+        id,
+        mediaData.title || mediaData.name,
+        mediaData.poster_path
       );
     }
 
     // Generate streaming URLs from multiple services
     const streamingSources = [];
     
-    // Add AutoEmbed source
-    if (type === 'movie') {
-      streamingSources.push({
-        name: 'AutoEmbed',
-        url: STREAMING_SERVICES.autoembed.movie(id),
-        quality: 'HD',
-        type: 'iframe',
-        embed: true
-      });
-    } else {
-      streamingSources.push({
-        name: 'AutoEmbed',
-        url: STREAMING_SERVICES.autoembed.tv(id, season, episode),
-        quality: 'HD',
-        type: 'iframe',
-        embed: true
-      });
-    }
-
-    // Add VidSrc source
-    if (type === 'movie') {
-      streamingSources.push({
-        name: 'VidSrc',
-        url: STREAMING_SERVICES.vidsrc.movie(id),
-        quality: 'HD',
-        type: 'iframe',
-        embed: true
-      });
-    } else {
-      streamingSources.push({
-        name: 'VidSrc',
-        url: STREAMING_SERVICES.vidsrc.tv(id, season, episode),
-        quality: 'HD',
-        type: 'iframe',
-        embed: true
-      });
-    }
-
-    // Add 111Movies source
+    // Add 111Movies source first because it is the most stable in this app.
     if (type === 'movie') {
       streamingSources.push({
         name: '111Movies',
@@ -157,6 +145,63 @@ export async function GET(
       streamingSources.push({
         name: '111Movies',
         url: STREAMING_SERVICES.movies111.tv(id, season, episode),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    }
+
+    // Add VidEasy source
+    if (type === 'movie') {
+      streamingSources.push({
+        name: 'VidEasy',
+        url: STREAMING_SERVICES.videasy.movie(id),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    } else {
+      streamingSources.push({
+        name: 'VidEasy',
+        url: STREAMING_SERVICES.videasy.tv(id, season, episode),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    }
+
+    // Add MultiEmbed source
+    if (type === 'movie') {
+      streamingSources.push({
+        name: 'MultiEmbed',
+        url: STREAMING_SERVICES.multiembed.movie(id),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    } else {
+      streamingSources.push({
+        name: 'MultiEmbed',
+        url: STREAMING_SERVICES.multiembed.tv(id, season, episode),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    }
+
+    // Add 2Embed fallback
+    if (type === 'movie') {
+      streamingSources.push({
+        name: '2Embed',
+        url: STREAMING_SERVICES.embed2.movie(id),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    } else {
+      streamingSources.push({
+        name: '2Embed',
+        url: STREAMING_SERVICES.embed2.tv(id, season, episode),
         quality: 'HD',
         type: 'iframe',
         embed: true

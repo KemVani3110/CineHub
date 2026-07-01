@@ -79,12 +79,7 @@ export default function RegisterForm() {
           : "Account created successfully! Welcome to CineHub",
       });
 
-      if (isMigration) {
-        // For migration, redirect to login with success message
-        router.push("/login?migrated=true");
-      } else {
-        router.push("/login");
-      }
+      router.push("/home");
     } catch (error) {
       toast({
         title: "Error",

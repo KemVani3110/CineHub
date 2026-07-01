@@ -1,23 +1,51 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import pool from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth-helpers";
+import { adminDb, numericIdFromUid, serverTimestamp, toIsoString } from "@/lib/firebase-admin";
 
-export async function GET() {
+function getMediaValue(mediaType: string, movieId?: number | null, tvId?: number | null) {
+  return mediaType === "movie" ? movieId : tvId;
+}
+
+function historyDocId(userId: string, mediaType: string, mediaId: number) {
+  return `${userId}_${mediaType}_${mediaId}`;
+}
+
+function serializeHistory(doc: FirebaseFirestore.QueryDocumentSnapshot | FirebaseFirestore.DocumentSnapshot) {
+  const data = doc.data() || {};
+  return {
+    id: data.numeric_id || numericIdFromUid(doc.id),
+    user_id: data.userId,
+    media_type: data.media_type,
+    movie_id: data.movie_id || null,
+    tv_id: data.tv_id || null,
+    title: data.title || "",
+    poster_path: data.poster_path || "",
+    watched_at: toIsoString(data.watched_at),
+    created_at: toIsoString(data.created_at),
+    updated_at: toIsoString(data.updated_at),
+  };
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user, error } = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: error || "Unauthorized" }, { status: 401 });
     }
 
-    const [rows] = await pool.query(
-      `SELECT * FROM watch_history 
-       WHERE user_id = ? 
-       ORDER BY watched_at DESC`,
-      [session.user.id]
-    );
+    const snapshot = await adminDb
+      .collection("watch_history")
+      .where("userId", "==", user.id)
+      .get();
 
-    return NextResponse.json(rows);
+    const history = snapshot.docs
+      .map(serializeHistory)
+      .sort(
+        (a, b) =>
+          new Date(b.watched_at).getTime() - new Date(a.watched_at).getTime()
+      );
+
+    return NextResponse.json(history);
   } catch (error) {
     console.error("Error fetching history:", error);
     return NextResponse.json(
@@ -27,68 +55,55 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { mediaType, movieId, tvId, title, posterPath } = await request.json();
-
-    // Use INSERT ... ON DUPLICATE KEY UPDATE to handle duplicates
-    const [result] = await pool.query(
-      `INSERT INTO watch_history 
-        (user_id, media_type, movie_id, tv_id, title, poster_path, watched_at) 
-      VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      ON DUPLICATE KEY UPDATE 
-        watched_at = CURRENT_TIMESTAMP,
-        title = VALUES(title),
-        poster_path = VALUES(poster_path)`,
-      [session.user.id, mediaType, movieId, tvId, title, posterPath]
-    );
-
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("Error adding to history:", error);
-    return NextResponse.json(
-      { error: "Failed to add to history" },
-      { status: 500 }
-    );
-  }
+export async function POST(request: NextRequest) {
+  return upsertHistory(request);
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
+  return upsertHistory(request);
+}
+
+async function upsertHistory(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user, error } = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: error || "Unauthorized" }, { status: 401 });
     }
 
     const { mediaType, movieId, tvId, title, posterPath } = await request.json();
+    const mediaId = Number(getMediaValue(mediaType, movieId, tvId));
 
-    // Update existing record
-    const [result] = await pool.query(
-      `UPDATE watch_history 
-       SET watched_at = CURRENT_TIMESTAMP,
-           title = ?,
-           poster_path = ?
-       WHERE user_id = ? AND media_type = ? AND movie_id = ? AND tv_id = ?`,
-      [title, posterPath, session.user.id, mediaType, movieId, tvId]
-    );
-
-    if ((result as any).affectedRows === 0) {
-      // If no record was updated, try inserting a new one
-      const [insertResult] = await pool.query(
-        `INSERT INTO watch_history 
-          (user_id, media_type, movie_id, tv_id, title, poster_path, watched_at) 
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-        [session.user.id, mediaType, movieId, tvId, title, posterPath]
+    if (!["movie", "tv"].includes(mediaType) || !mediaId) {
+      return NextResponse.json(
+        { error: "Valid media type and media ID are required" },
+        { status: 400 }
       );
-      return NextResponse.json(insertResult);
     }
 
-    return NextResponse.json({ success: true });
+    const now = serverTimestamp();
+    const ref = adminDb
+      .collection("watch_history")
+      .doc(historyDocId(user.id, mediaType, mediaId));
+
+    await ref.set(
+      {
+        userId: user.id,
+        numeric_id: numericIdFromUid(historyDocId(user.id, mediaType, mediaId)),
+        media_key: `${mediaType}:${mediaId}`,
+        media_type: mediaType,
+        movie_id: mediaType === "movie" ? mediaId : null,
+        tv_id: mediaType === "tv" ? mediaId : null,
+        title: title || "",
+        poster_path: posterPath || "",
+        watched_at: now,
+        updated_at: now,
+        created_at: now,
+      },
+      { merge: true }
+    );
+
+    const updated = await ref.get();
+    return NextResponse.json(serializeHistory(updated));
   } catch (error) {
     console.error("Error updating history:", error);
     return NextResponse.json(
@@ -98,29 +113,42 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user, error } = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: error || "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
-    if (id) {
-      // Delete specific history item
-      await pool.query(
-        "DELETE FROM watch_history WHERE id = ? AND user_id = ?",
-        [id, session.user.id]
-      );
-    } else {
-      // Clear all history
-      await pool.query(
-        "DELETE FROM watch_history WHERE user_id = ?",
-        [session.user.id]
-      );
+    if (!id) {
+      const snapshot = await adminDb
+        .collection("watch_history")
+        .where("userId", "==", user.id)
+        .get();
+
+      const batch = adminDb.batch();
+      snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+
+      return NextResponse.json({ success: true });
     }
+
+    const snapshot = await adminDb
+      .collection("watch_history")
+      .where("userId", "==", user.id)
+      .where("numeric_id", "==", Number(id))
+      .get();
+
+    if (snapshot.empty) {
+      return NextResponse.json({ error: "History record not found" }, { status: 404 });
+    }
+
+    const batch = adminDb.batch();
+    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -130,4 +158,4 @@ export async function DELETE(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

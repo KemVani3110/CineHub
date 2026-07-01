@@ -1,6 +1,3 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
 import Link from "next/link";
 import {
   Table,
@@ -32,45 +29,19 @@ import {
   ChevronsLeft,
   ChevronsRight
 } from "lucide-react";
+import { listAdminLogs } from "@/lib/admin-firestore";
 
 const ITEMS_PER_PAGE = 10;
 
 async function getActivityLogs(page: number = 1) {
   const offset = (page - 1) * ITEMS_PER_PAGE;
-  
-  const [rows] = await db.query(`
-    SELECT 
-      al.id,
-      al.admin_id,
-      al.action,
-      al.target_user_id,
-      al.description,
-      al.metadata,
-      al.ip_address,
-      al.created_at,
-      u.name as admin_name,
-      u.email as admin_email,
-      u.avatar as admin_avatar,
-      tu.name as target_user_name,
-      tu.email as target_user_email,
-      tu.avatar as target_user_avatar
-    FROM admin_activity_logs al
-    LEFT JOIN users u ON al.admin_id = u.id
-    LEFT JOIN users tu ON al.target_user_id = tu.id
-    ORDER BY al.created_at DESC
-    LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-  `);
-  
-  const [countResult] = await db.query(`
-    SELECT COUNT(*) as total
-    FROM admin_activity_logs
-  `);
-  
-  const total = (countResult as any)[0].total;
+
+  const allLogs = await listAdminLogs();
+  const total = allLogs.length;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
   
   return {
-    logs: rows,
+    logs: allLogs.slice(offset, offset + ITEMS_PER_PAGE),
     pagination: {
       currentPage: page,
       totalPages,
@@ -241,7 +212,6 @@ export default async function ActivityLogs({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
-  const session = await getServerSession(authOptions);
   const params = await searchParams;
   const currentPage = parseInt(params.page || '1', 10);
   const { logs, pagination } = await getActivityLogs(currentPage);

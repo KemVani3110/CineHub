@@ -55,6 +55,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { authenticatedFetch } from "@/lib/firebase-auth-api";
 
 interface UserManagementProps {
   users?: User[];
@@ -88,6 +89,12 @@ export function UserManagement({
   }, [propUsers]);
 
   useEffect(() => {
+    if (!propUsers && !initialUsers?.length) {
+      refreshUsers();
+    }
+  }, [propUsers, initialUsers?.length]);
+
+  useEffect(() => {
     if (onUsersChange) {
       onUsersChange(users);
     }
@@ -97,7 +104,7 @@ export function UserManagement({
     try {
       setRefreshing(true);
 
-      const response = await fetch("/api/admin/users", {
+      const response = await authenticatedFetch("/api/admin/users", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -162,7 +169,7 @@ export function UserManagement({
     try {
       setLoading((prev) => ({ ...prev, [`role-${userId}`]: true }));
 
-      const response = await fetch("/api/admin/users", {
+      const response = await authenticatedFetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -190,10 +197,7 @@ export function UserManagement({
         className: "bg-green-600/10 border-green-500/20 text-green-400",
       });
 
-      // Refresh data from server to ensure consistency
-      setTimeout(() => {
-        refreshUsers();
-      }, 1000);
+      await refreshUsers();
     } catch (error) {
       console.error("Error updating role:", error);
       toast({
@@ -221,7 +225,7 @@ export function UserManagement({
     try {
       setLoading((prev) => ({ ...prev, [`status-${userId}`]: true }));
 
-      const response = await fetch("/api/admin/users", {
+      const response = await authenticatedFetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -251,10 +255,7 @@ export function UserManagement({
         className: "bg-green-600/10 border-green-500/20 text-green-400",
       });
 
-      // Refresh data from server to ensure consistency
-      setTimeout(() => {
-        refreshUsers();
-      }, 1000);
+      await refreshUsers();
     } catch (error) {
       console.error("Error updating status:", error);
       toast({
@@ -289,7 +290,7 @@ export function UserManagement({
     try {
       setLoading((prev) => ({ ...prev, [`delete-${userToDelete.id}`]: true }));
 
-      const response = await fetch("/api/admin/users", {
+      const response = await authenticatedFetch("/api/admin/users", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: userToDelete.id }),
@@ -316,10 +317,7 @@ export function UserManagement({
       setDeleteDialogOpen(false);
       setUserToDelete(null);
 
-      // Refresh data from server to ensure consistency
-      setTimeout(() => {
-        refreshUsers();
-      }, 1000);
+      await refreshUsers();
     } catch (error) {
       console.error("Error deleting user:", error);
       toast({

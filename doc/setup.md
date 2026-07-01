@@ -4,7 +4,6 @@
 
 - Node.js (v18 or higher)
 - npm or yarn
-- MySQL database
 - Firebase account
 - TMDB API key
 
@@ -25,29 +24,24 @@ yarn install
 
 3. Create a `.env.local` file in the root directory with the following variables:
 ```env
-# Database
-DATABASE_URL=your_mysql_connection_string
-
 # Firebase
-FIREBASE_API_KEY=your_firebase_api_key
-FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-FIREBASE_PROJECT_ID=your_firebase_project_id
-FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-FIREBASE_APP_ID=your_firebase_app_id
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+FIREBASE_CLIENT_EMAIL=your_firebase_admin_client_email
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
 
 # TMDB API
-TMDB_API_KEY=your_tmdb_api_key
-TMDB_API_URL=https://api.themoviedb.org/3
-
-# NextAuth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_nextauth_secret
+NEXT_PUBLIC_TMDB_API_KEY=your_tmdb_api_key
 ```
 
-4. Set up the database:
-- Create a MySQL database
-- Run the database migrations (if any)
+4. Set up Firebase:
+- Enable Firebase Authentication providers
+- Create a Firestore database
+- Apply the rules from `firestore.rules`
 
 ## Development
 
@@ -91,8 +85,8 @@ cinehub/
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
 - **UI Components**: Radix UI
-- **Authentication**: NextAuth.js, Firebase Auth
-- **Database**: MySQL, Firebase
+- **Authentication**: Firebase Auth
+- **Database**: Firestore
 - **API Integration**: TMDB API
 - **Form Handling**: React Hook Form
 - **Validation**: Zod

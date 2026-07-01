@@ -101,6 +101,7 @@ const Footer = ({ isSidebarOpen = false }: FooterProps) => {
                   src="/logo.png"
                   alt="CineHub Logo"
                   fill
+                  sizes="56px"
                   className="object-contain rounded-full"
                 />
               </div>

@@ -171,27 +171,3 @@ export interface FirebaseAuthResult {
         profile?: any;
     };
 }
-
-// NextAuth.js integration types
-export interface NextAuthSession {
-    user: {
-        id: string;
-        name?: string | null;
-        email?: string | null;
-        image?: string | null;
-        role?: string;
-    };
-    expires: string;
-}
-
-export interface NextAuthToken {
-    sub?: string;
-    name?: string | null;
-    email?: string | null;
-    picture?: string | null;
-    role?: string;
-    provider?: string;
-    iat?: number;
-    exp?: number;
-    jti?: string;
-}

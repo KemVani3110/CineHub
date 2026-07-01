@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchStore, SearchType } from "@/store/searchStore";
 import { useSearch } from "@/hooks/useSearch";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -42,6 +42,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { TMDBMovie, TMDBSearchResult, TMDBTVShow } from "@/types/tmdb";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
+import Loading from "@/components/common/Loading";
 
 // Trending searches data
 const trendingSearches = [
@@ -64,7 +65,7 @@ const popularCategories = [
   { name: "Comedy Shows", icon: Users, type: "tv", query: "comedy" },
 ];
 
-export default function SearchPage() {
+function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -709,5 +710,13 @@ export default function SearchPage() {
       {/* Footer */}
       <Footer />
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<Loading message="Loading search..." showBackdrop={false} />}>
+      <SearchContent />
+    </Suspense>
   );
 }

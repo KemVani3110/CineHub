@@ -1,79 +1,57 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import pool from '@/lib/db';
-import { NextAuthSession } from '@/types/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
+import { listAdminLogs, listAdminUsers, requireAdmin } from "@/lib/admin-firestore";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as NextAuthSession | null;
-    if (!session?.user?.role || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    await requireAdmin(request);
 
-    // Get total users count
-    const [userCountRows] = await pool.execute(
-      'SELECT COUNT(*) as total FROM users'
-    );
-    const totalUsers = (userCountRows as any[])[0].total;
+    const [users, logs, ratingsSnapshot, watchlistSnapshot] = await Promise.all([
+      listAdminUsers(),
+      listAdminLogs(),
+      adminDb.collection("ratings").get(),
+      adminDb.collection("watchlists").get(),
+    ]);
 
-    // Get active users count
-    const [activeUserCountRows] = await pool.execute(
-      'SELECT COUNT(*) as total FROM users WHERE is_active = true'
-    );
-    const activeUsers = (activeUserCountRows as any[])[0].total;
+    const usersByRole = users.reduce((acc: Record<string, number>, user) => {
+      acc[user.role] = (acc[user.role] || 0) + 1;
+      return acc;
+    }, {});
 
-    // Get users by role
-    const [roleCountRows] = await pool.execute(
-      'SELECT role, COUNT(*) as count FROM users GROUP BY role'
-    );
-    const usersByRole = (roleCountRows as any[]).reduce(
-      (acc: Record<string, number>, row: any) => {
-        acc[row.role] = row.count;
-        return acc;
-      },
-      {}
-    );
+    const activityByType = logs.reduce((acc: Record<string, number>, log) => {
+      acc[log.action] = (acc[log.action] || 0) + 1;
+      return acc;
+    }, {});
 
-    // Get recent activity
-    const [recentActivityRows] = await pool.execute(
-      `SELECT 
-        l.*,
-        a.name as admin_name,
-        a.email as admin_email,
-        u.name as target_user_name,
-        u.email as target_user_email
-      FROM admin_activity_logs l
-      LEFT JOIN users a ON l.admin_id = a.id
-      LEFT JOIN users u ON l.target_user_id = u.id
-      ORDER BY l.created_at DESC
-      LIMIT 5`
-    );
+    const ratingValues = ratingsSnapshot.docs
+      .map((doc) => Number(doc.data().rating))
+      .filter((rating) => !Number.isNaN(rating));
 
-    // Get activity by type
-    const [activityTypeRows] = await pool.execute(
-      'SELECT action, COUNT(*) as count FROM admin_activity_logs GROUP BY action'
-    );
-    const activityByType = (activityTypeRows as any[]).reduce(
-      (acc: Record<string, number>, row: any) => {
-        acc[row.action] = row.count;
-        return acc;
-      },
-      {}
-    );
+    const averageRating = ratingValues.length
+      ? Number(
+          (
+            ratingValues.reduce((sum, rating) => sum + rating, 0) /
+            ratingValues.length
+          ).toFixed(1)
+        )
+      : 0;
 
     return NextResponse.json({
-      totalUsers,
-      activeUsers,
+      totalUsers: users.length,
+      activeUsers: users.filter((user) => user.isActive).length,
       usersByRole,
-      recentActivity: recentActivityRows,
+      recentActivity: logs.slice(0, 5),
       activityByType,
+      totalActivities: logs.length,
+      totalRatings: ratingsSnapshot.size,
+      totalWatchlist: watchlistSnapshot.size,
+      averageRating,
     });
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
+    console.error("Error fetching admin stats:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }
-} 
+}

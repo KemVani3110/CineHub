@@ -1,37 +1,41 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb, numericIdFromUid, toIsoString } from "@/lib/firebase-admin";
+import { requireAdminOrModerator } from "@/lib/admin-firestore";
 
-export async function GET() {
+function serializeAvatar(id: string, data: any) {
+  return {
+    id: data.numeric_id || numericIdFromUid(id),
+    uid: id,
+    filename: data.filename || "",
+    original_name: data.original_name || "",
+    file_path: data.file_path || "",
+    file_size: data.file_size || 0,
+    mime_type: data.mime_type || "",
+    uploaded_by: data.uploaded_by || null,
+    is_active: data.is_active !== false,
+    created_at: toIsoString(data.created_at),
+  };
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    await requireAdminOrModerator(request);
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
+    const snapshot = await adminDb.collection("admin_avatars").get();
+    const avatars = snapshot.docs
+      .map((doc) => serializeAvatar(doc.id, doc.data()))
+      .filter((avatar) => avatar.is_active)
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
-    }
-
-    // Check if user is admin or moderator
-    if (!session.user.role || !["admin", "moderator"].includes(session.user.role)) {
-      return NextResponse.json(
-        { message: "Forbidden" },
-        { status: 403 }
-      );
-    }
-
-    const [avatars] = await db.query(
-      `SELECT * FROM user_avatars WHERE is_active = true ORDER BY created_at DESC`
-    );
 
     return NextResponse.json({ avatars });
   } catch (error) {
     console.error("Error fetching avatars:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      { message: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }
-} 
+}

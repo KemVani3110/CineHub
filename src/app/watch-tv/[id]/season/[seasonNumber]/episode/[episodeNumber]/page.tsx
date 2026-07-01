@@ -21,6 +21,7 @@ import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { EpisodeActions } from "@/components/watch/EpisodeActions";
 import { EpisodesList } from "@/components/watch/EpisodesList";
 import { cn } from "@/lib/utils";
+import { authenticatedFetch } from "@/lib/firebase-auth-api";
 
 interface StreamingSource {
   name: string;
@@ -80,7 +81,7 @@ export default function WatchTVEpisodePage() {
       setLoadingStreams(true);
       setStreamError(null);
 
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/stream/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}`
       );
       const data: StreamingResponse = await response.json();
