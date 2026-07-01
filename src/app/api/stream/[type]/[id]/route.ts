@@ -108,8 +108,8 @@ export async function GET(
       );
     }
 
-    // Get media details from TMDB
-    const tmdbUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=${tmdbApiKey}`;
+    // Get media details from TMDB, including IMDb IDs when available for safer provider matching.
+    const tmdbUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=${tmdbApiKey}&append_to_response=external_ids`;
  
     const tmdbResponse = await fetch(tmdbUrl);
     if (!tmdbResponse.ok) {
@@ -129,29 +129,17 @@ export async function GET(
       );
     }
 
-    // Generate streaming URLs from multiple services
-    const streamingSources = [];
-    
-    // Add 111Movies source first because it is the most stable in this app.
-    if (type === 'movie') {
-      streamingSources.push({
-        name: '111Movies',
-        url: STREAMING_SERVICES.movies111.movie(id),
-        quality: 'HD',
-        type: 'iframe',
-        embed: true
-      });
-    } else {
-      streamingSources.push({
-        name: '111Movies',
-        url: STREAMING_SERVICES.movies111.tv(id, season, episode),
-        quality: 'HD',
-        type: 'iframe',
-        embed: true
-      });
-    }
+    const imdbId =
+      type === "movie"
+        ? mediaData.imdb_id
+        : mediaData.external_ids?.imdb_id;
+    const fallbackProviderId = imdbId || id;
 
-    // Add VidEasy source
+    // Generate streaming URLs from multiple services.
+    // Prefer providers that explicitly resolve TMDB IDs to reduce wrong-title matches.
+    const streamingSources = [];
+
+    // Add VidEasy source first because its embed API is TMDB-based.
     if (type === 'movie') {
       streamingSources.push({
         name: 'VidEasy',
@@ -170,7 +158,7 @@ export async function GET(
       });
     }
 
-    // Add MultiEmbed source
+    // Add MultiEmbed source with an explicit TMDB flag.
     if (type === 'movie') {
       streamingSources.push({
         name: 'MultiEmbed',
@@ -183,6 +171,25 @@ export async function GET(
       streamingSources.push({
         name: 'MultiEmbed',
         url: STREAMING_SERVICES.multiembed.tv(id, season, episode),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    }
+
+    // Add 111Movies fallback. IMDb IDs are less ambiguous for this provider when available.
+    if (type === 'movie') {
+      streamingSources.push({
+        name: '111Movies',
+        url: STREAMING_SERVICES.movies111.movie(fallbackProviderId),
+        quality: 'HD',
+        type: 'iframe',
+        embed: true
+      });
+    } else {
+      streamingSources.push({
+        name: '111Movies',
+        url: STREAMING_SERVICES.movies111.tv(fallbackProviderId, season, episode),
         quality: 'HD',
         type: 'iframe',
         embed: true

@@ -99,8 +99,11 @@ export function VideoPlayer({
   // Initialize streaming source
   useEffect(() => {
     if (sources.length > 0 && !selectedSource) {
-      // Prefer the first stable source configured by the stream API.
-      const stableSource = sources.find((s) => s.name === "111Movies");
+      // Prefer TMDB-explicit sources first to reduce wrong-title matches.
+      const stableSource =
+        sources.find((s) => s.name === "VidEasy") ||
+        sources.find((s) => s.name === "MultiEmbed") ||
+        sources.find((s) => s.name === "111Movies");
       const defaultSource = stableSource || sources[0];
       setSelectedSource(defaultSource);
       setIsIframeMode(defaultSource.type === "iframe");

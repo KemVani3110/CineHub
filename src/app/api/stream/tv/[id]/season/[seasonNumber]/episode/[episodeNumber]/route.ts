@@ -72,7 +72,7 @@ export async function GET(
     }
 
     // Get TV show details from TMDB
-    const tvShowUrl = `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbApiKey}`;
+    const tvShowUrl = `https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbApiKey}&append_to_response=external_ids`;
     const episodeUrl = `https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}?api_key=${tmdbApiKey}`;
 
     const [tvShowResponse, episodeResponse] = await Promise.all([
@@ -115,19 +115,14 @@ export async function GET(
       );
     }
 
-    // Generate streaming URLs from multiple services
+    const imdbId = tvShowData.external_ids?.imdb_id;
+    const fallbackProviderId = imdbId || id;
+
+    // Generate streaming URLs from multiple services.
+    // Prefer providers that explicitly resolve TMDB IDs to reduce wrong-title matches.
     const streamingSources = [];
     
-    // Add 111Movies source first because it is the most stable in this app.
-    streamingSources.push({
-      name: '111Movies',
-      url: STREAMING_SERVICES.movies111.tv(id, seasonNumber, episodeNumber),
-      quality: 'HD',
-      type: 'iframe',
-      embed: true
-    });
-
-    // Add VidEasy source
+    // Add VidEasy source first because its embed API is TMDB-based.
     streamingSources.push({
       name: 'VidEasy',
       url: STREAMING_SERVICES.videasy.tv(id, seasonNumber, episodeNumber),
@@ -136,10 +131,19 @@ export async function GET(
       embed: true
     });
 
-    // Add MultiEmbed source
+    // Add MultiEmbed source with an explicit TMDB flag.
     streamingSources.push({
       name: 'MultiEmbed',
       url: STREAMING_SERVICES.multiembed.tv(id, seasonNumber, episodeNumber),
+      quality: 'HD',
+      type: 'iframe',
+      embed: true
+    });
+
+    // Add 111Movies fallback. IMDb IDs are less ambiguous for this provider when available.
+    streamingSources.push({
+      name: '111Movies',
+      url: STREAMING_SERVICES.movies111.tv(fallbackProviderId, seasonNumber, episodeNumber),
       quality: 'HD',
       type: 'iframe',
       embed: true
