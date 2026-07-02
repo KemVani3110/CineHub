@@ -29,6 +29,25 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
   // Check if we're on mobile (popup may be blocked)
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
+  const getAuthErrorMessage = (error: any, providerName: string) => {
+    if (error.code === "auth/unauthorized-domain") {
+      return "Domain deploy chưa được thêm trong Firebase Authentication > Settings > Authorized domains.";
+    }
+    if (error.code === "auth/operation-not-allowed") {
+      return `${providerName} sign-in chưa được bật trong Firebase Authentication > Sign-in method.`;
+    }
+    if (error.code === "auth/popup-closed-by-user") {
+      return "Login was cancelled. Please try again.";
+    }
+    if (error.code === "auth/popup-blocked") {
+      return "Popup was blocked. Redirecting to Google sign-in...";
+    }
+    if (error.code === "auth/cancelled-popup-request") {
+      return "Another login attempt is in progress.";
+    }
+    return error.message || `Failed to authenticate with ${providerName}`;
+  };
+
   const handleGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
@@ -44,7 +63,15 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
         return; // The page will redirect and reload
       } else {
         // Use popup for desktop
-        result = await signInWithPopup(auth, provider);
+        try {
+          result = await signInWithPopup(auth, provider);
+        } catch (error: any) {
+          if (error.code === "auth/popup-blocked") {
+            await signInWithRedirect(auth, provider);
+            return;
+          }
+          throw error;
+        }
       }
 
       if (!result) {
@@ -72,19 +99,7 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
 
     } catch (error: any) {
       console.error("Google login error:", error);
-      
-      // Handle specific Firebase errors
-      let errorMessage = "Failed to authenticate with Google";
-      
-      if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = "Login was cancelled. Please try again.";
-      } else if (error.code === 'auth/popup-blocked') {
-        errorMessage = "Popup was blocked. Please allow popups and try again.";
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        errorMessage = "Another login attempt is in progress.";
-      } else if (error.message && error.message !== "Login was cancelled or failed") {
-        errorMessage = error.message;
-      }
+      const errorMessage = getAuthErrorMessage(error, "Google");
 
       toast({
         title: "Authentication Failed",
@@ -111,7 +126,15 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
         return; // The page will redirect and reload
       } else {
         // Use popup for desktop
-        result = await signInWithPopup(auth, provider);
+        try {
+          result = await signInWithPopup(auth, provider);
+        } catch (error: any) {
+          if (error.code === "auth/popup-blocked") {
+            await signInWithRedirect(auth, provider);
+            return;
+          }
+          throw error;
+        }
       }
 
       if (!result) {
@@ -139,19 +162,7 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
 
     } catch (error: any) {
       console.error("Facebook login error:", error);
-      
-      // Handle specific Firebase errors
-      let errorMessage = "Failed to authenticate with Facebook";
-      
-      if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = "Login was cancelled. Please try again.";
-      } else if (error.code === 'auth/popup-blocked') {
-        errorMessage = "Popup was blocked. Please allow popups and try again.";
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        errorMessage = "Another login attempt is in progress.";
-      } else if (error.message && error.message !== "Login was cancelled or failed") {
-        errorMessage = error.message;
-      }
+      const errorMessage = getAuthErrorMessage(error, "Facebook");
 
       toast({
         title: "Authentication Failed",

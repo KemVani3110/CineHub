@@ -13,6 +13,16 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const getRedirectErrorMessage = (error: any) => {
+    if (error.code === "auth/unauthorized-domain") {
+      return "Domain deploy chưa được thêm trong Firebase Authentication > Settings > Authorized domains.";
+    }
+    if (error.code === "auth/operation-not-allowed") {
+      return "Google sign-in chưa được bật trong Firebase Authentication > Sign-in method.";
+    }
+    return error.message || "Failed to complete social login";
+  };
+
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
@@ -63,7 +73,7 @@ export default function LoginPage() {
             error.code !== 'auth/cancelled-popup-request') {
           toast({
             title: "Authentication Failed",
-            description: error.message || "Failed to complete social login",
+            description: getRedirectErrorMessage(error),
             variant: "destructive",
           });
         }
