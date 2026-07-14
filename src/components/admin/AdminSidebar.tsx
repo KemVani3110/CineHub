@@ -17,6 +17,7 @@ import {
   CircleUser,
   Menu,
   Flag,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -70,6 +71,12 @@ const navItems = [
     title: "Source Reports",
     href: "/admin/source-reports",
     icon: Flag,
+    badge: null,
+  },
+  {
+    title: "Contact Messages",
+    href: "/admin/contact-messages",
+    icon: MessageSquare,
     badge: null,
   },
   {
