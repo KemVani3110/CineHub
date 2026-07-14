@@ -5,6 +5,7 @@ import {
   BookmarkPlus,
   Clock,
   Heart,
+  Flag,
   MessageSquare,
   Shield,
   Star,
@@ -149,6 +150,7 @@ async function getAnalyticsData() {
     historySnapshot,
     favoriteActorsSnapshot,
     userActivitySnapshot,
+    sourceReportsSnapshot,
   ] = await Promise.all([
     listAdminUsers(),
     listAdminLogs(),
@@ -158,6 +160,7 @@ async function getAnalyticsData() {
     adminDb.collection("watch_history").get(),
     adminDb.collection("favorite_actors").get(),
     adminDb.collection("user_activity_logs").get(),
+    adminDb.collection("source_reports").get(),
   ]);
 
   const ratings = ratingsSnapshot.docs.map((doc) => doc.data());
@@ -200,10 +203,17 @@ async function getAnalyticsData() {
       favoriteActors: favoriteActorsSnapshot.size,
       adminLogs: adminLogs.length,
       userActivities: userActivitySnapshot.size,
+      sourceReports: sourceReportsSnapshot.size,
+      openSourceReports: sourceReportsSnapshot.docs.filter(
+        (doc) => (doc.data().status || "open") === "open"
+      ).length,
       averageRating,
     },
     usersByRole: toCountItems(countBy(users, (user) => user.role || "user")),
     usersByProvider: toCountItems(countBy(users, (user) => user.provider || "local")),
+    sourceReportsByStatus: toCountItems(
+      countBy(sourceReportsSnapshot.docs, (doc) => doc.data().status || "open")
+    ),
     ratingDistribution,
     activityByDay,
     topWatchlist: topMediaFromDocs(watchlistsSnapshot.docs),
@@ -394,12 +404,23 @@ export default async function AnalyticsPage() {
           detail={`${percentage(data.totals.verifiedUsers, data.totals.users)}% of all users`}
           icon={Shield}
         />
+        <MetricCard
+          title="Source Reports"
+          value={data.totals.sourceReports.toLocaleString()}
+          detail={`${data.totals.openSourceReports} open reports need review`}
+          icon={Flag}
+        />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-4">
         <DistributionCard title="Users By Role" items={data.usersByRole} total={data.totals.users} />
         <DistributionCard title="Users By Provider" items={data.usersByProvider} total={data.totals.users} />
         <DistributionCard title="Rating Distribution" items={data.ratingDistribution} total={data.totals.ratings} />
+        <DistributionCard
+          title="Source Reports"
+          items={data.sourceReportsByStatus}
+          total={data.totals.sourceReports}
+        />
       </div>
 
       <Card className="bg-slate-900 border-slate-700">

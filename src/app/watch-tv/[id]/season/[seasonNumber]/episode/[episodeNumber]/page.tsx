@@ -2,7 +2,11 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchTVShowDetails, fetchSeasonDetails } from "@/services/tmdb";
+import {
+  fetchEpisodeVideos,
+  fetchSeasonDetails,
+  fetchTVShowDetails,
+} from "@/services/tmdb";
 import { TMDBTVDetails, TMDBSeasonDetails } from "@/types/tmdb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +26,7 @@ import { EpisodeActions } from "@/components/watch/EpisodeActions";
 import { EpisodesList } from "@/components/watch/EpisodesList";
 import { cn } from "@/lib/utils";
 import { authenticatedFetch } from "@/lib/firebase-auth-api";
+import { createTrailerSource, isFutureDate } from "@/lib/trailer-utils";
 
 interface StreamingSource {
   name: string;
@@ -52,6 +57,7 @@ export default function WatchTVEpisodePage() {
   const [loadingStreams, setLoadingStreams] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
+  const [trailerNotice, setTrailerNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const loadEpisode = async () => {
@@ -64,8 +70,38 @@ export default function WatchTVEpisodePage() {
         setTVShow(tvShowData);
         setSeason(seasonData);
 
-        // Load streaming sources
-        await loadStreamingSources();
+        const currentEpisode = seasonData.episodes?.find(
+          (episode: any) => episode.episode_number === Number(episodeNumber)
+        );
+        if (currentEpisode) {
+          setEpisodeInfo(currentEpisode);
+        }
+
+        if (isFutureDate(currentEpisode?.air_date)) {
+          const episodeVideos = await fetchEpisodeVideos(
+            Number(id),
+            Number(seasonNumber),
+            Number(episodeNumber)
+          );
+          const trailerSource =
+            createTrailerSource(episodeVideos, "Episode Trailer") ||
+            createTrailerSource(tvShowData.videos, "Official Trailer");
+
+          setTrailerNotice(
+            `${tvShowData.name} S${seasonNumber}E${episodeNumber} has not aired yet. Playing the trailer instead.`
+          );
+
+          if (trailerSource) {
+            setStreamingSources([trailerSource]);
+            setStreamError(null);
+          } else {
+            setStreamingSources([]);
+            setStreamError("This episode has not aired yet and no trailer is available.");
+          }
+        } else {
+          setTrailerNotice(null);
+          await loadStreamingSources();
+        }
       } catch (error) {
         console.error("Error loading TV show:", error);
       } finally {
@@ -114,6 +150,7 @@ export default function WatchTVEpisodePage() {
   };
 
   const retryStreaming = () => {
+    setTrailerNotice(null);
     loadStreamingSources();
   };
 
@@ -314,10 +351,14 @@ export default function WatchTVEpisodePage() {
                       ? `https://image.tmdb.org/t/p/original${tvShow.backdrop_path}`
                       : undefined
                   }
-                  title={showTitle}
+                  title={trailerNotice ? `${showTitle} - Trailer` : showTitle}
                   duration={
                     episodeInfo?.runtime || tvShow.episode_run_time?.[0]
                   }
+                  mediaType={trailerNotice ? undefined : "tv"}
+                  mediaId={trailerNotice ? undefined : (id as string)}
+                  seasonNumber={trailerNotice ? undefined : (seasonNumber as string)}
+                  episodeNumber={trailerNotice ? undefined : (episodeNumber as string)}
                   onTheaterModeChange={setIsTheaterMode}
                 />
               ) : (
@@ -346,6 +387,11 @@ export default function WatchTVEpisodePage() {
                 </div>
               )}
             </div>
+            {trailerNotice && (
+              <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                {trailerNotice}
+              </div>
+            )}
           </div>
         </div>
 

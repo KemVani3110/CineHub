@@ -10,6 +10,7 @@ import {
   Shield,
   Clock,
   Eye,
+  Flag,
   User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -38,11 +39,18 @@ const DASHBOARD_ITEMS_PER_PAGE = 5;
 
 async function getStats() {
   try {
-    const [users, logs, ratingsSnapshot, watchlistSnapshot] = await Promise.all([
+    const [
+      users,
+      logs,
+      ratingsSnapshot,
+      watchlistSnapshot,
+      sourceReportsSnapshot,
+    ] = await Promise.all([
       listAdminUsers(),
       listAdminLogs(),
       adminDb.collection("ratings").get(),
       adminDb.collection("watchlists").get(),
+      adminDb.collection("source_reports").get(),
     ]);
 
     const ratingValues = ratingsSnapshot.docs
@@ -54,6 +62,10 @@ async function getStats() {
       totalActivities: logs.length,
       totalRatings: ratingsSnapshot.size,
       totalWatchlist: watchlistSnapshot.size,
+      totalSourceReports: sourceReportsSnapshot.size,
+      openSourceReports: sourceReportsSnapshot.docs.filter(
+        (doc) => (doc.data().status || "open") === "open"
+      ).length,
       averageRating: ratingValues.length
         ? Number(
             (
@@ -70,6 +82,8 @@ async function getStats() {
       totalActivities: 0,
       totalRatings: 0,
       totalWatchlist: 0,
+      totalSourceReports: 0,
+      openSourceReports: 0,
       averageRating: 0,
     };
   }
@@ -213,7 +227,7 @@ export default async function AdminDashboardPage({
       </div>
 
       {/*  Main Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
         <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-primary/20 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900 hover:border-primary/40">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-slate-300">
@@ -323,6 +337,42 @@ export default async function AdminDashboardPage({
               <TrendingUp className="h-3 w-3 mr-1" />
               <span>Movies & TV shows saved</span>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer border-primary/20 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900 hover:border-primary/40">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-medium text-slate-300">
+              Source Reports
+            </CardTitle>
+            <div className="p-3 rounded-2xl bg-red-500/10 group-hover:bg-red-500/20 transition-colors">
+              <Flag className="h-6 w-6 text-red-400" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <div className="text-3xl font-bold text-white">
+                {stats.totalSourceReports.toLocaleString()}
+              </div>
+              <Badge
+                variant="secondary"
+                className="bg-red-500/20 text-red-300 hover:bg-red-500/30 border-red-500/30"
+              >
+                {stats.openSourceReports} open
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-400">Playback issues reported by users</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="cursor-pointer border-slate-600 text-slate-300 hover:bg-slate-700"
+              asChild
+            >
+              <Link href="/admin/source-reports">
+                <Eye className="h-4 w-4 mr-2" />
+                Review Reports
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

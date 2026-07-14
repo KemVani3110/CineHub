@@ -22,6 +22,7 @@ import { MovieActions } from "@/components/watch/MovieActions";
 import { SimilarMovies } from "@/components/watch/SimilarMovies";
 import { cn } from "@/lib/utils";
 import { authenticatedFetch } from "@/lib/firebase-auth-api";
+import { createTrailerSource, isFutureDate } from "@/lib/trailer-utils";
 
 interface StreamingSource {
   name: string;
@@ -49,6 +50,7 @@ export default function WatchMoviePage() {
   const [loadingStreams, setLoadingStreams] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
+  const [trailerNotice, setTrailerNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const loadMovie = async () => {
@@ -57,8 +59,23 @@ export default function WatchMoviePage() {
         const data = await fetchMovieDetails(Number(id));
         setMovie(data);
 
-        // Load streaming sources
-        await loadStreamingSources();
+        if (isFutureDate(data.release_date)) {
+          const trailerSource = createTrailerSource(data.videos);
+          setTrailerNotice(
+            `${data.title} has not been released yet. Playing the official trailer instead.`
+          );
+
+          if (trailerSource) {
+            setStreamingSources([trailerSource]);
+            setStreamError(null);
+          } else {
+            setStreamingSources([]);
+            setStreamError("This movie has not been released yet and no trailer is available.");
+          }
+        } else {
+          setTrailerNotice(null);
+          await loadStreamingSources();
+        }
       } catch (error) {
         console.error("Error loading movie:", error);
       } finally {
@@ -104,6 +121,7 @@ export default function WatchMoviePage() {
   };
 
   const retryStreaming = () => {
+    setTrailerNotice(null);
     loadStreamingSources();
   };
 
@@ -247,8 +265,10 @@ export default function WatchMoviePage() {
                       ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
                       : undefined
                   }
-                  title={movie.title}
+                  title={trailerNotice ? `${movie.title} - Trailer` : movie.title}
                   duration={movie.runtime}
+                  mediaType={trailerNotice ? undefined : "movie"}
+                  mediaId={trailerNotice ? undefined : (id as string)}
                   onTheaterModeChange={setIsTheaterMode}
                 />
               ) : (
@@ -287,6 +307,11 @@ export default function WatchMoviePage() {
                 </div>
               )}
             </div>
+            {trailerNotice && (
+              <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                {trailerNotice}
+              </div>
+            )}
           </div>
         </div>
 

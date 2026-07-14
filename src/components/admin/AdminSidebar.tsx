@@ -16,6 +16,7 @@ import {
   Shield,
   CircleUser,
   Menu,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -63,6 +64,12 @@ const navItems = [
     title: "Analytics",
     href: "/admin/analytics",
     icon: BarChart3,
+    badge: null,
+  },
+  {
+    title: "Source Reports",
+    href: "/admin/source-reports",
+    icon: Flag,
     badge: null,
   },
   {

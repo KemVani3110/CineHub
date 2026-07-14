@@ -17,6 +17,7 @@ import {
   RotateCcw,
   ExternalLink,
   RefreshCw,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -29,6 +30,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useVideoPlayerStore } from "@/store/videoPlayer";
+import { authenticatedFetch } from "@/lib/firebase-auth-api";
+import { useToast } from "@/components/ui/use-toast";
 
 interface StreamingSource {
   name: string;
@@ -44,6 +47,10 @@ interface VideoPlayerProps {
   posterUrl?: string;
   title: string;
   duration?: number; // Duration in minutes from TMDB
+  mediaType?: "movie" | "tv";
+  mediaId?: number | string;
+  seasonNumber?: number | string;
+  episodeNumber?: number | string;
   onTheaterModeChange?: (isTheaterMode: boolean) => void;
 }
 
@@ -53,6 +60,10 @@ export function VideoPlayer({
   posterUrl,
   title,
   duration,
+  mediaType,
+  mediaId,
+  seasonNumber,
+  episodeNumber,
   onTheaterModeChange,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -77,6 +88,8 @@ export function VideoPlayer({
   const [isEnded, setIsEnded] = useState(false);
   const [showHeader, setShowHeader] = useState(false);
   const [isSourceMenuOpen, setIsSourceMenuOpen] = useState(false);
+  const [isReportingSource, setIsReportingSource] = useState(false);
+  const { toast } = useToast();
 
   const {
     isPlaying,
@@ -193,6 +206,64 @@ export function VideoPlayer({
   const openExternal = () => {
     if (selectedSource) {
       window.open(selectedSource.url, "_blank");
+    }
+  };
+
+  const reportReasons = [
+    { value: "wrong_title", label: "Wrong movie/show" },
+    { value: "wrong_episode", label: "Wrong episode" },
+    { value: "not_working", label: "Not working" },
+    { value: "poor_quality", label: "Poor quality" },
+    { value: "other", label: "Other issue" },
+  ];
+
+  const reportSource = async (reason: string) => {
+    if (!selectedSource || !mediaType || !mediaId) {
+      toast({
+        title: "Report unavailable",
+        description: "Missing media or source information.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsReportingSource(true);
+      const response = await authenticatedFetch("/api/source-reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mediaType,
+          mediaId,
+          seasonNumber,
+          episodeNumber,
+          title,
+          sourceName: selectedSource.name,
+          sourceUrl: selectedSource.url,
+          reason,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to submit report");
+      }
+
+      toast({
+        title: "Report sent",
+        description: "Thanks. Admin will review this source.",
+      });
+    } catch (error) {
+      toast({
+        title: "Report failed",
+        description:
+          error instanceof Error ? error.message : "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsReportingSource(false);
     }
   };
 
@@ -802,6 +873,58 @@ export function VideoPlayer({
                       </DropdownMenuItem>
                     </>
                   )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {selectedSource && mediaType && mediaId && (
+              <DropdownMenu onOpenChange={handleMenuInteraction}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isReportingSource}
+                    className={cn(
+                      "rounded-2xl border border-slate-400/35 bg-slate-700/80 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-slate-600/90 cursor-pointer disabled:opacity-60",
+                      isMobile
+                        ? "h-10 min-w-10 px-3 active:scale-95"
+                        : "h-11 px-4"
+                    )}
+                    title="Report current source"
+                  >
+                    <Flag
+                      className={cn(
+                        isMobile ? "w-4 h-4" : "w-4 h-4",
+                        !isMobile && "mr-2"
+                      )}
+                    />
+                    <span className="hidden sm:inline font-semibold">
+                      Report
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className={cn(
+                    "bg-gradient-to-b from-slate-900/95 to-slate-800/95 backdrop-blur-xl border-slate-600/40 shadow-2xl rounded-2xl",
+                    isMobile ? "min-w-[190px]" : "min-w-[230px]"
+                  )}
+                >
+                  <div className={cn(isMobile ? "p-2" : "p-3")}>
+                    <h4 className="text-slate-300 font-bold mb-3 px-3 text-xs uppercase tracking-wider">
+                      Report Source
+                    </h4>
+                    {reportReasons.map((reason) => (
+                      <DropdownMenuItem
+                        key={reason.value}
+                        onClick={() => reportSource(reason.value)}
+                        className="text-white hover:bg-gradient-to-r hover:from-slate-700/50 hover:to-slate-600/50 cursor-pointer rounded-xl p-3 mb-1 transition-all duration-300"
+                      >
+                        <Flag className="w-4 h-4 mr-3 text-amber-300" />
+                        <span className="font-medium">{reason.label}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

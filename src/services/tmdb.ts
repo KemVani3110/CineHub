@@ -179,6 +179,22 @@ export const fetchSeasonDetails = async (tvShowId: number, seasonNumber: number)
   }
 };
 
+export const fetchEpisodeVideos = async (
+  tvShowId: number,
+  seasonNumber: number,
+  episodeNumber: number
+) => {
+  try {
+    const { data } = await tmdbApi.get(
+      `/tv/${tvShowId}/season/${seasonNumber}/episode/${episodeNumber}/videos`
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching episode videos:", error);
+    return { results: [] };
+  }
+};
+
 export const searchMulti = async (query: string, page: number = 1) => {
   try {
     const { data } = await tmdbApi.get('/search/multi', {

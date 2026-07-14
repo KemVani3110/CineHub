@@ -6,11 +6,12 @@ export async function GET(request: NextRequest) {
   try {
     await requireAdmin(request);
 
-    const [users, logs, ratingsSnapshot, watchlistSnapshot] = await Promise.all([
+    const [users, logs, ratingsSnapshot, watchlistSnapshot, sourceReportsSnapshot] = await Promise.all([
       listAdminUsers(),
       listAdminLogs(),
       adminDb.collection("ratings").get(),
       adminDb.collection("watchlists").get(),
+      adminDb.collection("source_reports").get(),
     ]);
 
     const usersByRole = users.reduce((acc: Record<string, number>, user) => {
@@ -36,6 +37,15 @@ export async function GET(request: NextRequest) {
         )
       : 0;
 
+    const sourceReportsByStatus = sourceReportsSnapshot.docs.reduce(
+      (acc: Record<string, number>, doc) => {
+        const status = doc.data().status || "open";
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
     return NextResponse.json({
       totalUsers: users.length,
       activeUsers: users.filter((user) => user.isActive).length,
@@ -46,6 +56,9 @@ export async function GET(request: NextRequest) {
       totalRatings: ratingsSnapshot.size,
       totalWatchlist: watchlistSnapshot.size,
       averageRating,
+      totalSourceReports: sourceReportsSnapshot.size,
+      openSourceReports: sourceReportsByStatus.open || 0,
+      sourceReportsByStatus,
     });
   } catch (error) {
     console.error("Error fetching admin stats:", error);
