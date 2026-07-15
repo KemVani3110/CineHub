@@ -1,243 +1,187 @@
 # CineHub Deployment Guide
 
-## Overview
+CineHub is designed for Vercel with Firebase Authentication, Firestore, Firebase Admin, TMDB, and SMTP contact email.
 
-CineHub uses Firebase Auth and Firestore for both local development and Vercel deployment.
+## Production Checklist
 
-## Local Development Setup
+Before deploying, confirm:
 
-### Prerequisites
-- Node.js 18+ 
-- Firebase project
-- TMDB API key
+- Firebase Authentication is enabled.
+- Firestore is created and rules are applied.
+- Firebase Admin service account values are ready.
+- TMDB API key is ready.
+- SMTP credentials are ready for contact messages.
+- Your Vercel domain is added to Firebase authorized domains.
 
-### Environment Variables (.env.local)
+## Required Vercel Environment Variables
 
-```bash
-# Firebase Configuration
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef
+Add these in Vercel Project Settings > Environment Variables.
+
+```env
+# Firebase client
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 
 # Firebase Admin
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-abc@your_project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
+FIREBASE_ADMIN_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
 
-# TMDB API
-NEXT_PUBLIC_TMDB_API_KEY=your_tmdb_api_key
+# TMDB
+NEXT_PUBLIC_TMDB_API_KEY=
+NEXT_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
+NEXT_PUBLIC_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
 
-# Environment Flags
-NODE_ENV=development
+# App
+NEXT_PUBLIC_APP_URL=https://your-vercel-domain.vercel.app
+NEXT_PUBLIC_APP_NAME=CineHub
+ADMIN_EMAIL=
+
+# Contact email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=
+SMTP_PASS=
+CONTACT_FROM_EMAIL=
+CONTACT_TO_EMAIL=
 ```
 
-### Installation & Setup
+Mark private values as Sensitive in Vercel:
 
-1. **Clone and Install Dependencies**
-   ```bash
-   git clone <repository>
-   cd cinehub
-   npm install
-   ```
+- `FIREBASE_ADMIN_PROJECT_ID`
+- `FIREBASE_CLIENT_EMAIL`
+- `FIREBASE_PRIVATE_KEY`
+- `ADMIN_EMAIL`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `CONTACT_FROM_EMAIL`
+- `CONTACT_TO_EMAIL`
 
-2. **Setup Firebase**
-   - Enable Firebase Authentication providers
-   - Create a Firestore database
-   - Apply `firestore.rules`
+## Firebase Setup
 
-3. **Configure Environment Variables**
-   - Copy `.env.example` to `.env.local`
-   - Fill in all the variables above
+### Authentication
 
-4. **Run Development Server**
-   ```bash
-   npm run dev
-   ```
+Enable:
 
-## Production Deployment (Vercel)
+- Email/Password
+- Google provider if used
 
-### Firebase Setup
+Then add authorized domains:
 
-1. **Create Firebase Project**
-   - Go to [Firebase Console](https://console.firebase.google.com)
-   - Create new project
-   - Enable Authentication
-   - Enable Firestore Database
+```text
+localhost
+your-vercel-domain.vercel.app
+your-custom-domain.com
+```
 
-2. **Configure Authentication Providers**
-   ```bash
-   # In Firebase Console > Authentication > Sign-in method
-   # Enable Email/Password
-   # Enable Google (optional)
-   # Enable Facebook (optional)
-   ```
+### Firestore
 
-3. **Setup Firestore Security Rules**
-   - Copy the rules from `firestore.rules` to your Firebase project
-   - Deploy the rules in Firebase Console
+1. Create the Firestore database.
+2. Open Firestore Rules.
+3. Paste the rules from `firestore.rules`.
+4. Publish the rules.
 
-4. **Generate Service Account Key**
-   ```bash
-   # In Firebase Console > Project Settings > Service accounts
-   # Click "Generate new private key"
-   # Download the JSON file
-   ```
+### Firebase Admin
 
-### Vercel Environment Variables
+1. Open Project Settings.
+2. Go to Service accounts.
+3. Generate a new private key.
+4. Copy values into Vercel:
+   - `FIREBASE_ADMIN_PROJECT_ID`
+   - `FIREBASE_CLIENT_EMAIL`
+   - `FIREBASE_PRIVATE_KEY`
 
-#### Required for Production
+For `FIREBASE_PRIVATE_KEY`, keep escaped newlines:
+
+```env
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+```
+
+## SMTP Contact Email
+
+For Gmail:
+
+1. Enable 2-Step Verification.
+2. Create a Google App Password.
+3. Use the 16-character App Password as `SMTP_PASS`.
+4. Use port `465` with `SMTP_SECURE=true`.
+
+The contact flow does two things:
+
+- Saves the message in Firestore under contact messages.
+- Sends an HTML email to `CONTACT_TO_EMAIL`.
+
+Admin replies are sent from the admin dashboard through `/api/contact`.
+
+## Deploy Steps
 
 ```bash
-# Firebase Client Configuration (Public)
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com  
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef
-
-# Firebase Admin Configuration (Private)
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-abc@your_project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
-
-# TMDB API
-NEXT_PUBLIC_TMDB_API_KEY=your_tmdb_api_key
-
-# Environment Flags (Critical!)
-NODE_ENV=production
-VERCEL_ENV=production
+git status
+git add .
+git commit -m "Prepare production deployment"
+git push
 ```
 
-### Deployment Steps
+Then in Vercel:
 
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Deploy to production"
-   git push origin main
-   ```
+1. Import the GitHub repository.
+2. Select the Next.js framework preset.
+3. Add all environment variables.
+4. Deploy.
+5. Redeploy after changing environment variables.
 
-2. **Connect to Vercel**
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Import your GitHub repository
-   - Framework preset: Next.js
+## Post-Deploy Verification
 
-3. **Configure Environment Variables**
-   - In Vercel project settings > Environment Variables
-   - Add all the required production variables above
-   - Set environment to "Production"
+Check these routes and flows:
 
-4. **Deploy**
-   - Vercel will automatically deploy on push to main branch
-   - Check deployment logs for any errors
-
-### Environment Variable Setup in Vercel
-
-#### Option 1: Through Vercel Dashboard
-1. Go to your project in Vercel
-2. Navigate to Settings > Environment Variables
-3. Add each variable one by one
-4. Select "Production" environment
-
-#### Option 2: Using Vercel CLI
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Login to Vercel
-vercel login
-
-# Add environment variables
-vercel env add NEXT_PUBLIC_FIREBASE_API_KEY
-vercel env add FIREBASE_CLIENT_EMAIL
-vercel env add FIREBASE_PRIVATE_KEY
-# ... add all other variables
-```
-
-### Important Notes
-
-1. **Firebase Private Key**: Make sure to properly escape the private key:
-   ```bash
-   # Correct format with escaped newlines
-   "-----BEGIN PRIVATE KEY-----\nMIIEvg...key_content...\n-----END PRIVATE KEY-----\n"
-   ```
-
-2. **Environment Detection**: The app automatically detects the environment:
-   ```javascript
-   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-   ```
-
-3. **Database**: User data is stored in Firestore.
-
-## Authentication Flow
-
-### Local Development and Production
-1. User enters email/password
-2. Firebase Auth validates credentials
-3. Firebase ID token generated
-4. API verifies token and updates Firestore
-5. User data retrieved from Firestore
+| Area | What To Verify |
+| --- | --- |
+| Health | `/api/auth/health` returns `ok: true`. |
+| Auth | Login, register, logout, and Google login if enabled. |
+| Firebase | Watchlist, history, profile, ratings, reviews. |
+| Watch | Movie watch page and TV episode watch page. |
+| Source Reports | Report a broken source and view it in admin. |
+| Contact | Submit a contact message and receive email. |
+| Admin | Dashboard, analytics, users, avatars, activity logs, contact messages. |
 
 ## Troubleshooting
 
-### Common Issues
+### Login does not work on Vercel
 
-1. **"Firebase token required" Error**
-   - Check that `NODE_ENV=production` is set
-   - Verify Firebase configuration is correct
+- Check Firebase authorized domains.
+- Check all Firebase client env values.
+- Confirm `NEXT_PUBLIC_APP_URL` matches the deployed URL.
+- Clear old cookies and retry.
 
-2. **"Invalid private key" Error**
-   - Ensure private key is properly escaped with \n
-   - Check that quotes are properly formatted
+### Google login says unauthorized domain
 
-3. **Authentication Loop**
-   - Clear browser cookies/localStorage
-   - Check environment variable configuration
+- Add the Vercel domain to Firebase Authentication > Settings > Authorized domains.
+- Redeploy if environment variables changed.
 
-4. **Build Errors**
-   - Verify all required environment variables are set
-   - Check that Firebase project has correct configuration
+### Contact email does not send
 
-### Debugging Commands
+- Check `/api/auth/health`.
+- Confirm `SMTP_PASS` is a Google App Password.
+- Confirm `SMTP_PORT=465` and `SMTP_SECURE=true`.
+- Redeploy after adding env variables.
 
-```bash
-# Check environment variables are loaded
-vercel env ls
+### Firebase private key error
 
-# View deployment logs
-vercel logs
+- Keep `\n` escaped in the private key.
+- Do not paste the JSON file directly into Vercel.
+- Put only the private key string in `FIREBASE_PRIVATE_KEY`.
 
-# Run local production build
-npm run build
-npm run start
-```
+### Source opens the wrong title
 
-## Security Considerations
+- Prefer TMDB-explicit source providers.
+- Check the stream route provider order.
+- Ask users to submit source reports from the player.
 
-1. **Environment Variables**: Never commit sensitive variables to git
-2. **Firebase Rules**: Ensure Firestore rules are properly configured
-3. **API Keys**: Use environment-specific API keys
-4. **CORS**: Configure proper CORS settings for production domain
+## Rollback
 
-## Performance Optimization
-
-1. **Firebase Connection**: Connection pooling is handled automatically
-2. **Caching**: Implement caching for frequently accessed data
-3. **Bundle Size**: Tree-shake unused Firebase features
-4. **CDN**: Leverage Vercel's edge network for static assets
-
-## Monitoring
-
-1. **Vercel Analytics**: Monitor performance and errors
-2. **Firebase Console**: Track authentication usage
-3. **Error Tracking**: Implement error tracking service
-4. **Logs**: Monitor function logs for issues
-
-## Rollback Strategy
-
-1. **Vercel Instant Rollback**: Use Vercel dashboard to rollback deployments
-2. **Environment Variables**: Keep backup of working configurations
-3. **Database**: Firestore has built-in backup/restore capabilities
-4. **Git**: Use git tags for release management
+Use Vercel's instant rollback if a deployment breaks. Keep the previous working environment variable set unchanged so rollback can recover quickly.

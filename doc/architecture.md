@@ -1,246 +1,184 @@
-# CineHub Architecture Documentation
+# CineHub Architecture
 
-## System Overview
+CineHub v2.0.0 is a Next.js App Router application with Firebase as the auth and data backbone. The app uses TMDB for public movie and TV metadata, Firestore for user/admin data, and server route handlers for secure writes and admin operations.
 
-CineHub is built using a modern web application architecture that follows the principles of scalability, maintainability, and performance. The application uses a combination of client-side and server-side rendering to provide an optimal user experience.
+## High-Level Diagram
 
-## Architecture Diagram
+```mermaid
+flowchart LR
+  Browser["Client Browser"]
+  App["Next.js App Router"]
+  API["Route Handlers"]
+  FirebaseAuth["Firebase Auth"]
+  Firestore["Firestore"]
+  AdminSDK["Firebase Admin SDK"]
+  TMDB["TMDB API"]
+  SMTP["SMTP Email"]
+  Streams["Third-party Stream Sources"]
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│  Client Browser │────▶│  Next.js App    │────▶│  External APIs  │
-│                 │     │                 │     │                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                               │
-                               │
-                               ▼
-                        ┌─────────────────┐
-                        │                 │
-                        │  Database Layer │
-                        │                 │
-                        └─────────────────┘
-```
-
-## Technology Stack
-
-### Frontend
-- **Framework**: Next.js 15
-- **Language**: TypeScript
-- **State Management**: Zustand
-- **UI Components**: Radix UI
-- **Styling**: Tailwind CSS
-- **Animation**: Framer Motion
-
-### Backend
-- **Runtime**: Node.js
-- **API**: Next.js API Routes
-- **Authentication**: Firebase Auth
-- **Database**: Firestore
-- **External APIs**: TMDB API
-
-## Directory Structure
-
-```
-cinehub/
-├── src/
-│   ├── app/                 # Next.js app directory
-│   │   ├── api/            # API routes
-│   │   ├── (auth)/         # Authentication pages
-│   │   ├── (main)/         # Main application pages
-│   │   └── layout.tsx      # Root layout
-│   │
-│   ├── components/         # React components
-│   │   ├── ui/            # UI components
-│   │   ├── features/      # Feature components
-│   │   └── layouts/       # Layout components
-│   │
-│   ├── hooks/             # Custom React hooks
-│   │   ├── auth/         # Authentication hooks
-│   │   ├── data/         # Data management hooks
-│   │   └── utils/        # Utility hooks
-│   │
-│   ├── lib/              # Utility functions
-│   │   ├── auth-helpers.ts       # Authentication helpers
-│   │   ├── firebase-admin.ts     # Firebase Admin SDK
-│   │   ├── firebase-user.ts      # Firestore user helpers
-│   │   └── utils.ts      # General utilities
-│   │
-│   ├── services/         # External services
-│   │   ├── tmdb.ts       # TMDB API service
-│   │   └── auth/         # Authentication services
-│   │
-│   ├── store/            # State management
-│   │   ├── authStore.ts  # Authentication store
-│   │   ├── userStore.ts  # User store
-│   │   └── uiStore.ts    # UI store
-│   │
-│   ├── styles/           # Global styles
-│   │   ├── globals.css   # Global CSS
-│   │  
-│   │
-│   └── types/            # TypeScript types
-│       ├── api.ts        # API types
-│       ├── auth.ts       # Authentication types
-│       └── models.ts     # Data model types
-│
-├── public/               # Static files
-├── doc/                 # Documentation
-└── tests/               # Test files
+  Browser --> App
+  App --> API
+  App --> FirebaseAuth
+  App --> TMDB
+  API --> AdminSDK
+  AdminSDK --> FirebaseAuth
+  AdminSDK --> Firestore
+  API --> SMTP
+  API --> Streams
 ```
 
-## Key Components
+## Main Layers
 
-### 1. Authentication System
-- Firebase Auth for authentication providers
-- Firebase Admin for server-side token verification
-- Firestore-backed user profiles and activity data
-- Protected routes and API endpoints
+| Layer | Responsibility |
+| --- | --- |
+| `src/app` | Pages, layouts, API route handlers, admin routes, watch routes. |
+| `src/components` | Shared UI, auth forms, admin tables, movie/TV UI, watch player UI. |
+| `src/hooks` | Client hooks for app behavior and auth. |
+| `src/lib` | Firebase Admin, auth helpers, email, utility functions, app metadata. |
+| `src/services` | TMDB fetch layer and media helpers. |
+| `src/store` | Zustand stores for client state. |
 
-### 2. Data Management
-- Zustand for client-side state management
-- Firestore for persistent user data
-- TMDB API for movie and TV show data
+## Authentication Architecture
 
-### 3. API Layer
-- Next.js API Routes for backend functionality
-- RESTful API design
-- Rate limiting and caching
-- Error handling and validation
+CineHub uses Firebase Authentication.
 
-### 4. UI Components
-- Radix UI for accessible components
-- Tailwind CSS for styling
-- Responsive design
-- Dark mode support
+```mermaid
+sequenceDiagram
+  participant User
+  participant Client
+  participant FirebaseAuth
+  participant API
+  participant AdminSDK
+  participant Firestore
 
-## Data Flow
+  User->>Client: Login or register
+  Client->>FirebaseAuth: Authenticate
+  FirebaseAuth-->>Client: ID token
+  Client->>API: Send token
+  API->>AdminSDK: Verify token
+  AdminSDK->>Firestore: Create/update user profile
+  API-->>Client: User session data
+```
 
-### Authentication Flow
-1. User initiates login/register
-2. Firebase Auth validates credentials
-3. Firebase ID token is generated
-4. API routes verify the token with Firebase Admin
-5. User data is loaded from Firestore
+Key points:
 
-### Movie Data Flow
-1. User requests movie data
-2. TMDB API is called
-3. Data is cached if possible
-4. Response is formatted
-5. UI is updated
+- MySQL and NextAuth are not used.
+- Firebase ID tokens are verified server-side with Firebase Admin.
+- Firestore stores profile, activity, watch, admin, and contact data.
+- Admin pages use server-side checks before rendering protected data.
 
-### User Data Flow
-1. User action triggers state change
-2. Zustand store is updated
-3. API request is made if needed
-4. Database is updated
-5. UI reflects changes
+## Data Model Areas
 
-## Security Measures
+Firestore is used for:
 
-### Authentication Security
-- JWT token encryption
-- Secure session management
-- CSRF protection
-- Rate limiting
+- Users and profiles
+- Watchlist
+- Watch history
+- Favorites and favorite actors
+- Ratings and reviews
+- Admin activity logs
+- Avatar metadata
+- Source reports
+- Contact messages
 
-### Data Security
-- Input validation
-- SQL injection prevention
-- XSS protection
-- Data encryption
+TMDB is used for:
 
-### API Security
-- API key management
-- Request validation
-- Error handling
-- Rate limiting
+- Movie details
+- TV details
+- Credits
+- Images
+- Videos and trailers
+- Similar and trending content
 
-## Performance Optimization
+## Watch Source Flow
 
-### Client-side
-- Code splitting
-- Lazy loading
-- Image optimization
-- Caching strategies
+```mermaid
+flowchart TD
+  Page["Watch page"]
+  ReleaseCheck["Check release or air date"]
+  Trailer["TMDB trailer fallback"]
+  StreamAPI["Stream API route"]
+  Providers["Provider list"]
+  Player["VideoPlayer"]
+  Report["Source report"]
+  Admin["Admin source reports"]
 
-### Server-side
-- API caching
-- Database indexing
-- Query optimization
-- Response compression
+  Page --> ReleaseCheck
+  ReleaseCheck -->|Not released| Trailer
+  ReleaseCheck -->|Released| StreamAPI
+  StreamAPI --> Providers
+  Providers --> Player
+  Player --> Report
+  Report --> Admin
+```
 
-## Error Handling
+The watch experience prioritizes correctness:
 
-### Client-side Errors
-- Error boundaries
-- Toast notifications
-- Fallback UI
-- Error logging
+- Use TMDB IDs where possible.
+- Prefer explicit providers before ambiguous title-based providers.
+- Allow users to report broken or wrong sources.
+- Use trailer fallback when content is unreleased.
 
-### Server-side Errors
-- API error responses
-- Database error handling
-- External API error handling
-- Error logging
+## Contact Flow
 
-## Testing Strategy
+```mermaid
+sequenceDiagram
+  participant Visitor
+  participant ContactPage
+  participant API
+  participant Firestore
+  participant SMTP
+  participant Admin
 
-### Unit Tests
-- Component testing
-- Hook testing
-- Utility function testing
-- Store testing
+  Visitor->>ContactPage: Submit contact form
+  ContactPage->>API: POST /api/contact
+  API->>Firestore: Save message
+  API->>SMTP: Send HTML email
+  Admin->>API: GET /api/contact
+  Admin->>API: PATCH /api/contact reply
+  API->>SMTP: Send reply email
+  API->>Firestore: Mark replied
+```
 
-### Integration Tests
-- API endpoint testing
-- Authentication flow testing
-- Data flow testing
-- UI interaction testing
+## Admin Architecture
 
-### E2E Tests
-- User flow testing
-- Critical path testing
-- Cross-browser testing
-- Performance testing
+Admin features are server-backed:
 
-## Deployment Strategy
+- Dashboard metrics
+- Analytics
+- User management
+- Avatar management
+- Activity logs
+- Source reports
+- Contact messages
 
-### Development
-- Local development environment
-- Hot reloading
-- Firebase/Firestore environment
-- Mock services
+Admin pages read Firestore through Firebase Admin instead of trusting client-only data.
 
-### Staging
-- Preview deployments
-- Integration testing
-- Performance testing
-- Security testing
+## Environment Boundaries
 
-### Production
-- Vercel deployment
-- Firestore rules and environment configuration
-- Environment configuration
-- Monitoring setup
+| Variable Type | Example | Exposed To Browser |
+| --- | --- | --- |
+| Public Firebase/TMDB | `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes |
+| Firebase Admin | `FIREBASE_PRIVATE_KEY` | No |
+| Contact SMTP | `SMTP_PASS` | No |
+| Admin config | `ADMIN_EMAIL` | No |
 
-## Monitoring and Maintenance
+## Security Notes
 
-### Performance Monitoring
-- Page load times
-- API response times
-- Database query times
-- Resource usage
+- Keep server secrets out of Git.
+- Use Vercel Sensitive environment variables for private values.
+- Protect `/admin` with server-side Firebase Admin checks.
+- Keep Firestore rules aligned with app behavior.
+- Validate route handler input before writing to Firestore.
 
-### Error Monitoring
-- Error tracking
-- User feedback
-- System logs
-- Performance metrics
+## Current Version Focus
 
-### Maintenance Tasks
-- Database optimization
-- Cache management
-- Security updates
-- Dependency updates 
+Version 2.0.0 focuses on:
+
+- Firebase-only auth and data flow.
+- Firestore-backed user features.
+- Real admin workflows.
+- Source reporting.
+- Trailer fallback.
+- Server-side contact email.
+- Vercel deployment reliability.

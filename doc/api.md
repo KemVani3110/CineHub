@@ -1,144 +1,163 @@
 # CineHub API Documentation
 
-## TMDB API Integration
+This document lists the current app route handlers in CineHub v2.0.0. All routes live under `src/app/api`.
 
-The application integrates with The Movie Database (TMDB) API for movie and TV show data.
+## Auth Routes
 
-### Base URL
-```
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/auth/health` | Check required production environment variables. |
+| `POST` | `/api/auth/register` | Register a Firebase user and initialize app user data. |
+| `POST` | `/api/auth/login` | Verify login token and sync user data. |
+| `POST` | `/api/auth/logout` | End the app session. |
+| `GET` | `/api/auth/me` | Return current authenticated user data. |
+| `POST` | `/api/auth/social-login` | Sync social login users with the app backend. |
+
+## Profile Routes
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/profile` | Get the current user's profile. |
+| `PUT` | `/api/profile` | Update the current user's profile. |
+| `PUT` | `/api/profile/avatar` | Update the current user's selected avatar. |
+| `GET` | `/api/profile/avatars` | List available profile avatars. |
+| `PUT` | `/api/profile/password` | Update password-related account data. |
+
+## Movie And TV Routes
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/movies/trending` | Fetch trending movies. |
+| `GET` | `/api/movies/[listType]` | Fetch movie lists such as popular, top rated, or upcoming. |
+| `GET` | `/api/tv` | Fetch TV discovery data. |
+| `GET` | `/api/tv/[listType]` | Fetch TV lists such as popular or top rated. |
+
+TMDB remains the source for public movie and TV metadata.
+
+## Watch And Stream Routes
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/stream/[type]/[id]` | Resolve stream sources for a movie or media item. |
+| `GET` | `/api/stream/tv/[id]/season/[seasonNumber]/episode/[episodeNumber]` | Resolve stream sources for a TV episode. |
+| `GET` | `/api/source-reports` | Admin list of source reports. |
+| `POST` | `/api/source-reports` | Submit a source report from the watch player. |
+| `PATCH` | `/api/source-reports` | Update a source report status. |
+
+## User Media Routes
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/watchlist` | Get the current user's watchlist. |
+| `POST` | `/api/watchlist` | Add an item to the watchlist. |
+| `DELETE` | `/api/watchlist/[mediaType]/[id]` | Remove an item from the watchlist. |
+| `GET` | `/api/history` | Get watch history. |
+| `POST` | `/api/history` | Add a watch history item. |
+| `PUT` | `/api/history` | Update watch history progress. |
+| `DELETE` | `/api/history` | Clear watch history. |
+| `PUT` | `/api/history/[id]` | Update one history item. |
+| `DELETE` | `/api/history/[id]` | Delete one history item. |
+| `GET` | `/api/favorites` | Get favorite items. |
+| `POST` | `/api/favorites` | Add a favorite item. |
+| `DELETE` | `/api/favorites` | Remove a favorite item. |
+| `GET` | `/api/ratings` | Get ratings. |
+| `POST` | `/api/ratings` | Create or update a rating. |
+| `DELETE` | `/api/ratings` | Remove a rating. |
+| `GET` | `/api/reviews` | Get reviews. |
+
+## Contact Routes
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/contact` | Save a contact message and send an email notification. |
+| `GET` | `/api/contact` | Admin list of contact messages. |
+| `PATCH` | `/api/contact` | Admin reply to a contact message. |
+
+Contact behavior:
+
+- Public visitors can submit contact messages.
+- Messages are saved in Firestore.
+- SMTP sends a styled HTML email to `CONTACT_TO_EMAIL`.
+- Admin replies send an email to the visitor and mark the message as replied.
+
+## Admin Routes
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/admin/stats` | Dashboard stats. |
+| `GET` | `/api/admin/users` | List users. |
+| `PATCH` | `/api/admin/users` | Update a user. |
+| `DELETE` | `/api/admin/users` | Delete or disable a user record. |
+| `GET` | `/api/admin/activity-logs` | List admin activity logs. |
+| `GET` | `/api/admin/avatars` | List avatars. |
+| `POST` | `/api/admin/avatars/upload` | Upload an avatar. |
+| `DELETE` | `/api/admin/avatars/[id]` | Delete an avatar. |
+
+Admin routes require server-side authorization.
+
+## External Services
+
+### TMDB
+
+Base URL:
+
+```text
 https://api.themoviedb.org/3
 ```
 
-### Authentication
-All requests require an API key passed as a query parameter:
-```
-?api_key=YOUR_TMDB_API_KEY
-```
+Common TMDB areas used by the app:
 
-### Available Endpoints
+- Movies
+- TV shows
+- Seasons and episodes
+- Credits
+- Videos and trailers
+- Images
+- Search
+- Similar content
 
-#### Movies
-- `GET /movie/popular` - Get popular movies
-- `GET /movie/top_rated` - Get top rated movies
-- `GET /movie/upcoming` - Get upcoming movies
-- `GET /movie/{id}` - Get movie details
-- `GET /movie/{id}/credits` - Get movie credits
-- `GET /movie/{id}/videos` - Get movie videos
-- `GET /movie/{id}/similar` - Get similar movies
+### Firebase
 
-#### TV Shows
-- `GET /tv/popular` - Get popular TV shows
-- `GET /tv/top_rated` - Get top rated TV shows
-- `GET /tv/{id}` - Get TV show details
-- `GET /tv/{id}/credits` - Get TV show credits
-- `GET /tv/{id}/videos` - Get TV show videos
-- `GET /tv/{id}/similar` - Get similar TV shows
+Firebase services used:
 
-#### Search
-- `GET /search/movie` - Search movies
-- `GET /search/tv` - Search TV shows
-- `GET /search/multi` - Search movies and TV shows
+- Firebase Authentication
+- Firestore
+- Firebase Admin SDK
 
-## Firebase Services
+### SMTP
 
-### Authentication
-- Email/Password authentication
-- Google authentication
-- Facebook authentication
+SMTP is used by contact flows only:
 
-### Firestore Collections
-
-#### Users
-```typescript
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-#### Reviews
-```typescript
-interface Review {
-  id: string;
-  userId: string;
-  movieId: number;
-  content: string;
-  rating: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-#### Watchlist
-```typescript
-interface WatchlistItem {
-  id: string;
-  userId: string;
-  movieId: number;
-  addedAt: Date;
-}
-```
-
-#### Favorites
-```typescript
-interface Favorite {
-  id: string;
-  userId: string;
-  movieId: number;
-  addedAt: Date;
-}
-```
-
-## Custom API Routes
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/logout` - Logout user
-- `GET /api/auth/session` - Get current session
-
-### User Profile
-- `GET /api/user/profile` - Get user profile
-- `PUT /api/user/profile` - Update user profile
-- `PUT /api/user/avatar` - Update user avatar
-
-### Reviews
-- `GET /api/reviews/:movieId` - Get reviews for a movie
-- `POST /api/reviews` - Create new review
-- `PUT /api/reviews/:id` - Update review
-- `DELETE /api/reviews/:id` - Delete review
-
-### Watchlist
-- `GET /api/watchlist` - Get user's watchlist
-- `POST /api/watchlist` - Add movie to watchlist
-- `DELETE /api/watchlist/:movieId` - Remove movie from watchlist
-
-### Favorites
-- `GET /api/favorites` - Get user's favorites
-- `POST /api/favorites` - Add movie to favorites
-- `DELETE /api/favorites/:movieId` - Remove movie from favorites
+- `POST /api/contact`
+- `PATCH /api/contact`
 
 ## Error Handling
 
-All API endpoints follow a consistent error response format:
+The app generally returns JSON responses with a `message` field for errors.
 
-```typescript
-interface ErrorResponse {
-  error: {
-    code: string;
-    message: string;
-    details?: any;
-  }
-}
+Common failure categories:
+
+| Category | Typical Cause |
+| --- | --- |
+| Unauthorized | Missing or invalid Firebase session/token. |
+| Validation | Missing required fields or invalid email format. |
+| Not found | Firestore document does not exist. |
+| Email failed | SMTP variables missing or provider rejected credentials. |
+| External API failed | TMDB or stream provider request failed. |
+
+## Health Check
+
+Use this after deploy:
+
+```text
+GET /api/auth/health
 ```
 
-Common error codes:
-- `AUTH_REQUIRED` - Authentication required
-- `INVALID_CREDENTIALS` - Invalid login credentials
-- `NOT_FOUND` - Resource not found
-- `VALIDATION_ERROR` - Invalid input data
-- `SERVER_ERROR` - Internal server error 
+Expected result when all required env vars are present:
+
+```json
+{
+  "ok": true,
+  "missing": []
+}
+```

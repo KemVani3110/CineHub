@@ -1,93 +1,157 @@
 # CineHub Setup Guide
 
-## Prerequisites
+CineHub v2.0.0 is a Firebase-first movie and TV discovery app. This guide explains how to run the project locally without the old MySQL or NextAuth setup.
 
-- Node.js (v18 or higher)
-- npm or yarn
-- Firebase account
+## Requirements
+
+- Node.js 18 or newer
+- npm
+- Firebase project
 - TMDB API key
+- Gmail App Password or another SMTP account for contact email
 
-## Installation
+## 1. Install The Project
 
-1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone <repository-url>
 cd cinehub
-```
-
-2. Install dependencies:
-```bash
 npm install
-# or
-yarn install
 ```
 
-3. Create a `.env.local` file in the root directory with the following variables:
+## 2. Create The Environment File
+
+```bash
+cp .env.example .env.local
+```
+
+PowerShell alternative:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+## 3. Configure Environment Variables
+
+Fill these groups in `.env.local`.
+
 ```env
-# Firebase
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
-FIREBASE_CLIENT_EMAIL=your_firebase_admin_client_email
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
+# Firebase client
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 
-# TMDB API
-NEXT_PUBLIC_TMDB_API_KEY=your_tmdb_api_key
+# Firebase Admin
+FIREBASE_ADMIN_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+
+# TMDB
+NEXT_PUBLIC_TMDB_API_KEY=
+NEXT_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
+NEXT_PUBLIC_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_NAME=CineHub
+ADMIN_EMAIL=
+
+# Contact email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=
+SMTP_PASS=
+CONTACT_FROM_EMAIL=
+CONTACT_TO_EMAIL=
 ```
 
-4. Set up Firebase:
-- Enable Firebase Authentication providers
-- Create a Firestore database
-- Apply the rules from `firestore.rules`
+Notes:
 
-## Development
+- `FIREBASE_PRIVATE_KEY` and `SMTP_PASS` are private server-side values.
+- `NEXT_PUBLIC_*` values are exposed to the browser by design.
+- Gmail SMTP requires a Google App Password, not the normal Gmail password.
+- Do not add MySQL, NextAuth, JWT, or legacy database variables.
 
-Start the development server:
+## 4. Configure Firebase
+
+In Firebase Console:
+
+1. Enable Authentication.
+2. Enable Email/Password.
+3. Enable Google provider if the app should use Google login.
+4. Create a Firestore database.
+5. Add `localhost` to Authentication authorized domains.
+6. Generate a Firebase Admin service account key.
+7. Copy the Firestore rules from `firestore.rules`.
+
+## 5. Configure TMDB
+
+Create an API key at TMDB and set:
+
+```env
+NEXT_PUBLIC_TMDB_API_KEY=
+NEXT_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
+NEXT_PUBLIC_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
+```
+
+## 6. Start Development
+
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-The application will be available at `http://localhost:3000`
+Open:
 
-## Project Structure
-
+```text
+http://localhost:3000
 ```
+
+## 7. Verify The Main Flows
+
+After the app starts, test:
+
+- Register and login.
+- Google login if enabled.
+- Browse `/home`, `/explore`, `/search`, movie details, and TV details.
+- Add a title to watchlist.
+- Watch a movie or TV episode.
+- Submit a source report from the player.
+- Submit the contact form and confirm email delivery.
+- Open admin pages with an admin account.
+
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the local development server. |
+| `npm run build` | Build the production app. |
+| `npm run start` | Run the built app. |
+| `npx tsc --noEmit` | Validate TypeScript. |
+
+## Project Map
+
+```text
 cinehub/
-├── src/
-│   ├── app/          # Next.js app directory
-│   ├── components/   # React components
-│   ├── hooks/        # Custom React hooks
-│   ├── lib/          # Utility functions and configurations
-│   ├── services/     # API services
-│   ├── store/        # State management (Zustand)
-│   ├── styles/       # Global styles
-│   └── types/        # TypeScript type definitions
-├── public/           # Static files
-└── doc/             # Documentation
+  doc/                    Project documentation
+  public/                 Logo and static assets
+  src/
+    app/                  App Router pages and API routes
+    components/           UI, auth, admin, watch, and shared components
+    hooks/                React hooks
+    lib/                  Firebase, email, admin, auth, and app helpers
+    services/             TMDB service layer
+    store/                Zustand stores
 ```
 
-## Available Scripts
+## Common Local Issues
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-
-## Tech Stack
-
-- **Framework**: Next.js 15
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: Zustand
-- **UI Components**: Radix UI
-- **Authentication**: Firebase Auth
-- **Database**: Firestore
-- **API Integration**: TMDB API
-- **Form Handling**: React Hook Form
-- **Validation**: Zod
-- **Animation**: Framer Motion
+| Issue | Fix |
+| --- | --- |
+| Firebase private key error | Keep escaped `\n` newlines in `FIREBASE_PRIVATE_KEY`. |
+| Google login blocked | Add the domain in Firebase authorized domains. |
+| Contact email fails | Check `SMTP_*` values and use a Gmail App Password. |
+| Admin redirects to login | Confirm the logged-in user's email matches `ADMIN_EMAIL` or admin role logic. |
+| Movie data missing | Confirm the TMDB key and base URLs are set. |
