@@ -13,6 +13,12 @@ const requiredEnvVars = [
   "NEXT_PUBLIC_TMDB_API_KEY",
   "NEXT_PUBLIC_TMDB_BASE_URL",
   "NEXT_PUBLIC_TMDB_IMAGE_BASE_URL",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_USER",
+  "SMTP_PASS",
+  "CONTACT_FROM_EMAIL",
+  "CONTACT_TO_EMAIL",
 ];
 
 export async function GET() {

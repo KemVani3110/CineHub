@@ -21,20 +21,6 @@ import { useToast } from "@/components/ui/use-toast";
 const MAIN_CONTACT_EMAIL = "minhkhoi3110953@gmail.com";
 const SECONDARY_EMAIL = "chuminhkhoi3110@gmail.com";
 
-function buildMailtoUrl(data: {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}) {
-  const subject = encodeURIComponent(`[CineHub Contact] ${data.subject}`);
-  const body = encodeURIComponent(
-    `Name: ${data.name}\nEmail: ${data.email}\n\nMessage:\n${data.message}`
-  );
-
-  return `mailto:${MAIN_CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-}
-
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -78,11 +64,10 @@ export default function ContactPage() {
       }
 
       toast({
-        title: "Message saved",
-        description: "The message is saved for admin review. Your mail app will open next.",
+        title: "Message sent",
+        description: "Your message was saved for admin review and emailed directly to me.",
       });
 
-      window.location.href = buildMailtoUrl(formData);
       setFormData({ name: "", email: "", subject: "", message: "" });
     } catch (error) {
       toast({
@@ -117,8 +102,7 @@ export default function ContactPage() {
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
                 This contact form saves your message into the CineHub admin
-                panel and also opens your mail app so the message can be sent
-                directly to my main email.
+                panel and sends it directly to my main email automatically.
               </p>
             </div>
 
@@ -159,7 +143,7 @@ export default function ContactPage() {
                   Send a Message
                 </CardTitle>
                 <CardDescription>
-                  Saved to admin and prepared for email delivery.
+                  Saved to admin and sent to the main email automatically.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -233,7 +217,7 @@ export default function ContactPage() {
                     className="w-full"
                   >
                     <Send className="mr-2 h-5 w-5" />
-                    {isSubmitting ? "Sending..." : "Save and Open Email"}
+                    {isSubmitting ? "Sending..." : "Send Message"}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </form>
@@ -261,7 +245,7 @@ export default function ContactPage() {
               <Mail className="h-7 w-7 text-primary" />
               <h2 className="text-lg font-semibold">Main email flow</h2>
               <p className="text-sm leading-6 text-muted-foreground">
-                After saving, the browser opens a prefilled email to{" "}
+                The server sends the message directly to{" "}
                 {MAIN_CONTACT_EMAIL}.
               </p>
             </CardContent>
