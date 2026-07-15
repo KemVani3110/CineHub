@@ -10,7 +10,6 @@ import {
   Facebook,
   Film,
   Github,
-  Heart,
   Linkedin,
   Mail,
   MapPin,
@@ -245,11 +244,6 @@ const Footer = ({ isSidebarOpen = false }: FooterProps) => {
             <p className="text-xs">
               Movie and TV metadata provided by TMDB.
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>Made with</span>
-            <Heart size={14} className="text-red-500" />
-            <span>for learning, product thinking, and better movie UX.</span>
           </div>
         </div>
       </div>

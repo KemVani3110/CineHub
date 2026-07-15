@@ -44,6 +44,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { useHistoryStore } from "@/store/historyStore";
 import { useHeaderStore } from "@/store/headerStore";
+import { APP_VERSION } from "@/lib/app-info";
 import NotificationBell from "./NotificationBell";
 
 interface HeaderProps {
@@ -490,7 +491,9 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                         </Button>
                       )}
                       <div className="px-4 py-3 text-center">
-                        <p className="text-xs text-slate-400">CineHub v1.0.0</p>
+                        <p className="text-xs text-slate-400">
+                          CineHub v{APP_VERSION}
+                        </p>
                       </div>
                     </div>
                   </div>

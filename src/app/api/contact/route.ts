@@ -52,48 +52,74 @@ function buildAdminContactEmail({
   const safeEmail = escapeHtml(email);
   const safeSubject = escapeHtml(subject);
   const safeMessage = escapeHtmlWithBreaks(message);
+  const senderInitial = escapeHtml(name.charAt(0).toUpperCase() || "C");
   const replyHref = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(
     `Re: ${subject}`
   )}`;
 
   return `
-    <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-      <div style="max-width:680px;margin:0 auto;padding:32px 16px;">
-        <div style="overflow:hidden;border-radius:18px;background:#ffffff;border:1px solid #e5e7eb;box-shadow:0 18px 45px rgba(15,23,42,0.08);">
-          <div style="padding:28px 30px;background:#07111f;color:#ffffff;">
-            <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#22d3ee;font-weight:700;">CineHub Contact</div>
-            <h1 style="margin:10px 0 0;font-size:26px;line-height:1.25;font-weight:800;">New message received</h1>
-            <p style="margin:10px 0 0;color:#cbd5e1;font-size:14px;line-height:1.6;">A visitor sent a message from your CineHub contact page.</p>
-          </div>
-
-          <div style="padding:28px 30px;">
-            <div style="margin-bottom:22px;padding:18px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;">
+    <div style="margin:0;padding:0;background:#eef3f8;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+      <div style="max-width:720px;margin:0 auto;padding:34px 16px;">
+        <div style="overflow:hidden;border-radius:24px;background:#ffffff;border:1px solid #dbe3ef;box-shadow:0 24px 60px rgba(15,23,42,0.14);">
+          <div style="padding:0;background:#07111f;">
+            <div style="height:6px;background:#12d6c5;"></div>
+            <div style="padding:30px 32px 28px;color:#ffffff;">
               <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
                 <tr>
-                  <td style="padding:6px 0;width:92px;color:#64748b;font-size:13px;font-weight:700;">Name</td>
-                  <td style="padding:6px 0;color:#0f172a;font-size:15px;font-weight:700;">${safeName}</td>
+                  <td style="vertical-align:top;">
+                    <div style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#67e8f9;font-weight:800;">CineHub Contact</div>
+                    <h1 style="margin:10px 0 0;font-size:28px;line-height:1.2;font-weight:900;">New lead from your portfolio</h1>
+                    <p style="margin:12px 0 0;color:#cbd5e1;font-size:14px;line-height:1.7;">A visitor submitted the CineHub contact form. The message is saved in your admin dashboard.</p>
+                  </td>
+                  <td align="right" style="vertical-align:top;width:120px;">
+                    <span style="display:inline-block;border-radius:999px;background:rgba(20,184,166,0.16);border:1px solid rgba(45,212,191,0.45);padding:8px 12px;color:#99f6e4;font-size:12px;font-weight:800;">New message</span>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <div style="padding:30px 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:22px;">
+              <tr>
+                <td style="width:62px;vertical-align:top;">
+                  <div style="width:52px;height:52px;border-radius:18px;background:#0f172a;color:#ffffff;text-align:center;line-height:52px;font-size:22px;font-weight:900;">${senderInitial}</div>
+                </td>
+                <td style="vertical-align:middle;">
+                  <div style="color:#0f172a;font-size:18px;font-weight:900;line-height:1.3;">${safeName}</div>
+                  <div style="margin-top:4px;color:#64748b;font-size:14px;"><a href="mailto:${safeEmail}" style="color:#2563eb;text-decoration:none;">${safeEmail}</a></div>
+                </td>
+              </tr>
+            </table>
+
+            <div style="margin-bottom:24px;padding:20px;border-radius:18px;background:#f8fafc;border:1px solid #dbeafe;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+                <tr>
+                  <td style="padding:0 0 8px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;">Subject</td>
                 </tr>
                 <tr>
-                  <td style="padding:6px 0;width:92px;color:#64748b;font-size:13px;font-weight:700;">Email</td>
-                  <td style="padding:6px 0;color:#0f172a;font-size:15px;"><a href="mailto:${encodeURIComponent(email)}" style="color:#2563eb;text-decoration:none;">${safeEmail}</a></td>
-                </tr>
-                <tr>
-                  <td style="padding:6px 0;width:92px;color:#64748b;font-size:13px;font-weight:700;">Subject</td>
-                  <td style="padding:6px 0;color:#0f172a;font-size:15px;">${safeSubject}</td>
+                  <td style="padding:0;color:#0f172a;font-size:18px;font-weight:800;line-height:1.45;">${safeSubject}</td>
                 </tr>
               </table>
             </div>
 
             <div style="margin-bottom:24px;">
-              <div style="margin-bottom:10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;">Message</div>
-              <div style="padding:20px;border-left:4px solid #06b6d4;border-radius:12px;background:#ecfeff;color:#0f172a;font-size:16px;line-height:1.7;">${safeMessage}</div>
+              <div style="margin-bottom:12px;color:#64748b;font-size:12px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;">Message</div>
+              <div style="padding:22px 24px;border-radius:18px;background:#ecfeff;border:1px solid #a5f3fc;border-left:6px solid #06b6d4;color:#0f172a;font-size:17px;line-height:1.75;">${safeMessage}</div>
             </div>
 
-            <a href="${replyHref}" style="display:inline-block;padding:13px 18px;border-radius:999px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">Reply to ${safeName}</a>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+              <tr>
+                <td>
+                  <a href="${replyHref}" style="display:inline-block;padding:14px 20px;border-radius:999px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:900;">Reply to ${safeName}</a>
+                </td>
+                <td style="padding-left:12px;color:#64748b;font-size:13px;">Reply-To is already set to the sender.</td>
+              </tr>
+            </table>
           </div>
 
-          <div style="padding:18px 30px;background:#f8fafc;border-top:1px solid #e5e7eb;color:#64748b;font-size:12px;line-height:1.6;">
-            This email was generated automatically from the CineHub contact form. The message is also saved in your admin dashboard.
+          <div style="padding:18px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;color:#64748b;font-size:12px;line-height:1.6;">
+            Sent automatically by CineHub Contact. Keep replies professional and continue the conversation from your admin dashboard when needed.
           </div>
         </div>
       </div>
@@ -112,18 +138,25 @@ function buildReplyEmail({
   const safeOriginalMessage = escapeHtmlWithBreaks(originalMessage);
 
   return `
-    <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-      <div style="max-width:680px;margin:0 auto;padding:32px 16px;">
-        <div style="overflow:hidden;border-radius:18px;background:#ffffff;border:1px solid #e5e7eb;box-shadow:0 18px 45px rgba(15,23,42,0.08);">
-          <div style="padding:24px 30px;background:#07111f;color:#ffffff;">
-            <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#22d3ee;font-weight:700;">CineHub</div>
-            <h1 style="margin:8px 0 0;font-size:24px;line-height:1.25;font-weight:800;">Thanks for reaching out</h1>
+    <div style="margin:0;padding:0;background:#eef3f8;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+      <div style="max-width:720px;margin:0 auto;padding:34px 16px;">
+        <div style="overflow:hidden;border-radius:24px;background:#ffffff;border:1px solid #dbe3ef;box-shadow:0 24px 60px rgba(15,23,42,0.14);">
+          <div style="padding:0;background:#07111f;color:#ffffff;">
+            <div style="height:6px;background:#12d6c5;"></div>
+            <div style="padding:28px 32px;">
+              <div style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#67e8f9;font-weight:900;">CineHub</div>
+              <h1 style="margin:10px 0 0;font-size:27px;line-height:1.2;font-weight:900;">Thanks for reaching out</h1>
+              <p style="margin:12px 0 0;color:#cbd5e1;font-size:14px;line-height:1.7;">Here is a reply from Huynh Chu Minh Khoi about your message.</p>
+            </div>
           </div>
-          <div style="padding:28px 30px;">
-            <div style="color:#0f172a;font-size:16px;line-height:1.7;">${safeReplyMessage}</div>
-            <div style="height:1px;background:#e5e7eb;margin:26px 0;"></div>
-            <div style="margin-bottom:10px;color:#64748b;font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;">Original message</div>
-            <div style="padding:16px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;color:#334155;font-size:14px;line-height:1.7;">${safeOriginalMessage}</div>
+          <div style="padding:30px 32px;">
+            <div style="padding:22px 24px;border-radius:18px;background:#ffffff;border:1px solid #e2e8f0;color:#0f172a;font-size:16px;line-height:1.75;">${safeReplyMessage}</div>
+            <div style="height:1px;background:#e5e7eb;margin:28px 0;"></div>
+            <div style="margin-bottom:12px;color:#64748b;font-size:12px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;">Original message</div>
+            <div style="padding:18px 20px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;border-left:5px solid #94a3b8;color:#334155;font-size:14px;line-height:1.7;">${safeOriginalMessage}</div>
+          </div>
+          <div style="padding:18px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;color:#64748b;font-size:12px;line-height:1.6;">
+            You can reply directly to this email to continue the conversation.
           </div>
         </div>
       </div>
