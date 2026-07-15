@@ -1,6 +1,6 @@
 # CineHub Architecture
 
-CineHub v2.0.0 is a Next.js App Router application with Firebase as the auth and data backbone. The app uses TMDB for public movie and TV metadata, Firestore for user/admin data, and server route handlers for secure writes and admin operations.
+CineHub v2.1.0 is a Next.js App Router application with Firebase as the auth and data backbone. The app uses TMDB for public movie and TV metadata, Firestore for user/admin data, and server route handlers for secure writes and admin operations.
 
 ## High-Level Diagram
 
@@ -173,12 +173,14 @@ Admin pages read Firestore through Firebase Admin instead of trusting client-onl
 
 ## Current Version Focus
 
-Version 2.0.0 focuses on:
+Version 2.1.0 focuses on:
 
 - Firebase-only auth and data flow.
 - Firestore-backed user features.
 - Real admin workflows.
 - Source reporting.
 - Trailer fallback.
+- Unreleased-title trailer actions from detail pages.
+- More realistic watch history and TV episode resume behavior.
 - Server-side contact email.
 - Vercel deployment reliability.

@@ -11,6 +11,8 @@ export interface HistoryItem {
   watchedAt: string;
   progress?: number; // For tracking watch progress
   vote_average?: number; // Add vote_average property
+  currentSeason?: number | null;
+  currentEpisode?: number | null;
 }
 
 interface HistoryState {
@@ -61,4 +63,4 @@ export const useHistoryStore = create<HistoryState>()(
       name: 'history-storage',
     }
   )
-); 
+);

@@ -1,6 +1,6 @@
 # CineHub API Documentation
 
-This document lists the current app route handlers in CineHub v2.0.0. All routes live under `src/app/api`.
+This document lists the current app route handlers in CineHub v2.1.0. All routes live under `src/app/api`.
 
 ## Auth Routes
 

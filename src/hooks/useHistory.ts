@@ -43,6 +43,8 @@ export const useHistory = () => {
             posterPath: details?.poster_path || item.poster_path || "",
             watchedAt: item.watched_at,
             vote_average: details?.vote_average || 0,
+            currentSeason: item.current_season || null,
+            currentEpisode: item.current_episode || null,
           };
         })
       );
@@ -67,7 +69,15 @@ export const useHistory = () => {
     }
   };
 
-  const addToWatchHistory = async (mediaType: 'movie' | 'tv', movieId: number | null, tvId: number | null, title: string, posterPath: string) => {
+  const addToWatchHistory = async (
+    mediaType: 'movie' | 'tv',
+    movieId: number | null,
+    tvId: number | null,
+    title: string,
+    posterPath: string,
+    currentSeason?: number | null,
+    currentEpisode?: number | null
+  ) => {
     try {
       // Check if item already exists in history
       const existingItem = items.find(
@@ -88,6 +98,8 @@ export const useHistory = () => {
           tvId,
           title,
           posterPath,
+          currentSeason,
+          currentEpisode,
         }),
       });
 
@@ -105,6 +117,8 @@ export const useHistory = () => {
               tvId,
               title,
               posterPath,
+              currentSeason,
+              currentEpisode,
             }),
           });
           

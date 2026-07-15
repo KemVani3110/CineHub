@@ -1,6 +1,6 @@
 # CineHub Setup Guide
 
-CineHub v2.0.0 is a Firebase-first movie and TV discovery app. This guide explains how to run the project locally without the old MySQL or NextAuth setup.
+CineHub v2.1.0 is a Firebase-first movie and TV discovery app. This guide explains how to run the project locally without the old MySQL or NextAuth setup.
 
 ## Requirements
 

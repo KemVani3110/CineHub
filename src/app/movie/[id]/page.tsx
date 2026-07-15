@@ -13,7 +13,9 @@ import { TMDBGenre } from "@/types/tmdb";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { WatchlistButton } from "@/components/common/WatchlistButton";
 import { WatchButton } from "@/components/common/WatchButton";
+import { TrailerActionButton } from "@/components/common/TrailerActionButton";
 import Image from "next/image";
+import { isFutureDate } from "@/lib/trailer-utils";
 
 import {
   MovieOverview,
@@ -91,6 +93,8 @@ export default function MovieDetail() {
   const formatReleaseDate = (dateString: string) => {
     return new Date(dateString).getFullYear();
   };
+
+  const isUpcoming = isFutureDate(movie.release_date);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -213,16 +217,23 @@ export default function MovieDetail() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 md:gap-7">
-                <WatchButton
-                  mediaType="movie"
-                  movieId={movie.id}
-                  tvId={null}
-                  title={movie.title}
-                  posterPath={movie.poster_path || ""}
-                  className="flex items-center justify-center w-full sm:w-[210px] h-14 rounded-full font-bold text-base px-6 transition-all duration-300 bg-gradient-to-r from-[#4fd1c5] to-[#38b2ac] hover:from-[#38b2ac] hover:to-[#319795] text-slate-900 shadow-none border-none cursor-pointer"
-                  isUpcoming={new Date(movie.release_date) > new Date()}
-                  isDetailView={true}
-                />
+                {isUpcoming ? (
+                  <TrailerActionButton
+                    videos={movie.videos}
+                    title={movie.title}
+                    className="cursor-pointer"
+                  />
+                ) : (
+                  <WatchButton
+                    mediaType="movie"
+                    movieId={movie.id}
+                    tvId={null}
+                    title={movie.title}
+                    posterPath={movie.poster_path || ""}
+                    className="flex items-center justify-center w-full sm:w-[210px] h-14 rounded-full font-bold text-base px-6 transition-all duration-300 bg-gradient-to-r from-[#4fd1c5] to-[#38b2ac] hover:from-[#38b2ac] hover:to-[#319795] text-slate-900 shadow-none border-none cursor-pointer"
+                    isDetailView={true}
+                  />
+                )}
                 <Button
                   variant="outline"
                   size="lg"

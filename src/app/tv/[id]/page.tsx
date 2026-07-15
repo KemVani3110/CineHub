@@ -13,7 +13,9 @@ import { TMDBGenre } from "@/types/tmdb";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { WatchlistButton } from "@/components/common/WatchlistButton";
 import { WatchButton } from "@/components/common/WatchButton";
+import { TrailerActionButton } from "@/components/common/TrailerActionButton";
 import Image from "next/image";
+import { isFutureDate } from "@/lib/trailer-utils";
 
 import {
   TVShowOverview,
@@ -92,6 +94,8 @@ export default function TVShowDetail() {
   const formatReleaseDate = (dateString: string) => {
     return new Date(dateString).getFullYear();
   };
+
+  const isUpcoming = isFutureDate(tvShow.first_air_date);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -214,16 +218,23 @@ export default function TVShowDetail() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 md:gap-7">
-                <WatchButton
-                  mediaType="tv"
-                  movieId={null}
-                  tvId={tvShow.id}
-                  title={tvShow.name}
-                  posterPath={tvShow.poster_path || ""}
-                  className="flex items-center justify-center w-full sm:w-[210px] h-14 rounded-full font-bold text-base px-6 transition-all duration-300 bg-gradient-to-r from-[#4fd1c5] to-[#38b2ac] hover:from-[#38b2ac] hover:to-[#319795] text-slate-900 shadow-none border-none cursor-pointer"
-                  isUpcoming={new Date(tvShow.first_air_date) > new Date()}
-                  isDetailView={true}
-                />
+                {isUpcoming ? (
+                  <TrailerActionButton
+                    videos={tvShow.videos}
+                    title={tvShow.name}
+                    className="cursor-pointer"
+                  />
+                ) : (
+                  <WatchButton
+                    mediaType="tv"
+                    movieId={null}
+                    tvId={tvShow.id}
+                    title={tvShow.name}
+                    posterPath={tvShow.poster_path || ""}
+                    className="flex items-center justify-center w-full sm:w-[210px] h-14 rounded-full font-bold text-base px-6 transition-all duration-300 bg-gradient-to-r from-[#4fd1c5] to-[#38b2ac] hover:from-[#38b2ac] hover:to-[#319795] text-slate-900 shadow-none border-none cursor-pointer"
+                    isDetailView={true}
+                  />
+                )}
                 <Button
                   variant="outline"
                   size="lg"

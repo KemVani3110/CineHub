@@ -21,6 +21,8 @@ function serializeHistory(doc: FirebaseFirestore.QueryDocumentSnapshot | Firebas
     title: data.title || "",
     poster_path: data.poster_path || "",
     watched_at: toIsoString(data.watched_at),
+    current_season: data.current_season || null,
+    current_episode: data.current_episode || null,
     created_at: toIsoString(data.created_at),
     updated_at: toIsoString(data.updated_at),
   };
@@ -70,7 +72,15 @@ async function upsertHistory(request: NextRequest) {
       return NextResponse.json({ error: error || "Unauthorized" }, { status: 401 });
     }
 
-    const { mediaType, movieId, tvId, title, posterPath } = await request.json();
+    const {
+      mediaType,
+      movieId,
+      tvId,
+      title,
+      posterPath,
+      currentSeason,
+      currentEpisode,
+    } = await request.json();
     const mediaId = Number(getMediaValue(mediaType, movieId, tvId));
 
     if (!["movie", "tv"].includes(mediaType) || !mediaId) {
@@ -95,6 +105,10 @@ async function upsertHistory(request: NextRequest) {
         tv_id: mediaType === "tv" ? mediaId : null,
         title: title || "",
         poster_path: posterPath || "",
+        current_season:
+          mediaType === "tv" && currentSeason ? Number(currentSeason) : null,
+        current_episode:
+          mediaType === "tv" && currentEpisode ? Number(currentEpisode) : null,
         watched_at: now,
         updated_at: now,
         created_at: now,
