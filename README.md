@@ -7,7 +7,7 @@
 <h3 align="center">A modern movie and TV discovery platform built with Next.js, Firebase, Firestore, and TMDB.</h3>
 
 <p align="center">
-  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.2.0-14b8a6?style=for-the-badge" /></a>
+  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.3.0-14b8a6?style=for-the-badge" /></a>
   <a href="#"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.19-black?style=for-the-badge&logo=nextdotjs" /></a>
   <a href="#"><img alt="React" src="https://img.shields.io/badge/React-19.1.8-61dafb?style=for-the-badge&logo=react&logoColor=111827" /></a>
   <a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-Firestore-f59e0b?style=for-the-badge&logo=firebase&logoColor=111827" /></a>
@@ -251,10 +251,10 @@ After deployment, verify:
 Current application version:
 
 ```text
-2.2.0
+2.3.0
 ```
 
-Version 2.2 focuses on Explore filter accuracy, a Vietnamese language filter, and a smoother filter sidebar experience.
+Version 2.3 focuses on a more realistic watchlist experience with real media metadata, practical filters, and refreshed movie and TV cards.
 
 ## Roadmap
 

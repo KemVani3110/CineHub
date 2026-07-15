@@ -1,101 +1,418 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
+import {
+  CalendarDays,
+  Clock3,
+  Film,
+  Grid3X3,
+  Heart,
+  ListFilter,
+  Play,
+  Search,
+  Star,
+  Trash2,
+  Tv,
+} from "lucide-react";
 import { useWatchlistStore } from "@/store/watchlistStore";
-import { Film, Tv, Trash2, Grid, LayoutGrid, ArrowUp, Sparkles, Heart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { MovieCard } from "@/components/common/MovieCard";
-import { TVShowCard } from "@/components/common/TVShowCard";
 import { Button } from "@/components/ui/button";
-import { fetchMovieDetails, fetchTVShowDetails } from "@/services/tmdb";
-import useEmblaCarousel from 'embla-carousel-react';
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { fetchMovieDetails, fetchTVShowDetails, getImageUrl } from "@/services/tmdb";
 import BackToTop from "@/components/common/BackToTop";
 
-interface MediaDetails {
+type MediaType = "movie" | "tv";
+type FilterType = "all" | MediaType;
+type SortMode = "recent" | "rating" | "title" | "release";
+
+interface WatchlistDetails {
   id: number;
-  mediaType: 'movie' | 'tv';
-  vote_average: number;
+  mediaType: MediaType;
+  title: string;
+  posterPath: string;
+  backdropPath: string;
+  releaseDate: string | null;
+  rating: number;
+  overview: string;
+  genres: string[];
+  runtimeLabel: string;
+  status: string;
+}
+
+interface EnrichedWatchlistItem extends WatchlistDetails {
+  addedAt: string;
+}
+
+const itemKey = (mediaType: MediaType, id: number) => `${mediaType}:${id}`;
+
+function formatDate(date?: string | null) {
+  if (!date) return "Unknown";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "Unknown";
+  return format(parsed, "MMM d, yyyy");
+}
+
+function formatRuntime(minutes?: number | null) {
+  if (!minutes) return "Runtime unknown";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (!hours) return `${mins}m`;
+  return mins ? `${hours}h ${mins}m` : `${hours}h`;
+}
+
+function getStatus(releaseDate?: string | null, fallback?: string) {
+  if (releaseDate && new Date(releaseDate).getTime() > Date.now()) {
+    return "Upcoming";
+  }
+  return fallback || "Released";
+}
+
+function WatchlistSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-8 h-36 rounded-xl bg-slate-800/60 animate-pulse" />
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="h-24 rounded-lg bg-slate-800/50 animate-pulse" />
+          ))}
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="h-[420px] rounded-xl bg-slate-800/50 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyWatchlist() {
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto flex min-h-[calc(100vh-92px)] max-w-3xl items-center justify-center px-4 py-16 text-center">
+        <div>
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
+            <Heart className="h-9 w-9 text-cyan-300" />
+          </div>
+          <h1 className="text-3xl font-bold text-white sm:text-4xl">Your watchlist is empty</h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-400 sm:text-base">
+            Save movies and TV shows you want to watch later. Your newest saves will appear here with real release dates, ratings, and quick actions.
+          </p>
+          <Button asChild className="mt-8 bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+            <Link href="/explore">
+              <Search className="mr-2 h-4 w-4" />
+              Browse Explore
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  icon: typeof Heart;
+}) {
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-slate-400">{label}</span>
+        <Icon className="h-4 w-4 text-cyan-300" />
+      </div>
+      <div className="mt-3 text-2xl font-semibold text-white">{value}</div>
+    </div>
+  );
+}
+
+function WatchlistCard({
+  item,
+  onRemove,
+}: {
+  item: EnrichedWatchlistItem;
+  onRemove: (item: EnrichedWatchlistItem) => void;
+}) {
+  const detailHref = item.mediaType === "movie" ? `/movie/${item.id}` : `/tv/${item.id}`;
+  const actionHref = item.mediaType === "movie" ? `/watch-movie/${item.id}` : `/tv/${item.id}`;
+  const actionLabel = item.mediaType === "movie" ? "Watch" : "Episodes";
+  const posterUrl = item.posterPath ? getImageUrl(item.posterPath, "w500") : "/images/no-poster.jpg";
+
+  return (
+    <article className="group overflow-hidden rounded-xl border border-slate-800 bg-slate-950/75 shadow-lg shadow-black/20 transition-colors hover:border-cyan-400/40">
+      <Link href={detailHref} className="block">
+        <div className="relative aspect-[2/3] overflow-hidden bg-slate-900">
+          <Image
+            src={posterUrl}
+            alt={`${item.title} poster`}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-90" />
+
+          <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+            <Badge className="border border-white/10 bg-slate-950/80 text-white backdrop-blur">
+              {item.mediaType === "movie" ? (
+                <Film className="mr-1.5 h-3.5 w-3.5" />
+              ) : (
+                <Tv className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              {item.mediaType === "movie" ? "Movie" : "TV Show"}
+            </Badge>
+            {item.status && (
+              <Badge className="border border-cyan-300/20 bg-cyan-300/15 text-cyan-100">
+                {item.status}
+              </Badge>
+            )}
+          </div>
+
+          {item.rating > 0 && (
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-slate-950/85 px-3 py-1 text-sm font-semibold text-white backdrop-blur">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              {item.rating.toFixed(1)}
+            </div>
+          )}
+        </div>
+      </Link>
+
+      <div className="space-y-4 p-4">
+        <div>
+          <Link href={detailHref} className="line-clamp-1 text-lg font-semibold text-white hover:text-cyan-200">
+            {item.title}
+          </Link>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+            <span className="inline-flex items-center gap-1">
+              <CalendarDays className="h-3.5 w-3.5" />
+              {formatDate(item.releaseDate)}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Clock3 className="h-3.5 w-3.5" />
+              {item.runtimeLabel}
+            </span>
+          </div>
+        </div>
+
+        <p className="line-clamp-2 min-h-10 text-sm leading-5 text-slate-400">
+          {item.overview || "No overview is available yet."}
+        </p>
+
+        <div className="flex min-h-7 flex-wrap gap-2">
+          {item.genres.slice(0, 2).map((genre) => (
+            <span
+              key={genre}
+              className="rounded-full border border-slate-700 px-2.5 py-1 text-xs text-slate-300"
+            >
+              {genre}
+            </span>
+          ))}
+        </div>
+
+        <div className="text-xs text-slate-500">Saved {formatDate(item.addedAt)}</div>
+
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <Button asChild className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+            <Link href={actionHref}>
+              <Play className="mr-2 h-4 w-4" />
+              {actionLabel}
+            </Link>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="border-red-400/30 text-red-200 hover:bg-red-500/15 hover:text-red-100"
+            onClick={() => onRemove(item)}
+            aria-label={`Remove ${item.title} from watchlist`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </article>
+  );
 }
 
 export function WatchlistPage() {
   const { items, fetchWatchlist, removeFromWatchlist, isLoading } = useWatchlistStore();
   const { toast } = useToast();
-  const [mediaDetails, setMediaDetails] = useState<MediaDetails[]>([]);
+  const [detailsByKey, setDetailsByKey] = useState<Record<string, WatchlistDetails>>({});
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'carousel'>('grid');
-  const [movieEmblaRef] = useEmblaCarousel({
-    align: 'start',
-    loop: false,
-    skipSnaps: false,
-    dragFree: true,
-  });
-  const [tvEmblaRef] = useEmblaCarousel({
-    align: 'start',
-    loop: false,
-    skipSnaps: false,
-    dragFree: true,
-  });
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("recent");
+  const [query, setQuery] = useState("");
 
-  // Fetch watchlist and details
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoadingDetails(true);
-        await fetchWatchlist();
-        
-        // Fetch details for each item
-        const safeItemsForEffect = Array.isArray(items) ? items : [];
-        const details = await Promise.all(
-          safeItemsForEffect.map(async (item) => {
-            try {
-              if (item.mediaType === 'movie') {
-                const movieDetails = await fetchMovieDetails(item.id);
-                return {
-                  id: item.id,
-                  mediaType: 'movie' as const,
-                  vote_average: movieDetails.vote_average
-                };
-              } else {
-                const tvDetails = await fetchTVShowDetails(item.id);
-                return {
-                  id: item.id,
-                  mediaType: 'tv' as const,
-                  vote_average: tvDetails.vote_average
-                };
-              }
-            } catch (error) {
-              console.error(`Error fetching details for ${item.mediaType} ${item.id}:`, error);
-              return {
+    fetchWatchlist();
+  }, [fetchWatchlist]);
+
+  useEffect(() => {
+    const safeItems = Array.isArray(items) ? items : [];
+    const missingItems = safeItems.filter((item) => !detailsByKey[itemKey(item.mediaType, item.id)]);
+
+    if (missingItems.length === 0) return;
+
+    let cancelled = false;
+    setIsLoadingDetails(true);
+
+    Promise.all(
+      missingItems.map(async (item) => {
+        try {
+          if (item.mediaType === "movie") {
+            const movie = await fetchMovieDetails(item.id);
+            return {
+              key: itemKey("movie", item.id),
+              details: {
                 id: item.id,
-                mediaType: item.mediaType,
-                vote_average: 0
-              };
-            }
-          })
-        );
-        setMediaDetails(details);
-      } catch (error) {
-        console.error('Error loading watchlist:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load watchlist. Please try again.",
-          variant: "destructive",
+                mediaType: "movie" as const,
+                title: movie.title || item.title,
+                posterPath: movie.poster_path || item.posterPath,
+                backdropPath: movie.backdrop_path || "",
+                releaseDate: movie.release_date || null,
+                rating: movie.vote_average || 0,
+                overview: movie.overview || "",
+                genres: Array.isArray(movie.genres) ? movie.genres.map((genre: { name: string }) => genre.name) : [],
+                runtimeLabel: formatRuntime(movie.runtime),
+                status: getStatus(movie.release_date, movie.status),
+              },
+            };
+          }
+
+          const show = await fetchTVShowDetails(item.id);
+          return {
+            key: itemKey("tv", item.id),
+            details: {
+              id: item.id,
+              mediaType: "tv" as const,
+              title: show.name || item.title,
+              posterPath: show.poster_path || item.posterPath,
+              backdropPath: show.backdrop_path || "",
+              releaseDate: show.first_air_date || null,
+              rating: show.vote_average || 0,
+              overview: show.overview || "",
+              genres: Array.isArray(show.genres) ? show.genres.map((genre: { name: string }) => genre.name) : [],
+              runtimeLabel: show.number_of_seasons
+                ? `${show.number_of_seasons} ${show.number_of_seasons === 1 ? "season" : "seasons"}`
+                : formatRuntime(show.episode_run_time?.[0]),
+              status: getStatus(show.first_air_date, show.status),
+            },
+          };
+        } catch (error) {
+          console.error(`Error loading ${item.mediaType} ${item.id}:`, error);
+          return {
+            key: itemKey(item.mediaType, item.id),
+            details: {
+              id: item.id,
+              mediaType: item.mediaType,
+              title: item.title,
+              posterPath: item.posterPath,
+              backdropPath: "",
+              releaseDate: null,
+              rating: 0,
+              overview: "",
+              genres: [],
+              runtimeLabel: item.mediaType === "movie" ? "Runtime unknown" : "Seasons unknown",
+              status: "Saved",
+            },
+          };
+        }
+      })
+    )
+      .then((results) => {
+        if (cancelled) return;
+        setDetailsByKey((current) => {
+          const next = { ...current };
+          results.forEach((result) => {
+            next[result.key] = result.details;
+          });
+          return next;
         });
-      } finally {
-        setIsLoadingDetails(false);
-      }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingDetails(false);
+      });
+
+    return () => {
+      cancelled = true;
     };
+  }, [detailsByKey, items]);
 
-    loadData();
-  }, [fetchWatchlist, items.length]);
+  const enrichedItems = useMemo<EnrichedWatchlistItem[]>(() => {
+    const safeItems = Array.isArray(items) ? items : [];
+    return safeItems.map((item) => {
+      const details = detailsByKey[itemKey(item.mediaType, item.id)];
+      return {
+        id: item.id,
+        mediaType: item.mediaType,
+        title: details?.title || item.title,
+        posterPath: details?.posterPath || item.posterPath,
+        backdropPath: details?.backdropPath || "",
+        releaseDate: details?.releaseDate || null,
+        rating: details?.rating || 0,
+        overview: details?.overview || "",
+        genres: details?.genres || [],
+        runtimeLabel: details?.runtimeLabel || (item.mediaType === "movie" ? "Runtime unknown" : "Seasons unknown"),
+        status: details?.status || "Saved",
+        addedAt: item.addedAt,
+      };
+    });
+  }, [detailsByKey, items]);
 
-  const handleRemove = async (id: number, mediaType: 'movie' | 'tv', title: string) => {
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return enrichedItems
+      .filter((item) => filter === "all" || item.mediaType === filter)
+      .filter((item) => {
+        if (!normalizedQuery) return true;
+        return item.title.toLowerCase().includes(normalizedQuery);
+      })
+      .sort((a, b) => {
+        if (sortMode === "rating") return b.rating - a.rating;
+        if (sortMode === "title") return a.title.localeCompare(b.title);
+        if (sortMode === "release") {
+          return new Date(b.releaseDate || 0).getTime() - new Date(a.releaseDate || 0).getTime();
+        }
+        return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
+      });
+  }, [enrichedItems, filter, query, sortMode]);
+
+  const stats = useMemo(() => {
+    const movies = enrichedItems.filter((item) => item.mediaType === "movie").length;
+    const tvShows = enrichedItems.filter((item) => item.mediaType === "tv").length;
+    const rated = enrichedItems.filter((item) => item.rating > 0);
+    const average = rated.length
+      ? (rated.reduce((sum, item) => sum + item.rating, 0) / rated.length).toFixed(1)
+      : "0.0";
+
+    return {
+      total: enrichedItems.length,
+      movies,
+      tvShows,
+      average,
+    };
+  }, [enrichedItems]);
+
+  const handleRemove = async (item: EnrichedWatchlistItem) => {
     try {
-      await removeFromWatchlist(id, mediaType);
+      await removeFromWatchlist(item.id, item.mediaType);
+      setDetailsByKey((current) => {
+        const next = { ...current };
+        delete next[itemKey(item.mediaType, item.id)];
+        return next;
+      });
       toast({
         title: "Removed from Watchlist",
-        description: `${title} has been removed from your watchlist.`,
-        variant: "default",
+        description: `${item.title} has been removed.`,
       });
     } catch (error) {
       toast({
@@ -106,360 +423,106 @@ export function WatchlistPage() {
     }
   };
 
-  if (isLoading || isLoadingDetails) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          {/* Header Skeleton */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 animate-pulse" />
-              <div className="h-12 w-64 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-xl animate-pulse" />
-            </div>
-            <div className="h-6 w-96 mx-auto bg-gradient-to-r from-muted/30 to-muted/50 rounded-lg animate-pulse" />
-          </div>
-
-          <div className="space-y-16">
-            {/* Movies Section Skeleton */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 animate-pulse" />
-                <div className="h-8 w-40 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg animate-pulse" />
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                {Array(12).fill(0).map((_, index) => (
-                  <div key={index} className="group space-y-4 animate-pulse" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <div className="relative">
-                      <div className="aspect-[2/3] w-full rounded-xl bg-gradient-to-br from-primary/5 via-accent/5 to-muted/10 animate-pulse" />
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                    </div>
-                    <div className="space-y-3">
-                      <div className="h-5 w-3/4 bg-gradient-to-r from-muted/20 to-muted/40 rounded-lg animate-pulse" />
-                      <div className="h-4 w-1/2 bg-gradient-to-r from-muted/15 to-muted/30 rounded-lg animate-pulse" />
-                      <div className="h-3 w-2/3 bg-gradient-to-r from-muted/10 to-muted/20 rounded-lg animate-pulse" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* TV Shows Section Skeleton */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-blue-500/20 animate-pulse" />
-                <div className="h-8 w-40 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg animate-pulse" />
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                {Array(12).fill(0).map((_, index) => (
-                  <div key={index} className="group space-y-4 animate-pulse" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <div className="relative">
-                      <div className="aspect-[2/3] w-full rounded-xl bg-gradient-to-br from-primary/5 via-accent/5 to-muted/10 animate-pulse" />
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                    </div>
-                    <div className="space-y-3">
-                      <div className="h-5 w-3/4 bg-gradient-to-r from-muted/20 to-muted/40 rounded-lg animate-pulse" />
-                      <div className="h-4 w-1/2 bg-gradient-to-r from-muted/15 to-muted/30 rounded-lg animate-pulse" />
-                      <div className="h-3 w-2/3 bg-gradient-to-r from-muted/10 to-muted/20 rounded-lg animate-pulse" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Ensure items is an array
-  const safeItems = Array.isArray(items) ? items : [];
-
-  if (safeItems.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
-        <div className="text-center space-y-8 px-4">
-          {/* Empty State Icon */}
-          <div className="relative">
-            <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-primary/10 via-accent/10 to-muted/20 flex items-center justify-center">
-              <Heart className="w-16 h-16 text-muted-foreground/50" />
-            </div>
-          </div>
-          
-          {/* Empty State Content */}
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              Your Watchlist Awaits
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-              Discover amazing movies and TV shows, then add them to your personal collection for later viewing.
-            </p>
-          </div>
-
-          {/* CTA Button */}
-          <Button 
-            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-3 rounded-xl text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-            onClick={() => window.location.href = '/explore'}
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Start Exploring
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Separate movies and TV shows
-  const movies = safeItems.filter(item => item.mediaType === 'movie');
-  const tvShows = safeItems.filter(item => item.mediaType === 'tv');
-
-  const getRating = (id: number, mediaType: 'movie' | 'tv') => {
-    const details = mediaDetails.find(d => d.id === id && d.mediaType === mediaType);
-    return details?.vote_average || 0;
-  };
+  if (isLoading && enrichedItems.length === 0) return <WatchlistSkeleton />;
+  if (!isLoading && enrichedItems.length === 0) return <EmptyWatchlist />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        {/*  Header */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-              <Heart className="w-7 h-7 text-white" />
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <section className="mb-8 overflow-hidden rounded-xl border border-slate-800 bg-slate-950/80">
+          <div className="grid gap-6 p-5 lg:grid-cols-[1fr_auto] lg:items-end lg:p-7">
+            <div>
+              <div className="mb-4 inline-flex items-center rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-sm text-cyan-100">
+                <Heart className="mr-2 h-4 w-4" />
+                Personal Library
+              </div>
+              <h1 className="text-3xl font-bold text-white sm:text-4xl">Watchlist</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+                A practical queue for saved movies and TV shows, sorted with real metadata from TMDB.
+                {isLoadingDetails ? " Updating details..." : ""}
+              </p>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
-              My Watchlist
-            </h1>
-          </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
-            Your curated collection of {safeItems.length} amazing {safeItems.length === 1 ? 'title' : 'titles'} waiting to be discovered
-          </p>
-          
-          {/* View Mode Toggle */}
-          <div className="flex justify-center">
-            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-1.5 shadow-lg">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={`rounded-lg px-6 py-2.5 transition-all duration-300 ${
-                  viewMode === 'grid' 
-                    ? 'bg-gradient-to-r from-primary to-accent text-white shadow-md' 
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <Grid className="w-4 h-4 mr-2" />
-                Grid View
-              </Button>
-              <Button
-                variant={viewMode === 'carousel' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('carousel')}
-                className={`rounded-lg px-6 py-2.5 transition-all duration-300 ${
-                  viewMode === 'carousel' 
-                    ? 'bg-gradient-to-r from-primary to-accent text-white shadow-md' 
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4 mr-2" />
-                Carousel View
-              </Button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Movies Section */}
-        {movies.length > 0 && (
-          <div className="mb-20">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <Film className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                Movies
-              </h2>
-              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-600/10 border border-blue-500/20">
-                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{movies.length}</span>
-              </div>
-            </div>
-            
-            {viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                {movies.map((item, index) => (
-                  <div 
-                    key={`${item.mediaType}-${item.id}-${item.addedAt}`} 
-                    className="group transform transition-all duration-500 hover:scale-105 hover:z-10"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
-                      <MovieCard
-                        movie={{
-                          id: item.id,
-                          title: item.title,
-                          poster_path: item.posterPath,
-                          vote_average: getRating(item.id, 'movie'),
-                          release_date: item.addedAt
-                        }}
-                      />
-                      {/* Remove Button */}
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 w-9 h-9 rounded-full bg-red-500/90 hover:bg-red-500 backdrop-blur-sm shadow-lg transform hover:scale-110"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleRemove(item.id, 'movie', item.title);
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="relative">
-                <div className="overflow-hidden rounded-xl" ref={movieEmblaRef}>
-                  <div className="flex gap-6">
-                    {movies.map((item, index) => (
-                      <div 
-                        key={`${item.mediaType}-${item.id}-${item.addedAt}`} 
-                        className="flex-[0_0_180px] sm:flex-[0_0_200px] md:flex-[0_0_220px]"
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                      >
-                        <div className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                          <MovieCard
-                            movie={{
-                              id: item.id,
-                              title: item.title,
-                              poster_path: item.posterPath,
-                              vote_average: getRating(item.id, 'movie'),
-                              release_date: item.addedAt
-                            }}
-                          />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 w-9 h-9 rounded-full bg-red-500/90 hover:bg-red-500 backdrop-blur-sm shadow-lg transform hover:scale-110"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleRemove(item.id, 'movie', item.title);
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* TV Shows Section */}
-        {tvShows.length > 0 && (
-          <div className="mb-20">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center shadow-lg">
-                <Tv className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-500 to-teal-600 bg-clip-text text-transparent">
-                TV Shows
-              </h2>
-              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-green-500/10 to-teal-600/10 border border-green-500/20">
-                <span className="text-sm font-medium text-green-600 dark:text-green-400">{tvShows.length}</span>
-              </div>
+            <Button asChild variant="outline" className="border-cyan-300/30 text-cyan-100 hover:bg-cyan-300/10">
+              <Link href="/explore">
+                <Search className="mr-2 h-4 w-4" />
+                Add More
+              </Link>
+            </Button>
+          </div>
+        </section>
+
+        <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Saved Titles" value={stats.total.toString()} icon={Heart} />
+          <StatCard label="Movies" value={stats.movies.toString()} icon={Film} />
+          <StatCard label="TV Shows" value={stats.tvShows.toString()} icon={Tv} />
+          <StatCard label="Average Rating" value={stats.average} icon={Star} />
+        </section>
+
+        <section className="mb-8 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search your watchlist"
+                className="border-slate-700 bg-slate-900/80 pl-9 text-white placeholder:text-slate-500"
+              />
             </div>
-            
-            {viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                {tvShows.map((item, index) => (
-                  <div 
-                    key={`${item.mediaType}-${item.id}-${item.addedAt}`} 
-                    className="group transform transition-all duration-500 hover:scale-105 hover:z-10"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
-                      <TVShowCard
-                        show={{
-                          id: item.id,
-                          name: item.title,
-                          poster_path: item.posterPath,
-                          backdrop_path: null,
-                          overview: "",
-                          first_air_date: item.addedAt,
-                          vote_average: getRating(item.id, 'tv'),
-                          vote_count: 0,
-                          genre_ids: []
-                        }}
-                      />
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 w-9 h-9 rounded-full bg-red-500/90 hover:bg-red-500 backdrop-blur-sm shadow-lg transform hover:scale-110"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleRemove(item.id, 'tv', item.title);
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="relative">
-                <div className="overflow-hidden rounded-xl" ref={tvEmblaRef}>
-                  <div className="flex gap-6">
-                    {tvShows.map((item, index) => (
-                      <div 
-                        key={`${item.mediaType}-${item.id}-${item.addedAt}`} 
-                        className="flex-[0_0_180px] sm:flex-[0_0_200px] md:flex-[0_0_220px]"
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                      >
-                        <div className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                          <TVShowCard
-                            show={{
-                              id: item.id,
-                              name: item.title,
-                              poster_path: item.posterPath,
-                              backdrop_path: null,
-                              overview: "",
-                              first_air_date: item.addedAt,
-                              vote_average: getRating(item.id, 'tv'),
-                              vote_count: 0,
-                              genre_ids: []
-                            }}
-                          />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 w-9 h-9 rounded-full bg-red-500/90 hover:bg-red-500 backdrop-blur-sm shadow-lg transform hover:scale-110"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleRemove(item.id, 'tv', item.title);
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+
+            <div className="flex rounded-lg border border-slate-800 bg-slate-900 p-1">
+              {[
+                { value: "all", label: "All" },
+                { value: "movie", label: "Movies" },
+                { value: "tv", label: "TV Shows" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFilter(option.value as FilterType)}
+                  className={`rounded-md px-3 py-2 text-sm transition-colors ${
+                    filter === option.value
+                      ? "bg-cyan-400 text-slate-950"
+                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <label className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-300">
+              <ListFilter className="h-4 w-4 text-cyan-300" />
+              <select
+                value={sortMode}
+                onChange={(event) => setSortMode(event.target.value as SortMode)}
+                className="bg-transparent text-sm text-white outline-none"
+              >
+                <option className="bg-slate-950" value="recent">Recently saved</option>
+                <option className="bg-slate-950" value="rating">Highest rated</option>
+                <option className="bg-slate-950" value="title">Title A-Z</option>
+                <option className="bg-slate-950" value="release">Newest release</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        {filteredItems.length === 0 ? (
+          <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-10 text-center">
+            <Grid3X3 className="mx-auto h-10 w-10 text-slate-500" />
+            <h2 className="mt-4 text-xl font-semibold text-white">No titles match your filters</h2>
+            <p className="mt-2 text-sm text-slate-400">Try clearing the search text or changing the media filter.</p>
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredItems.map((item) => (
+              <WatchlistCard
+                key={`${item.mediaType}-${item.id}-${item.addedAt}`}
+                item={item}
+                onRemove={handleRemove}
+              />
+            ))}
           </div>
         )}
 
@@ -467,4 +530,4 @@ export function WatchlistPage() {
       </div>
     </div>
   );
-} 
+}

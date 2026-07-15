@@ -83,6 +83,8 @@ export const useWatchlistStore = create<WatchlistStore>()(
       },
 
       removeFromWatchlist: async (id, mediaType) => {
+        const previousItems = get().items;
+
         // Optimistically update the UI
         set((state) => ({
           items: state.items.filter(
@@ -97,16 +99,18 @@ export const useWatchlistStore = create<WatchlistStore>()(
 
           if (!response.ok) {
             // If the API call fails, revert the optimistic update
-            set((state) => ({
-              items: [...state.items, state.items.find(
-                (item) => item.id === id && item.mediaType === mediaType
-              )!],
+            set(() => ({
+              items: previousItems,
               error: 'Failed to remove from watchlist',
             }));
             throw new Error('Failed to remove from watchlist');
           }
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'An error occurred' });
+          set({
+            items: previousItems,
+            error: error instanceof Error ? error.message : 'An error occurred'
+          });
+          throw error;
         }
       },
 
