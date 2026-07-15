@@ -367,7 +367,7 @@ export default function HomePage() {
             <section className="mb-20">
               <SectionTitle
                 icon={Star}
-                subtitle="Personalized recommendations based on your watchlist and ratings"
+                subtitle="Personalized picks from your watchlist and recent history"
               >
                 Recommended for You
               </SectionTitle>
