@@ -6,7 +6,11 @@ import {
   toIsoString,
 } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/admin-firestore";
-import { getContactEmail, isEmailConfigured, sendEmail } from "@/lib/email";
+import {
+  getContactEmail,
+  isEmailConfigured,
+  sendEmail,
+} from "@/lib/email";
 
 const MAIN_CONTACT_EMAIL = getContactEmail();
 
@@ -208,15 +212,12 @@ export async function PATCH(request: NextRequest) {
 
     const message = serializeMessage(snapshot.id, snapshot.data());
     const safeOriginalMessage = escapeHtml(message.message);
-    const safeSenderName = escapeHtml(message.name);
 
     await sendEmail({
       to: message.email,
       replyTo: MAIN_CONTACT_EMAIL,
       subject: `Re: ${message.subject}`,
       text: [
-        `Hi ${message.name},`,
-        "",
         replyMessage,
         "",
         "---",
@@ -225,7 +226,6 @@ export async function PATCH(request: NextRequest) {
       ].join("\n"),
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <p>Hi ${safeSenderName},</p>
           <p style="white-space: pre-wrap;">${safeReplyMessage}</p>
           <hr />
           <p><strong>Original message:</strong></p>
