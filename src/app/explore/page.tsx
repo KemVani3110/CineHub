@@ -32,7 +32,8 @@ export default function ExplorePage() {
   const getActiveFiltersCount = () => {
     let count = 0;
     if (filters.genres.length > 0) count++;
-    if (filters.year && filters.year !== new Date().getFullYear()) count++;
+    if (filters.originalLanguage) count++;
+    if (filters.year) count++;
     if (filters.runtime.min && filters.runtime.min > 0) count++;
     if (filters.releaseDate.from || filters.releaseDate.to) count++;
     if (filters.sortBy !== "popularity" || filters.sortOrder !== "desc")
@@ -170,7 +171,7 @@ export default function ExplorePage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="lg:w-80 shrink-0">
-            <div className="sticky top-24">
+            <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold">Filters</h1>
                 <div className="flex items-center gap-2">

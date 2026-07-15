@@ -21,6 +21,10 @@ const getDiscoverParams = (
     params.with_genres = filters.genres.join(',');
   }
 
+  if (filters.originalLanguage) {
+    params.with_original_language = filters.originalLanguage;
+  }
+
   if (activeTab === 'movie') {
     if (filters.year) {
       params.primary_release_year = filters.year;
@@ -144,4 +148,4 @@ export const useExplore = () => {
     hasMore: activeTab === 'movie' ? hasNextMoviePage : hasNextTVPage,
     isFetchingMore: activeTab === 'movie' ? isFetchingNextMoviePage : isFetchingNextTVPage,
   };
-}; 
+};

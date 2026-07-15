@@ -14,6 +14,24 @@ import {
   RefreshCw,
 } from "lucide-react";
 
+const backgroundParticles = [
+  { left: "8%", top: "18%", duration: 3.4, delay: 0.1 },
+  { left: "18%", top: "74%", duration: 4.1, delay: 0.8 },
+  { left: "27%", top: "36%", duration: 3.7, delay: 1.4 },
+  { left: "34%", top: "88%", duration: 4.6, delay: 0.4 },
+  { left: "42%", top: "16%", duration: 3.2, delay: 1.1 },
+  { left: "49%", top: "61%", duration: 4.8, delay: 0.2 },
+  { left: "57%", top: "27%", duration: 3.9, delay: 1.7 },
+  { left: "63%", top: "79%", duration: 4.3, delay: 0.6 },
+  { left: "71%", top: "42%", duration: 3.5, delay: 1.2 },
+  { left: "78%", top: "9%", duration: 4.7, delay: 0.9 },
+  { left: "84%", top: "68%", duration: 3.8, delay: 1.5 },
+  { left: "91%", top: "31%", duration: 4.2, delay: 0.3 },
+  { left: "12%", top: "49%", duration: 4.5, delay: 1.8 },
+  { left: "53%", top: "94%", duration: 3.6, delay: 0.7 },
+  { left: "96%", top: "86%", duration: 4.9, delay: 1.0 },
+];
+
 export default function RootPage() {
   const router = useRouter();
   const [showRedirect, setShowRedirect] = useState(false);
@@ -116,6 +134,7 @@ export default function RootPage() {
                       src="/logo.png"
                       alt="CineHub Logo"
                       fill
+                      sizes="(min-width: 640px) 80px, 64px"
                       className="object-contain rounded-full"
                       priority
                     />
@@ -237,22 +256,22 @@ export default function RootPage() {
 
       {/* Background particles effect */}
       <div className="absolute inset-0 z-0">
-        {[...Array(15)].map((_, i) => (
+        {backgroundParticles.map((particle, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-cinehub-accent/20 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: particle.left,
+              top: particle.top,
             }}
             animate={{
               y: [0, -10, 0],
               opacity: [0.2, 0.8, 0.2],
             }}
             transition={{
-              duration: 3 + Math.random() * 2,
+              duration: particle.duration,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: particle.delay,
             }}
           />
         ))}

@@ -8,6 +8,7 @@ export type SortOrder = 'asc' | 'desc';
 
 export interface ExploreFilters {
   genres: number[];
+  originalLanguage: string | null;
   year: number | null;
   runtime: {
     min: number | null;
@@ -35,6 +36,7 @@ interface ExploreStore {
 
 const defaultFilters: ExploreFilters = {
   genres: [],
+  originalLanguage: null,
   year: null,
   runtime: {
     min: null,
@@ -123,4 +125,4 @@ export const useExploreStore = create<ExploreStore>()(
       }),
     }
   )
-); 
+);

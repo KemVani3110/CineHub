@@ -20,6 +20,29 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import "@/styles/animation.css";
 
+const sparklePositions = [
+  { id: 0, x: 7, y: 14, delay: 0.2, duration: 2.4 },
+  { id: 1, x: 16, y: 67, delay: 1.1, duration: 3.1 },
+  { id: 2, x: 23, y: 38, delay: 2.6, duration: 4.0 },
+  { id: 3, x: 31, y: 82, delay: 0.8, duration: 2.9 },
+  { id: 4, x: 39, y: 21, delay: 3.3, duration: 4.5 },
+  { id: 5, x: 44, y: 58, delay: 1.9, duration: 3.6 },
+  { id: 6, x: 52, y: 11, delay: 4.1, duration: 2.7 },
+  { id: 7, x: 59, y: 74, delay: 0.5, duration: 4.2 },
+  { id: 8, x: 66, y: 33, delay: 2.2, duration: 3.3 },
+  { id: 9, x: 73, y: 89, delay: 1.4, duration: 4.8 },
+  { id: 10, x: 79, y: 18, delay: 3.7, duration: 2.6 },
+  { id: 11, x: 86, y: 51, delay: 0.9, duration: 3.9 },
+  { id: 12, x: 92, y: 27, delay: 2.9, duration: 4.4 },
+  { id: 13, x: 11, y: 91, delay: 4.5, duration: 3.0 },
+  { id: 14, x: 28, y: 6, delay: 1.7, duration: 4.7 },
+  { id: 15, x: 47, y: 96, delay: 0.3, duration: 3.5 },
+  { id: 16, x: 61, y: 45, delay: 2.0, duration: 2.8 },
+  { id: 17, x: 69, y: 8, delay: 3.1, duration: 4.1 },
+  { id: 18, x: 83, y: 77, delay: 1.2, duration: 3.7 },
+  { id: 19, x: 95, y: 63, delay: 4.8, duration: 2.5 },
+];
+
 export default function NotFound() {
   const router = useRouter();
   const [countdown, setCountdown] = useState(10);
@@ -27,21 +50,9 @@ export default function NotFound() {
   const [showGlitch, setShowGlitch] = useState(false);
   const [progressValue, setProgressValue] = useState(100);
   const [isMounted, setIsMounted] = useState(false);
-  const [sparkles, setSparkles] = useState<
-    Array<{ id: number; x: number; y: number; delay: number }>
-  >([]);
 
   useEffect(() => {
     setIsMounted(true);
-
-    // Generate sparkles for background
-    const newSparkles = Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      delay: Math.random() * 5,
-    }));
-    setSparkles(newSparkles);
 
     let countdownTimer = null;
 
@@ -101,7 +112,7 @@ export default function NotFound() {
 
           {/* Floating sparkles */}
           {isMounted &&
-            sparkles.map((sparkle) => (
+            sparklePositions.map((sparkle) => (
               <div
                 key={sparkle.id}
                 className="absolute opacity-30"
@@ -114,7 +125,7 @@ export default function NotFound() {
                 <Sparkles
                   className="w-4 h-4 text-cinehub-accent animate-pulse"
                   style={{
-                    animationDuration: `${2 + Math.random() * 3}s`,
+                    animationDuration: `${sparkle.duration}s`,
                     filter: "drop-shadow(0 0 6px rgba(79, 209, 197, 0.5))",
                   }}
                 />

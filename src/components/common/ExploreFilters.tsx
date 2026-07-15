@@ -10,7 +10,7 @@ import { TMDBGenre } from '@/types/tmdb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
-import { ChevronDown, Calendar, Clock, Filter, Star } from 'lucide-react';
+import { ChevronDown, Calendar, Clock, Globe2, Star } from 'lucide-react';
 import { DateRangePicker } from '@/components/ui/date-picker';
 
 interface ExploreFiltersProps {
@@ -19,10 +19,12 @@ interface ExploreFiltersProps {
 
 export function ExploreFilters({ genres }: ExploreFiltersProps) {
   const { filters, setFilters, activeTab } = useExploreStore();
+  const currentYear = new Date().getFullYear();
   
   // Local states for all filters
   const [runtimeValue, setRuntimeValue] = useState(filters.runtime.min || 0);
-  const [yearValue, setYearValue] = useState(filters.year || new Date().getFullYear());
+  const [yearValue, setYearValue] = useState(filters.year || currentYear);
+  const [hasYearFilter, setHasYearFilter] = useState(filters.year !== null);
   const [selectedGenres, setSelectedGenres] = useState<number[]>(filters.genres);
   const [dateRange, setDateRange] = useState({
     from: filters.releaseDate.from || '',
@@ -68,19 +70,19 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
     if (debouncedRuntime !== filters.runtime.min) {
       setFilters({ runtime: { min: debouncedRuntime, max: null } });
     }
-  }, [debouncedRuntime, setFilters]);
+  }, [debouncedRuntime, filters.runtime.min, setFilters]);
 
   useEffect(() => {
-    if (debouncedYear !== filters.year) {
+    if (hasYearFilter && debouncedYear !== filters.year) {
       setFilters({ year: debouncedYear });
     }
-  }, [debouncedYear, setFilters]);
+  }, [debouncedYear, filters.year, hasYearFilter, setFilters]);
 
   useEffect(() => {
     if (JSON.stringify(debouncedGenres) !== JSON.stringify(filters.genres)) {
       setFilters({ genres: debouncedGenres });
     }
-  }, [debouncedGenres, setFilters]);
+  }, [debouncedGenres, filters.genres, setFilters]);
 
   useEffect(() => {
     if (
@@ -94,7 +96,28 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
         }
       });
     }
-  }, [debouncedDateRange, setFilters]);
+  }, [debouncedDateRange, filters.releaseDate.from, filters.releaseDate.to, setFilters]);
+
+  useEffect(() => {
+    setRuntimeValue(filters.runtime.min || 0);
+    setRuntimeInput((filters.runtime.min || 0).toString());
+    setYearValue(filters.year || currentYear);
+    setYearInput((filters.year || currentYear).toString());
+    setHasYearFilter(filters.year !== null);
+    setSelectedGenres(filters.genres);
+    setDateRange({
+      from: filters.releaseDate.from || '',
+      to: filters.releaseDate.to || ''
+    });
+  }, [
+    activeTab,
+    currentYear,
+    filters.genres,
+    filters.releaseDate.from,
+    filters.releaseDate.to,
+    filters.runtime.min,
+    filters.year
+  ]);
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({
@@ -140,6 +163,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
   }, []);
 
   const handleYearChange = useCallback((value: number[]) => {
+    setHasYearFilter(true);
     setYearValue(value[0]);
     setYearInput(value[0].toString());
   }, []);
@@ -149,6 +173,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
     setYearInput(value);
     
     if (validateYear(value)) {
+      setHasYearFilter(true);
       setYearValue(parseInt(value));
     }
   }, [validateYear]);
@@ -175,6 +200,12 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
     );
   }, []);
 
+  const handleVietnameseToggle = useCallback(() => {
+    setFilters({
+      originalLanguage: filters.originalLanguage === 'vi' ? null : 'vi'
+    });
+  }, [filters.originalLanguage, setFilters]);
+
   const handleDateRangeChange = useCallback((field: 'from' | 'to', value: string) => {
     setDateRange(prev => ({
       ...prev,
@@ -183,8 +214,8 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-lg rounded-2xl border border-slate-700/50 shadow-2xl max-h-[85vh] flex flex-col sticky top-4">
-      <div className="p-6 space-y-6 overflow-y-auto flex-1 scrollbar-thin scroll-smooth">
+    <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-lg rounded-2xl border border-slate-700/50 shadow-2xl h-[calc(100vh-11rem)] min-h-[520px] lg:min-h-0 flex flex-col overflow-hidden">
+      <div className="p-6 space-y-6 overflow-y-auto overscroll-contain flex-1 scrollbar-thin scroll-smooth">
         {/* Sort Section */}
         <div className="space-y-3">
           <button
@@ -234,9 +265,9 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
               <span className="font-medium text-slate-200">Genres</span>
-              {selectedGenres.length > 0 && (
+              {(selectedGenres.length > 0 || filters.originalLanguage) && (
                 <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">
-                  {selectedGenres.length}
+                  {selectedGenres.length + (filters.originalLanguage ? 1 : 0)}
                 </span>
               )}
             </div>
@@ -248,7 +279,20 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
           
           {openSections.genres && (
             <div className="pl-4 animate-in slide-in-from-top-2 duration-300">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex max-h-44 flex-wrap gap-2 overflow-y-auto overscroll-contain pr-1 scrollbar-thin">
+                <Badge
+                  variant={filters.originalLanguage === 'vi' ? "default" : "outline"}
+                  className={cn(
+                    "px-3 py-1.5 cursor-pointer transition-all duration-200 border",
+                    filters.originalLanguage === 'vi'
+                      ? "bg-gradient-to-r from-emerald-500 to-cyan-500 border-emerald-300/50 text-white hover:from-emerald-600 hover:to-cyan-600 shadow-lg shadow-emerald-500/20"
+                      : "bg-slate-800/70 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/15 hover:border-emerald-400/60 hover:text-white"
+                  )}
+                  onClick={handleVietnameseToggle}
+                >
+                  <Globe2 className="mr-1.5 h-3.5 w-3.5" />
+                  Vietnamese
+                </Badge>
                 {genres.length === 0 ? (
                   <div className="w-full space-y-2">
                     {[...Array(6)].map((_, i) => (
@@ -286,9 +330,9 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4 text-green-400" />
               <span className="font-medium text-slate-200">Year</span>
-              {yearValue && (
+              {filters.year && (
                 <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
-                  {yearValue}
+                  {filters.year}
                 </span>
               )}
             </div>
@@ -305,7 +349,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
                   value={[yearValue]}
                   onValueChange={handleYearChange}
                   min={1900}
-                  max={new Date().getFullYear()}
+                  max={currentYear}
                   step={1}
                   className="flex-1"
                 />
@@ -315,7 +359,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
                     value={yearInput}
                     onChange={handleYearInputChange}
                     min={1900}
-                    max={new Date().getFullYear()}
+                    max={currentYear}
                     className={cn(
                       "w-20 bg-slate-800/70 border-slate-600/50 text-slate-200 hover:bg-slate-700/70 hover:border-slate-500/50 focus:border-green-400/50 transition-all duration-200",
                       yearError && "border-red-400/50 focus:border-red-400/50"
@@ -329,7 +373,9 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
                 </div>
               </div>
               <div className="text-sm text-slate-400">
-                Selected: <span className="text-green-400 font-medium">{yearValue}</span>
+                Selected: <span className="text-green-400 font-medium">
+                  {hasYearFilter ? yearValue : 'Any year'}
+                </span>
               </div>
             </div>
           )}
@@ -436,4 +482,4 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
       </div>
     </div>
   );
-} 
+}
