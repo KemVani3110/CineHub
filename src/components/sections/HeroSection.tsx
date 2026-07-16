@@ -363,11 +363,9 @@ const HeroSection = () => {
                     >
                       {/*  Rating */}
                       <motion.div
-                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-warning/20 via-warning/10 to-warning/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-warning/30 hover:border-warning/50 transition-all duration-300 hover:scale-105 cursor-default group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-warning/20 via-warning/10 to-warning/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-warning/30 transition-colors duration-300 group"
                       >
-                        <Star className="w-3 h-3 sm:w-4 sm:h-4 text-warning fill-current group-hover:rotate-12 transition-transform duration-300" />
+                        <Star className="w-3 h-3 sm:w-4 sm:h-4 text-warning fill-current" />
                         <span className="text-white font-semibold text-xs sm:text-sm lg:text-base">
                           {item.vote_average.toFixed(1)}
                         </span>
@@ -375,11 +373,9 @@ const HeroSection = () => {
 
                       {/*  Release Date */}
                       <motion.div
-                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-cinehub-accent/20 via-cinehub-accent/10 to-cinehub-accent/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-cinehub-accent/30 hover:border-cinehub-accent/50 transition-all duration-300 hover:scale-105 cursor-default group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-cinehub-accent/20 via-cinehub-accent/10 to-cinehub-accent/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-cinehub-accent/30 transition-colors duration-300 group"
                       >
-                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-cinehub-accent group-hover:rotate-12 transition-transform duration-300" />
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-cinehub-accent" />
                         <span className="text-white font-medium text-xs sm:text-sm">
                           {formatDate(
                             activeTab === "movies"
@@ -391,11 +387,9 @@ const HeroSection = () => {
 
                       {/*  Runtime */}
                       <motion.div
-                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-slate-600/20 via-slate-500/10 to-slate-600/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-slate-400/30 hover:border-slate-300/50 transition-all duration-300 hover:scale-105 cursor-default group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-slate-600/20 via-slate-500/10 to-slate-600/20 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border border-slate-400/30 transition-colors duration-300 group"
                       >
-                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-slate-300 group-hover:rotate-12 transition-transform duration-300" />
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-slate-300" />
                         <span className="text-white font-medium text-xs sm:text-sm">
                           {activeTab === "movies"
                             ? `${
@@ -451,12 +445,7 @@ const HeroSection = () => {
                       {getGenreNames(item.genre_ids).map((genre, index) => (
                         <motion.span
                           key={index}
-                          className="px-2 py-1 sm:px-3 sm:py-1.5 bg-gradient-to-r from-bg-card/40 via-bg-card/20 to-bg-card/40 backdrop-blur-sm border border-border hover:border-cinehub-accent rounded-full text-white font-medium text-xs hover:scale-105 transition-all duration-300 cursor-default"
-                          whileHover={{
-                            scale: 1.05,
-                            backgroundColor: "rgba(var(--cinehub-accent), 0.1)",
-                          }}
-                          whileTap={{ scale: 0.95 }}
+                          className="px-2 py-1 sm:px-3 sm:py-1.5 bg-gradient-to-r from-bg-card/40 via-bg-card/20 to-bg-card/40 backdrop-blur-sm border border-border rounded-full text-white font-medium text-xs transition-colors duration-300"
                         >
                           {genre}
                         </motion.span>

@@ -85,7 +85,7 @@
   --accent: var(--cinehub-accent);
   --accent-foreground: var(--bg-main);
   --destructive: var(--danger);
-  --input: var(--bg-card);
+  --input: #3a4b63;
   --ring: var(--cinehub-accent);
 
   /* Chart colors for admin dashboard */
@@ -182,6 +182,30 @@
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
       sans-serif;
     font-weight: 400;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  summary,
+  label[for],
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  [data-slot$="-trigger"]:not([data-disabled]),
+  [data-slot$="-item"]:not([data-disabled]),
+  [data-slot$="-close"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"],
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    cursor: not-allowed;
   }
 
   /* Typography theo BRD */
