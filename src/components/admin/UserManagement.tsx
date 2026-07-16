@@ -373,7 +373,7 @@ export function UserManagement({
   };
 
   return (
-    <div className="space-y-6 bg-[var(--bg-main)] text-[var(--text-main)] p-6">
+    <div className="space-y-5 bg-[var(--bg-main)] p-0 text-[var(--text-main)] sm:space-y-6 md:p-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
@@ -390,7 +390,7 @@ export function UserManagement({
           size="sm"
           onClick={refreshUsers}
           disabled={refreshing}
-          className="cursor-pointer hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)] transition-colors disabled:opacity-50"
+          className="h-10 transition-colors hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)] disabled:opacity-50"
         >
           <RefreshCw
             className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
@@ -476,7 +476,7 @@ export function UserManagement({
 
       {/* Search and Filter Section */}
       <Card className="bg-[var(--bg-card)] border-[var(--border)]">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
             <div className="flex-1 w-full lg:max-w-md">
               <div className="relative">
@@ -490,8 +490,8 @@ export function UserManagement({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 w-full lg:w-auto">
-              <div className="flex items-center gap-2">
+            <div className="grid w-full gap-3 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center">
+              <div className="flex min-w-0 items-center gap-2">
                 <Filter className="h-4 w-4 text-[var(--text-sub)]" />
                 <Select
                   value={roleFilter}
@@ -499,7 +499,7 @@ export function UserManagement({
                     setRoleFilter(value as UserRole | "all")
                   }
                 >
-                  <SelectTrigger className="w-[140px] bg-[var(--bg-main)] border-[var(--border)] cursor-pointer hover:border-[var(--cinehub-accent)] transition-colors">
+                  <SelectTrigger className="w-full min-w-[140px] bg-[var(--bg-main)] border-[var(--border)] hover:border-[var(--cinehub-accent)] transition-colors">
                     <SelectValue placeholder="Role" />
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--bg-card)] border-[var(--border)]">
@@ -532,7 +532,7 @@ export function UserManagement({
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px] bg-[var(--bg-main)] border-[var(--border)] cursor-pointer hover:border-[var(--cinehub-accent)] transition-colors">
+                <SelectTrigger className="w-full min-w-[140px] bg-[var(--bg-main)] border-[var(--border)] hover:border-[var(--cinehub-accent)] transition-colors">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="bg-[var(--bg-card)] border-[var(--border)]">
@@ -641,7 +641,7 @@ export function UserManagement({
                           : false)
                       }
                     >
-                      <SelectTrigger className="w-[130px] h-9 text-sm bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-main)] cursor-pointer hover:border-[var(--cinehub-accent)] transition-colors">
+                      <SelectTrigger className="h-10 w-[130px] bg-[var(--bg-main)] text-sm text-[var(--text-main)] border-[var(--border)] hover:border-[var(--cinehub-accent)] transition-colors">
                         {loading[`role-${user.id}`] ? (
                           <div className="flex items-center">
                             <Loader2 className="mr-2 h-3 w-3 animate-spin" />
@@ -700,7 +700,7 @@ export function UserManagement({
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="h-8 w-8 p-0 cursor-pointer hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)] transition-colors"
+                          className="h-10 w-10 p-0 transition-colors hover:bg-[var(--cinehub-accent)]/10 hover:text-[var(--cinehub-accent)]"
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>

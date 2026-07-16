@@ -7,7 +7,7 @@
 <h3 align="center">A modern movie and TV discovery platform built with Next.js, Firebase, Firestore, and TMDB.</h3>
 
 <p align="center">
-  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.4.1-14b8a6?style=for-the-badge" /></a>
+  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.5.0-14b8a6?style=for-the-badge" /></a>
   <a href="#"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.19-black?style=for-the-badge&logo=nextdotjs" /></a>
   <a href="#"><img alt="React" src="https://img.shields.io/badge/React-19.1.8-61dafb?style=for-the-badge&logo=react&logoColor=111827" /></a>
   <a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-Firestore-f59e0b?style=for-the-badge&logo=firebase&logoColor=111827" /></a>
@@ -251,8 +251,10 @@ After deployment, verify:
 Current application version:
 
 ```text
-2.4.1
+2.5.0
 ```
+
+Version 2.5.0 adds the responsive foundation pass: shared touch targets, stronger form controls, mobile Explore filters, responsive detail/watch pages, and admin mobile card views for key workflows.
 
 Version 2.4.1 polishes app-wide interaction states: clickable controls now consistently show pointer cursors, form borders are clearer on dark panels, and shared hover states have stronger contrast.
 

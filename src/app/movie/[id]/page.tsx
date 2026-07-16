@@ -195,7 +195,7 @@ export default function MovieDetail() {
                 {movie.genres.slice(0, 4).map((genre: TMDBGenre) => (
                   <Badge
                     key={genre.id}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-slate-800/80 border border-[#4fd1c5]/30 text-[#4fd1c5] hover:bg-[#4fd1c5]/10 hover:border-[#4fd1c5]/60 backdrop-blur-sm transition-all duration-300 cursor-pointer"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-slate-800/80 border border-[#4fd1c5]/30 text-[#4fd1c5] backdrop-blur-sm"
                   >
                     {genre.name.toUpperCase()}
                   </Badge>
@@ -216,7 +216,7 @@ export default function MovieDetail() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 md:gap-7">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-5 md:gap-7">
                 {isUpcoming ? (
                   <TrailerActionButton
                     videos={movie.videos}
@@ -230,14 +230,14 @@ export default function MovieDetail() {
                     tvId={null}
                     title={movie.title}
                     posterPath={movie.poster_path || ""}
-                    className="flex items-center justify-center w-full sm:w-[210px] h-14 rounded-full font-bold text-base px-6 transition-all duration-300 bg-gradient-to-r from-[#4fd1c5] to-[#38b2ac] hover:from-[#38b2ac] hover:to-[#319795] text-slate-900 shadow-none border-none cursor-pointer"
+                    className="flex items-center justify-center w-full sm:min-w-[190px] sm:flex-1 lg:flex-none lg:w-[210px] h-14 rounded-full font-bold text-base px-6 transition-all duration-300 bg-gradient-to-r from-[#4fd1c5] to-[#38b2ac] hover:from-[#38b2ac] hover:to-[#319795] text-slate-900 shadow-none border-none cursor-pointer"
                     isDetailView={true}
                   />
                 )}
                 <Button
                   variant="outline"
                   size="lg"
-                  className="flex items-center justify-center w-full sm:w-[210px] h-14 rounded-full font-semibold text-base px-6 border-2 border-slate-600 text-white hover:bg-slate-800 hover:border-[#4fd1c5] hover:text-[#4fd1c5] transition-all duration-300 shadow-none bg-slate-900/40 cursor-pointer"
+                  className="flex items-center justify-center w-full sm:min-w-[190px] sm:flex-1 lg:flex-none lg:w-[210px] h-14 rounded-full font-semibold text-base px-6 border-2 border-slate-600 text-white hover:bg-slate-800 hover:border-[#4fd1c5] hover:text-[#4fd1c5] transition-all duration-300 shadow-none bg-slate-900/40 cursor-pointer"
                   onClick={handleShare}
                 >
                   <Share2 className="w-5 h-5 mr-2" />
@@ -248,7 +248,7 @@ export default function MovieDetail() {
                   mediaType="movie"
                   title={movie.title}
                   posterPath={movie.poster_path || ""}
-                  className="flex items-center justify-center w-full sm:w-[210px] h-14 rounded-full font-semibold text-base px-6 border-2 border-slate-600 text-white hover:bg-slate-800 hover:border-[#4fd1c5] hover:text-[#4fd1c5] transition-all duration-300 shadow-none bg-slate-900/40 cursor-pointer"
+                  className="flex items-center justify-center w-full sm:min-w-[190px] sm:flex-1 lg:flex-none lg:w-[210px] h-14 rounded-full font-semibold text-base px-6 border-2 border-slate-600 text-white hover:bg-slate-800 hover:border-[#4fd1c5] hover:text-[#4fd1c5] transition-all duration-300 shadow-none bg-slate-900/40 cursor-pointer"
                 />
               </div>
             </div>
@@ -267,7 +267,7 @@ export default function MovieDetail() {
           >
             <div className="mb-8">
               <ScrollArea className="w-full">
-                <TabsList className="w-full bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-2 flex flex-nowrap shadow-2xl">
+                <TabsList className="min-w-max bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-2 flex flex-nowrap shadow-2xl">
                   {[
                     { value: "overview", label: "Overview" },
                     { value: "cast", label: "Cast & Crew" },
@@ -278,7 +278,7 @@ export default function MovieDetail() {
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4fd1c5] data-[state=active]:to-[#38b2ac] data-[state=active]:text-slate-900 text-slate-300 hover:text-white cursor-pointer transition-all duration-300 whitespace-nowrap px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-xl flex-shrink-0 data-[state=active]:shadow-lg"
+                      className="min-h-11 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4fd1c5] data-[state=active]:to-[#38b2ac] data-[state=active]:text-slate-900 text-slate-300 hover:text-white cursor-pointer transition-all duration-300 whitespace-nowrap px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-xl flex-shrink-0 data-[state=active]:shadow-lg"
                     >
                       {tab.label}
                     </TabsTrigger>

@@ -15,9 +15,10 @@ import { DateRangePicker } from '@/components/ui/date-picker';
 
 interface ExploreFiltersProps {
   genres: TMDBGenre[];
+  className?: string;
 }
 
-export function ExploreFilters({ genres }: ExploreFiltersProps) {
+export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
   const { filters, setFilters, activeTab } = useExploreStore();
   const currentYear = new Date().getFullYear();
   
@@ -214,13 +215,18 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-lg rounded-2xl border border-slate-700/50 shadow-2xl h-[calc(100vh-11rem)] min-h-[520px] lg:min-h-0 flex flex-col overflow-hidden">
-      <div className="p-6 space-y-6 overflow-y-auto overscroll-contain flex-1 scrollbar-thin scroll-smooth">
+    <div
+      className={cn(
+        "flex flex-col overflow-hidden rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-900/95 to-slate-800/95 shadow-2xl backdrop-blur-lg",
+        className
+      )}
+    >
+      <div className="min-h-0 space-y-5 overflow-y-auto overscroll-contain p-4 scrollbar-thin scroll-smooth sm:space-y-6 sm:p-6">
         {/* Sort Section */}
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('sort')}
-            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
+            className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <Star className="w-4 h-4 text-yellow-400" />
@@ -260,7 +266,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('genres')}
-            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
+            className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
@@ -283,7 +289,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
                 <Badge
                   variant={filters.originalLanguage === 'vi' ? "default" : "outline"}
                   className={cn(
-                    "px-3 py-1.5 cursor-pointer transition-all duration-200 border",
+                    "min-h-9 px-3 py-1.5 cursor-pointer transition-all duration-200 border",
                     filters.originalLanguage === 'vi'
                       ? "bg-gradient-to-r from-emerald-500 to-cyan-500 border-emerald-300/50 text-white hover:from-emerald-600 hover:to-cyan-600 shadow-lg shadow-emerald-500/20"
                       : "bg-slate-800/70 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/15 hover:border-emerald-400/60 hover:text-white"
@@ -305,7 +311,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
                       key={genre.id}
                       variant={selectedGenres.includes(genre.id) ? "default" : "outline"}
                       className={cn(
-                        "px-3 py-1.5 cursor-pointer transition-all duration-200 border",
+                        "min-h-9 px-3 py-1.5 cursor-pointer transition-all duration-200 border",
                         selectedGenres.includes(genre.id)
                           ? "bg-gradient-to-r from-blue-500 to-purple-600 border-blue-400/50 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25"
                           : "bg-slate-800/70 border-slate-600/50 text-slate-300 hover:bg-slate-700/70 hover:border-slate-500/50 hover:text-white"
@@ -325,7 +331,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('year')}
-            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
+            className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4 text-green-400" />
@@ -385,7 +391,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('runtime')}
-            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
+            className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <Clock className="w-4 h-4 text-orange-400" />
@@ -445,7 +451,7 @@ export function ExploreFilters({ genres }: ExploreFiltersProps) {
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('dateRange')}
-            className="group flex items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
+            className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4 text-cyan-400" />

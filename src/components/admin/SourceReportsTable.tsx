@@ -137,7 +137,92 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
   }
 
   return (
-    <div className="overflow-x-auto">
+    <>
+      <div className="grid gap-4 md:hidden">
+        {reports.map((report) => (
+          <article
+            key={report.id}
+            className="rounded-xl border border-slate-800 bg-slate-950/70 p-4"
+          >
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="line-clamp-2 font-semibold text-white">
+                    {report.title}
+                  </h3>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                    <Badge variant="outline" className="capitalize border-slate-600 text-slate-300">
+                      {report.media_type}
+                    </Badge>
+                    <span>ID {report.media_id}</span>
+                    {report.media_type === "tv" && report.season_number && report.episode_number && (
+                      <span>
+                        S{report.season_number}E{report.episode_number}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Badge variant="outline" className={statusClass(report.status)}>
+                  {report.status}
+                </Badge>
+              </div>
+
+              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-sm">
+                <div className="font-medium text-slate-200">{report.source_name}</div>
+                <a
+                  href={report.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 block truncate text-xs text-primary hover:underline"
+                  title={report.source_url}
+                >
+                  {report.source_url}
+                </a>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-200">
+                  {reasonLabels[report.reason] || reasonLabels.other}
+                </Badge>
+                <span className="text-xs text-slate-500">
+                  {format(new Date(report.created_at), "MMM d, yyyy HH:mm")}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-[1fr_auto] gap-2">
+                <Select
+                  value={report.status}
+                  disabled={pendingId === report.id}
+                  onValueChange={(status) => updateStatus(report.id, status)}
+                >
+                  <SelectTrigger className="w-full border-slate-700 text-slate-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-slate-700 text-slate-200 hover:bg-slate-800"
+                >
+                  <Link href={mediaHref(report)}>
+                    <ExternalLink className="h-4 w-4" />
+                    <span className="sr-only">Open report media</span>
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
       <Table>
         <TableHeader>
           <TableRow className="border-slate-700 bg-slate-800/80">
@@ -235,6 +320,7 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
           ))}
         </TableBody>
       </Table>
-    </div>
+      </div>
+    </>
   );
 }

@@ -7,7 +7,14 @@ import { MovieCard } from "@/components/common/MovieCard";
 import { TVShowCard } from "@/components/common/TVShowCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Film, Tv, X } from "lucide-react";
+import { Film, SlidersHorizontal, Tv, X } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { TMDBMovie, TMDBTVShow } from "@/types/tmdb";
 import Header from "@/components/common/Header";
 import BackToTop from "@/components/common/BackToTop";
@@ -110,7 +117,7 @@ export default function ExplorePage() {
               item && (
                 <div
                   key={`${activeTab}-${item.id}`}
-                  className="transform scale-95 hover:scale-100 transition-transform duration-200"
+                  className="transition-transform duration-200 hover:-translate-y-1"
                 >
                   {activeTab === "movie" ? (
                     <MovieCard
@@ -167,11 +174,11 @@ export default function ExplorePage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <Header />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 py-5 sm:px-4 sm:py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
-          <div className="lg:w-80 shrink-0">
-            <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-hidden">
+          <div className="hidden lg:block lg:w-80 shrink-0">
+            <div className="lg:sticky lg:top-24">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold">Filters</h1>
                 <div className="flex items-center gap-2">
@@ -196,33 +203,106 @@ export default function ExplorePage() {
                   </Button>
                 </div>
               </div>
-              <ExploreFilters genres={genres || []} />
+              <ExploreFilters genres={genres || []} className="lg:max-h-[calc(100vh-11rem)]" />
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <Tabs
               value={activeTab}
               onValueChange={handleTabChange}
               className="w-full"
             >
-              <TabsList className="w-full max-w-md mx-auto mb-8">
-                <TabsTrigger
-                  value="movie"
-                  className="flex-1 cursor-pointer hover:bg-accent/50 transition-colors"
-                >
-                  <Film className="w-4 h-4 mr-2" />
-                  Movies
-                </TabsTrigger>
-                <TabsTrigger
-                  value="tv"
-                  className="flex-1 cursor-pointer hover:bg-accent/50 transition-colors"
-                >
-                  <Tv className="w-4 h-4 mr-2" />
-                  TV Shows
-                </TabsTrigger>
-              </TabsList>
+              <div className="mb-6 space-y-4 lg:mb-8">
+                <div className="flex items-center gap-3 lg:hidden">
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="min-h-11 flex-1 justify-center gap-2 rounded-xl border-slate-700/70 bg-slate-900/70 text-slate-100 hover:border-primary/50 hover:bg-primary/10"
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                        Filters
+                        {getActiveFiltersCount() > 0 && (
+                          <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-slate-950">
+                            {getActiveFiltersCount()}
+                          </span>
+                        )}
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent
+                      side="bottom"
+                      className="h-[88vh] rounded-t-3xl border-slate-700 bg-slate-950 p-0"
+                    >
+                      <SheetHeader className="border-b border-slate-800 px-4 py-4 text-left">
+                        <SheetTitle className="flex items-center gap-2 text-white">
+                          <SlidersHorizontal className="h-5 w-5 text-primary" />
+                          Explore Filters
+                        </SheetTitle>
+                      </SheetHeader>
+                      <div className="h-[calc(88vh-65px)] overflow-hidden">
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-800 px-4 py-3">
+                          <p className="text-sm text-slate-400">
+                            Refine movies and TV shows
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {getActiveFiltersCount() > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={clearFilters}
+                                className="h-10 gap-1 rounded-lg border-red-500/30 bg-red-500/5 text-red-300 hover:bg-red-500/10"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                                Clear
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={resetFilters}
+                              className="h-10 rounded-lg"
+                            >
+                              Reset
+                            </Button>
+                          </div>
+                        </div>
+                        <ExploreFilters
+                          genres={genres || []}
+                          className="h-full min-h-0 rounded-none border-0 bg-transparent shadow-none"
+                        />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                  {getActiveFiltersCount() > 0 && (
+                    <Button
+                      variant="ghost"
+                      onClick={clearFilters}
+                      className="min-h-11 rounded-xl px-3 text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
+                <TabsList className="mx-auto grid h-14 w-full max-w-md grid-cols-2 rounded-2xl border border-slate-700/70 bg-slate-900/80 p-1.5">
+                  <TabsTrigger
+                    value="movie"
+                    className="min-h-11 gap-2 rounded-xl text-sm font-semibold"
+                  >
+                    <Film className="w-4 h-4" />
+                    Movies
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="tv"
+                    className="min-h-11 gap-2 rounded-xl text-sm font-semibold"
+                  >
+                    <Tv className="w-4 h-4" />
+                    TV Shows
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="movie" className="mt-0">
                 {renderContent()}

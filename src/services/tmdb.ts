@@ -27,7 +27,9 @@ tmdbApi.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('TMDB API Request Error:', error);
+    console.warn('TMDB API request could not be prepared:', {
+      message: error.message,
+    });
     return Promise.reject(error);
   }
 );
@@ -38,7 +40,11 @@ tmdbApi.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('TMDB API Response Error:', error);
+    console.warn('TMDB API request failed:', {
+      message: error.message,
+      status: error.response?.status,
+      url: error.config?.url,
+    });
     return Promise.reject(error);
   }
 );
@@ -123,22 +129,38 @@ export const getImageUrl = (path: string | null, size: 'w500' | 'original' = 'w5
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 };
 
+const emptyCredits = { cast: [], crew: [] };
+const emptyListResponse = { page: 1, results: [], total_pages: 0, total_results: 0 };
+
+const safeTmdbGet = async <T>(url: string, fallback: T): Promise<T> => {
+  try {
+    const response = await tmdbApi.get(url);
+    return response.data;
+  } catch (error: any) {
+    console.warn(`Optional TMDB request failed: ${url}`, {
+      message: error.message,
+      status: error.response?.status,
+    });
+    return fallback;
+  }
+};
+
 export const fetchMovieDetails = async (movieId: number) => {
   try {
-    const [movieDetails, credits, videos, reviews, similar] = await Promise.all([
-      tmdbApi.get(`/movie/${movieId}`),
-      tmdbApi.get(`/movie/${movieId}/credits`),
-      tmdbApi.get(`/movie/${movieId}/videos`),
-      tmdbApi.get(`/movie/${movieId}/reviews`),
-      tmdbApi.get(`/movie/${movieId}/similar`),
+    const movieDetails = await tmdbApi.get(`/movie/${movieId}`);
+    const [credits, videos, reviews, similar] = await Promise.all([
+      safeTmdbGet(`/movie/${movieId}/credits`, emptyCredits),
+      safeTmdbGet(`/movie/${movieId}/videos`, emptyListResponse),
+      safeTmdbGet(`/movie/${movieId}/reviews`, emptyListResponse),
+      safeTmdbGet(`/movie/${movieId}/similar`, emptyListResponse),
     ]);
 
     return {
       ...movieDetails.data,
-      credits: credits.data,
-      videos: videos.data,
-      reviews: reviews.data,
-      similar: similar.data.results,
+      credits,
+      videos,
+      reviews,
+      similar: similar.results,
     };
   } catch (error) {
     console.error('Error fetching movie details:', error);
@@ -148,20 +170,20 @@ export const fetchMovieDetails = async (movieId: number) => {
 
 export const fetchTVShowDetails = async (tvShowId: number) => {
   try {
-    const [details, credits, videos, reviews, similar] = await Promise.all([
-      tmdbApi.get(`/tv/${tvShowId}`),
-      tmdbApi.get(`/tv/${tvShowId}/credits`),
-      tmdbApi.get(`/tv/${tvShowId}/videos`),
-      tmdbApi.get(`/tv/${tvShowId}/reviews`),
-      tmdbApi.get(`/tv/${tvShowId}/similar`),
+    const details = await tmdbApi.get(`/tv/${tvShowId}`);
+    const [credits, videos, reviews, similar] = await Promise.all([
+      safeTmdbGet(`/tv/${tvShowId}/credits`, emptyCredits),
+      safeTmdbGet(`/tv/${tvShowId}/videos`, emptyListResponse),
+      safeTmdbGet(`/tv/${tvShowId}/reviews`, emptyListResponse),
+      safeTmdbGet(`/tv/${tvShowId}/similar`, emptyListResponse),
     ]);
 
     return {
       ...details.data,
-      credits: credits.data,
-      videos: videos.data,
-      reviews: reviews.data,
-      similar: similar.data.results,
+      credits,
+      videos,
+      reviews,
+      similar: similar.results,
     };
   } catch (error) {
     console.error('Error fetching TV show details:', error);

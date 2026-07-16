@@ -86,7 +86,7 @@ export function TVShowCard({
               <span>{format(new Date(releaseDate), "MMM d, yyyy")}</span>
             </div>
           )}
-          <button className="w-full bg-[#4FD1C5] text-white py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#4FD1C5]/90 transition-colors cursor-pointer">
+          <button className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#4FD1C5] px-3 py-2 text-white transition-colors hover:bg-[#4FD1C5]/90">
             <Play className="w-4 h-4" />
             <span>Watch Now</span>
           </button>

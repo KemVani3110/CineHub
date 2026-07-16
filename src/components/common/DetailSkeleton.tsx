@@ -118,11 +118,11 @@ const DetailSkeleton = ({ type = "movie" }: DetailSkeletonProps) => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-16">
           {/* Tabs Skeleton */}
           <div className="mb-8">
-            <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-2 flex gap-2 overflow-x-auto">
+            <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-2 flex gap-2 overflow-x-auto overscroll-x-contain">
               {tabs.map((tab, i) => (
                 <Skeleton
                   key={i}
-                  className="h-12 px-6 rounded-xl bg-gradient-to-r from-slate-700 to-slate-600 whitespace-nowrap"
+                  className="h-11 min-w-[104px] flex-none px-4 sm:h-12 sm:min-w-[132px] sm:px-6 rounded-xl bg-gradient-to-r from-slate-700 to-slate-600 whitespace-nowrap"
                 >
                   <span className="opacity-0">{tab}</span>
                 </Skeleton>

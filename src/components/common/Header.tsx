@@ -161,15 +161,15 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
           isSidebarOpen ? "hidden" : "block"
         }`}
       >
-        <div className="container mx-auto px-4 lg:px-6 py-3 md:py-4">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-2.5 md:py-4">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center space-x-3 md:space-x-4">
               <Link
                 href="/home"
-                className="flex items-center space-x-2 md:space-x-3 hover:opacity-90 transition-opacity cursor-pointer"
+                className="flex min-h-11 items-center space-x-2 rounded-full pr-2 transition-opacity hover:opacity-90 md:space-x-3"
               >
-                <div className="relative w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14">
+                <div className="relative h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14">
                   <Image
                     src="/logo.png"
                     alt="CineHub Logo"
@@ -180,10 +180,10 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold gradient-text">
+                  <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold leading-tight gradient-text">
                     CineHub
                   </span>
-                  <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground -mt-1">
+                  <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground leading-tight">
                     Cinema Experience
                   </span>
                 </div>
@@ -199,7 +199,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                   <button
                     key={item.path}
                     onClick={() => handleNavClick(item)}
-                    className={`nav-item flex items-center space-x-2 px-4 py-2 mx-1 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
+                    className={`nav-item flex min-h-11 items-center space-x-2 px-4 py-2 mx-1 rounded-full text-sm font-medium transition-all duration-200 ${
                       isActive
                         ? "text-white bg-primary shadow-lg shadow-primary/25"
                         : "text-slate-300 hover:text-white hover:bg-slate-700/50"
@@ -224,7 +224,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="hidden sm:flex p-1 rounded-full hover:!bg-transparent focus-visible:ring-0 cursor-pointer"
+                        className="hidden sm:flex h-11 w-11 p-1 rounded-full hover:!bg-transparent focus-visible:ring-0"
                       >
                         <Avatar className="h-8 w-8 md:h-10 md:w-10 border-2 border-primary/20">
                           <AvatarImage
@@ -313,16 +313,15 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                   <div className="hidden sm:flex items-center space-x-2">
                     <Button
                       variant="ghost"
-                      size="sm"
                       asChild
-                      className="rounded-full"
+                      className="h-11 rounded-full px-4"
                     >
                       <Link href="/login">
                         <LogIn size={18} className="mr-2" />
                         Sign In
                       </Link>
                     </Button>
-                    <Button size="sm" asChild className="rounded-full">
+                    <Button asChild className="h-11 rounded-full px-4">
                       <Link href="/register">
                         <User size={18} className="mr-2" />
                         Sign Up
@@ -338,14 +337,15 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="lg:hidden h-9 w-9 rounded-full hover:bg-slate-700/50 text-slate-300 hover:text-white relative"
+                    className="lg:hidden h-11 w-11 rounded-full hover:bg-slate-700/50 text-slate-300 hover:text-white relative"
+                    aria-label="Open navigation menu"
                   >
                     <Menu size={22} />
                   </Button>
                 </SheetTrigger>
                 <SheetContent
                   side="right"
-                  className="w-[300px] sm:w-[400px] p-0 bg-slate-900 border-slate-700"
+                  className="w-[min(92vw,400px)] p-0 bg-slate-900 border-slate-700"
                 >
                   <SheetHeader className="sr-only">
                     <SheetTitle>Navigation Menu</SheetTitle>
@@ -404,7 +404,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                               key={item.path}
                               href={item.path}
                               onClick={closeMobileMenu}
-                              className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                              className={`flex min-h-12 items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                                 isActive
                                   ? "text-white bg-primary shadow-lg shadow-primary/25"
                                   : "text-slate-300 hover:text-white hover:bg-slate-700/50"
@@ -425,7 +425,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           <Link
                             href="/profile"
                             onClick={closeMobileMenu}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
+                            className="flex min-h-12 items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                           >
                             <User size={20} className="flex-shrink-0" />
                             <span>Profile</span>
@@ -434,7 +434,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           <Link
                             href="/favorite-actors"
                             onClick={closeMobileMenu}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
+                            className="flex min-h-12 items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                           >
                             <Heart size={20} className="flex-shrink-0" />
                             <span>Favorite Actors</span>
@@ -445,7 +445,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           <Link
                             href="/login"
                             onClick={closeMobileMenu}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
+                            className="flex min-h-12 items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                           >
                             <LogIn size={20} className="flex-shrink-0" />
                             <span>Login</span>
@@ -453,7 +453,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                           <Link
                             href="/register"
                             onClick={closeMobileMenu}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
+                            className="flex min-h-12 items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                           >
                             <User size={20} className="flex-shrink-0" />
                             <span>Register</span>
@@ -468,7 +468,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                               key={item.path}
                               href={item.path}
                               onClick={closeMobileMenu}
-                              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
+                              className="flex min-h-12 items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50"
                             >
                               <item.icon size={20} className="flex-shrink-0" />
                               <span>{item.name}</span>
@@ -484,7 +484,7 @@ const Header = ({ onSidebarChange }: HeaderProps) => {
                         <Button
                           variant="ghost"
                           onClick={handleLogout}
-                          className="w-full flex items-center space-x-3 px-4 py-3 rounded-none text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 justify-start"
+                          className="w-full min-h-12 flex items-center space-x-3 px-4 py-3 rounded-none text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 justify-start"
                         >
                           <LogOut size={20} className="flex-shrink-0" />
                           <span>Logout</span>

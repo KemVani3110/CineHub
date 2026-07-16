@@ -70,13 +70,13 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden">
+    <div className="relative flex min-h-dvh flex-col overflow-y-auto overflow-x-hidden">
       {/* Return to Main Page Button */}
       <div className="absolute top-4 left-4 z-10">
         <Link href="/home">
           <Button
             variant="ghost"
-            className="flex items-center text-muted-foreground hover:text-foreground transition-colors p-2 cursor-pointer"
+            className="flex min-h-10 items-center rounded-full px-3 text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             <span className="text-sm hidden sm:inline">Return to Main Page</span>
@@ -86,7 +86,7 @@ export default function LoginForm() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-16 sm:py-8">
+      <div className="flex flex-1 items-center justify-center px-3 py-20 sm:px-4 sm:py-10">
         <div className="relative w-full max-w-md mx-auto">
           {/* Header */}
           <div className="text-center mb-6 sm:mb-8 animate-fade-in-down">
@@ -197,7 +197,8 @@ export default function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute inset-y-0 right-0 flex min-w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -212,7 +213,7 @@ export default function LoginForm() {
               <div className="text-right">
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-primary hover:text-primary/80 transition-colors cursor-pointer hover:underline"
+                  className="inline-flex min-h-10 items-center text-sm text-primary transition-colors hover:text-primary/80 hover:underline"
                 >
                   Forgot your password?
                 </Link>
@@ -244,7 +245,7 @@ export default function LoginForm() {
                 </span>
                 <Link
                   href="/register"
-                  className="text-primary hover:text-primary/80 font-medium transition-colors cursor-pointer hover:underline text-sm"
+                  className="inline-flex min-h-10 items-center text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
                 >
                   Create Account
                 </Link>

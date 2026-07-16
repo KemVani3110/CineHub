@@ -56,8 +56,8 @@ const BackToTop = () => {
     <div
       className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 z-50 transition-all duration-500 ease-in-out ${
         isVisible
-          ? 'opacity-100 translate-y-0 scale-100'
-          : 'opacity-0 translate-y-12 scale-75 pointer-events-none'
+          ? 'visible opacity-100 translate-y-0 scale-100'
+          : 'invisible opacity-0 translate-y-12 scale-75 pointer-events-none'
       }`}
     >
       <div className="relative group">
@@ -69,6 +69,7 @@ const BackToTop = () => {
           onClick={scrollToTop}
           className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-gradient-to-br from-[var(--cinehub-accent)] to-[var(--cinehub-accent-hover)] hover:from-[var(--cinehub-accent-hover)] hover:to-[var(--cinehub-accent)] border-2 border-[var(--cinehub-accent)]/30 shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl hover:shadow-[var(--cinehub-accent)]/40 transition-all duration-300 cursor-pointer transform hover:scale-110 active:scale-95 group z-10"
           aria-label="Back to top"
+          tabIndex={isVisible ? 0 : -1}
         >
           {/* Inner circle for better visual depth - pointer-events-none */}
           <div className="absolute inset-0.5 sm:inset-1 rounded-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>

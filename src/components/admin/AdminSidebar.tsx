@@ -151,7 +151,8 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
           variant="ghost"
           size="icon"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="fixed top-4 left-4 z-50 md:hidden"
+          className="fixed left-3 top-3 z-50 h-11 w-11 rounded-full border border-border/60 bg-card/90 shadow-lg backdrop-blur md:hidden"
+          aria-label="Open admin navigation"
         >
           <Menu size={24} />
         </Button>
@@ -159,7 +160,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
       <TooltipProvider>
         <div
           className={cn(
-            "bg-gradient-to-b from-card to-card/50 border-r border-border/50 h-screen flex flex-col transition-all duration-300 ease-in-out backdrop-blur-sm",
+            "flex h-dvh flex-col border-r border-border/50 bg-gradient-to-b from-card to-card/50 backdrop-blur-sm transition-all duration-300 ease-in-out",
             sidebarWidth,
             mobileClasses,
             mobileTransform,
@@ -212,7 +213,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="h-8 w-8 rounded-full hover:!bg-transparent flex-shrink-0 cursor-pointer hover:text-primary"
+                className="h-10 w-10 flex-shrink-0 rounded-full hover:!bg-transparent hover:text-primary"
               >
                 {isCollapsed ? (
                   <ChevronRight size={16} />
@@ -281,7 +282,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative cursor-pointer",
+                    "group relative flex min-h-11 items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-105"
                       : "text-muted-foreground hover:text-primary hover:bg-accent/50 hover:scale-102"
@@ -466,7 +467,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
       </TooltipProvider>
       {isMobile && isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}

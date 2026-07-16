@@ -124,7 +124,75 @@ export function ContactMessagesTable({
 
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="grid gap-4 md:hidden">
+        {messages.length ? (
+          messages.map((message) => (
+            <article
+              key={message.id}
+              className="rounded-xl border border-slate-800 bg-slate-950/70 p-4"
+            >
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-white">{message.name}</h3>
+                    <a
+                      href={`mailto:${message.email}`}
+                      className="mt-1 block truncate text-xs text-primary hover:underline"
+                    >
+                      {message.email}
+                    </a>
+                  </div>
+                  <Badge variant="outline" className={statusClass(message.status)}>
+                    {message.status}
+                  </Badge>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold text-slate-200">{message.subject}</p>
+                  <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-slate-300">
+                    {message.message}
+                  </p>
+                </div>
+
+                {message.reply_message && (
+                  <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-3 text-xs leading-5 text-green-100">
+                    <div className="mb-1 font-semibold">Last reply</div>
+                    <div className="line-clamp-4 whitespace-pre-wrap">{message.reply_message}</div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <Badge variant="outline" className="border-slate-600 text-slate-300">
+                    email {message.email_status}
+                  </Badge>
+                  <span>{format(new Date(message.created_at), "MMM d, yyyy HH:mm")}</span>
+                  {message.replied_at && (
+                    <span className="text-green-300">
+                      Replied {format(new Date(message.replied_at), "MMM d, HH:mm")}
+                    </span>
+                  )}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-slate-700"
+                  onClick={() => openReplyDialog(message)}
+                >
+                  <Reply className="mr-2 h-4 w-4" />
+                  Reply
+                </Button>
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="rounded-xl border border-slate-800 bg-slate-950/70 py-12 text-center text-slate-400">
+            No contact messages yet
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-slate-700 bg-slate-800/80">

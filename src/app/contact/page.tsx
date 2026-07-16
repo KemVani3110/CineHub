@@ -83,21 +83,21 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <section className="relative overflow-hidden px-4 py-20 lg:py-28">
+      <section className="relative overflow-hidden px-3 py-14 sm:px-4 sm:py-20 lg:py-28">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background/90" />
         <div className="relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-7"
+            className="space-y-6 sm:space-y-7"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+            <div className="inline-flex min-h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
               <MessageSquare className="h-4 w-4" />
               Contact the developer
             </div>
 
             <div className="space-y-5">
-              <h1 className="max-w-4xl text-4xl font-bold leading-tight md:text-6xl">
+              <h1 className="max-w-4xl text-3xl font-bold leading-tight sm:text-4xl md:text-6xl">
                 Send feedback, questions, or project inquiries.
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
@@ -137,8 +137,8 @@ export default function ContactPage() {
             transition={{ delay: 0.15 }}
           >
             <Card className="border-primary/20 bg-card/90 shadow-2xl">
-              <CardHeader>
-                <CardTitle className="flex items-center text-2xl text-primary">
+              <CardHeader className="px-4 sm:px-6">
+                <CardTitle className="flex items-center text-xl text-primary sm:text-2xl">
                   <Send className="mr-3 h-6 w-6" />
                   Send a Message
                 </CardTitle>
@@ -146,7 +146,7 @@ export default function ContactPage() {
                   Saved to admin and sent to the main email automatically.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 sm:px-6">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
@@ -214,7 +214,7 @@ export default function ContactPage() {
                     type="submit"
                     size="lg"
                     disabled={isSubmitting}
-                    className="w-full"
+                    className="h-12 w-full"
                   >
                     <Send className="mr-2 h-5 w-5" />
                     {isSubmitting ? "Sending..." : "Send Message"}
@@ -227,7 +227,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="px-4 pb-20">
+      <section className="px-3 pb-16 sm:px-4 sm:pb-20">
         <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
           <Card className="border-border bg-card/80">
             <CardContent className="space-y-3 p-6">
@@ -257,7 +257,7 @@ export default function ContactPage() {
               <h2 className="text-lg font-semibold">Second contact</h2>
               <p className="text-sm leading-6 text-muted-foreground">
                 You can also reach me at{" "}
-                <a className="text-primary hover:underline" href={`mailto:${SECONDARY_EMAIL}`}>
+                <a className="inline-flex min-h-10 items-center break-all text-primary hover:underline" href={`mailto:${SECONDARY_EMAIL}`}>
                   {SECONDARY_EMAIL}
                 </a>
                 .

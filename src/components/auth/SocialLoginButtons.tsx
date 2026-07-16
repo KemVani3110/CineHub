@@ -175,7 +175,7 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Divider with text */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -189,14 +189,14 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
       </div>
 
       {/* Social Login Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         {/* Google Button */}
         <Button
           variant="outline"
           type="button"
           disabled={isGoogleLoading || isFacebookLoading}
           onClick={handleGoogleLogin}
-          className="group relative overflow-hidden h-12 bg-card border-border hover:bg-accent hover:border-primary/50 transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg cursor-pointer"
+          className="group relative h-12 overflow-hidden border-border bg-card transition-all duration-300 ease-in-out hover:scale-[1.02] hover:border-primary/50 hover:bg-accent hover:shadow-lg"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
 
@@ -244,7 +244,7 @@ export function SocialLoginButtons({ onLogin }: SocialLoginButtonsProps) {
           type="button"
           disabled={isGoogleLoading || isFacebookLoading}
           onClick={handleFacebookLogin}
-          className="group relative overflow-hidden h-12 bg-card border-border hover:bg-accent hover:border-primary/50 transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg cursor-pointer"
+          className="group relative h-12 overflow-hidden border-border bg-card transition-all duration-300 ease-in-out hover:scale-[1.02] hover:border-primary/50 hover:bg-accent hover:shadow-lg"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
 

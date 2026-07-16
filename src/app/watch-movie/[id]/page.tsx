@@ -176,7 +176,7 @@ export default function WatchMoviePage() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-foreground hover:text-accent hover:bg-accent/20 shrink-0 cursor-pointer rounded-full transition-all duration-200 hover:scale-105 w-8 h-8 sm:w-10 sm:h-10"
+              className="h-10 w-10 shrink-0 cursor-pointer rounded-full text-foreground transition-all duration-200 hover:scale-105 hover:bg-accent/20 hover:text-accent"
               onClick={() => router.push(`/movie/${id}`)}
             >
               <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -231,14 +231,14 @@ export default function WatchMoviePage() {
       </div>
 
       {/* Main Content */}
-      <div className="pt-20 pb-8">
+      <div className="pt-20 pb-8 sm:pt-24">
         {/* Video Player Section - Horizontal Layout */}
         <div className="w-full">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50">
+          <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6">
+            <div className="relative w-full aspect-video sm:aspect-[21/9] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50">
               {streamError ? (
                 <div className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-black/80 to-black/90 flex items-center justify-center">
-                  <div className="text-center text-white p-8 max-w-md">
+                  <div className="max-w-md p-5 text-center text-white sm:p-8">
                     <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30">
                       <Play className="w-10 h-10 text-red-400" />
                     </div>
@@ -318,21 +318,21 @@ export default function WatchMoviePage() {
         {/* Content Section - Dimmed in Theater Mode */}
         <div
           className={cn(
-            "max-w-6xl mx-auto px-4 mt-8 transition-all duration-500",
+            "max-w-6xl mx-auto px-3 sm:px-4 mt-6 sm:mt-8 transition-all duration-500",
             isTheaterMode ? "opacity-20 pointer-events-none" : "opacity-100"
           )}
         >
           {/* Movie Details Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
               {/* Movie Info Card  */}
               <Card className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 border-slate-700/50 backdrop-blur-sm shadow-2xl hover:shadow-3xl transition-all duration-300">
-                <CardContent className="p-8">
-                  <div className="flex flex-col sm:flex-row gap-8">
+                <CardContent className="p-4 sm:p-6 md:p-8">
+                  <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
                     {/* Poster  */}
                     <div className="shrink-0 mx-auto sm:mx-0">
-                      <div className="relative w-40 h-60 sm:w-48 sm:h-72 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-800 to-slate-700 shadow-2xl border border-slate-600/50 group">
+                      <div className="relative h-60 w-40 overflow-hidden rounded-xl border border-slate-600/50 bg-gradient-to-br from-slate-800 to-slate-700 shadow-2xl group sm:h-72 sm:w-48 sm:rounded-2xl">
                         {movie.poster_path ? (
                           <div className="relative">
                             <img
@@ -352,20 +352,20 @@ export default function WatchMoviePage() {
                     </div>
 
                     {/* Movie Details  */}
-                    <div className="flex-1 space-y-6">
+                    <div className="min-w-0 flex-1 space-y-5 sm:space-y-6">
                       <div>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight">
+                        <h2 className="mb-3 text-2xl font-bold tracking-tight text-white sm:mb-4 sm:text-4xl">
                           {movie.title}
                         </h2>
                         {movie.tagline && (
-                          <p className="text-[#4FD1C5] italic text-lg font-medium mb-4">
+                          <p className="mb-4 text-base font-medium italic text-[#4FD1C5] sm:text-lg">
                             "{movie.tagline}"
                           </p>
                         )}
                       </div>
 
                       {/* Rating and Info  */}
-                      <div className="flex flex-wrap items-center gap-4">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                         {movie.vote_average > 0 && (
                           <div className="flex items-center gap-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 px-4 py-3 rounded-full border border-yellow-400/30">
                             <Star className="h-5 w-5 text-yellow-400 fill-current" />
@@ -415,7 +415,7 @@ export default function WatchMoviePage() {
 
                       {/* Overview  */}
                       {movie.overview && (
-                        <div className="bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-2xl p-6 border border-slate-600/50">
+                        <div className="rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 sm:rounded-2xl sm:p-6">
                           <h3 className="font-bold text-white mb-4 text-lg flex items-center gap-2">
                             <div className="w-1 h-6 bg-gradient-to-b from-[#4FD1C5] to-[#38B2AC] rounded-full"></div>
                             Overview
@@ -432,7 +432,7 @@ export default function WatchMoviePage() {
 
               {/* Actions Card  */}
               <Card className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 border-slate-700/50 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300">
-                <CardContent className="p-8">
+                <CardContent className="p-4 sm:p-6 md:p-8">
                   <h3 className="font-bold text-white mb-6 text-xl flex items-center gap-3">
                     <div className="w-1 h-7 bg-gradient-to-b from-[#4FD1C5] to-[#38B2AC] rounded-full"></div>
                     Movie Actions
@@ -451,17 +451,17 @@ export default function WatchMoviePage() {
             </div>
 
             {/* Sidebar  */}
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {/* Movie Stats  */}
               <Card className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 border-slate-700/50 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h3 className="font-bold text-white mb-6 text-lg flex items-center gap-2">
                     <div className="w-1 h-6 bg-gradient-to-b from-[#4FD1C5] to-[#38B2AC] rounded-full"></div>
                     Movie Details
                   </h3>
                   <div className="space-y-4">
                     {movie.release_date && (
-                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-[#4FD1C5]/30 transition-all duration-200">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-[#4FD1C5]" />
                           Release Date
@@ -473,7 +473,7 @@ export default function WatchMoviePage() {
                     )}
 
                     {movie.runtime && (
-                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-purple-400/30 transition-all duration-200">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-purple-400/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
                           <Clock className="h-4 w-4 text-purple-400" />
                           Duration
@@ -486,7 +486,7 @@ export default function WatchMoviePage() {
                     )}
 
                     {movie.budget > 0 && (
-                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-green-400/30 transition-all duration-200">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-green-400/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
                           <div className="h-4 w-4 text-green-400">💰</div>
                           Budget
@@ -498,7 +498,7 @@ export default function WatchMoviePage() {
                     )}
 
                     {movie.revenue > 0 && (
-                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-yellow-400/30 transition-all duration-200">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-yellow-400/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
                           <div className="h-4 w-4 text-yellow-400">💵</div>
                           Revenue
@@ -510,7 +510,7 @@ export default function WatchMoviePage() {
                     )}
 
                     {movie.vote_count > 0 && (
-                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-blue-400/30 transition-all duration-200">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-blue-400/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
                           <Star className="h-4 w-4 text-blue-400" />
                           Votes
@@ -528,7 +528,7 @@ export default function WatchMoviePage() {
               {movie.production_companies &&
                 movie.production_companies.length > 0 && (
                   <Card className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 border-slate-700/50 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4 sm:p-6">
                       <h3 className="font-bold text-white mb-6 text-lg flex items-center gap-2">
                         <div className="w-1 h-6 bg-gradient-to-b from-[#4FD1C5] to-[#38B2AC] rounded-full"></div>
                         Production
@@ -555,10 +555,10 @@ export default function WatchMoviePage() {
           {movie.similar && movie.similar.length > 0 && (
             <div className="mt-12">
               <Card className="bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 border-slate-700/50 backdrop-blur-sm shadow-2xl hover:shadow-3xl transition-all duration-300">
-                <CardContent className="p-8">
-                  <div className="flex items-center gap-4 mb-8">
+                <CardContent className="p-4 sm:p-6 md:p-8">
+                  <div className="mb-6 flex items-center gap-3 sm:mb-8 sm:gap-4">
                     <div className="w-1 h-10 bg-gradient-to-b from-[#4FD1C5] to-[#38B2AC] rounded-full"></div>
-                    <h3 className="text-3xl font-bold text-white">
+                    <h3 className="text-2xl font-bold text-white sm:text-3xl">
                       You might also like
                     </h3>
                     <div className="flex-1 h-px bg-gradient-to-r from-slate-600 via-slate-500 to-transparent"></div>
@@ -581,7 +581,7 @@ function WatchPageSkeleton() {
       <div className="fixed top-0 left-0 right-0 z-40 bg-main/95 backdrop-blur-md border-b border-custom">
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-4">
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="skeleton w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 animate-pulse" />
+            <div className="skeleton h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 animate-pulse" />
             <div className="flex-1 space-y-1 sm:space-y-2">
               <div className="skeleton h-4 sm:h-6 w-32 sm:w-48 rounded-lg bg-gradient-to-r from-slate-700 to-slate-600 animate-pulse" />
               <div className="flex gap-1 sm:gap-2">
@@ -593,11 +593,11 @@ function WatchPageSkeleton() {
         </div>
       </div>
 
-      <div className="pt-20 pb-8">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="pt-20 pb-8 sm:pt-24">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
           {/* Video Player Skeleton */}
           <div className="mb-6 sm:mb-8">
-            <div className="skeleton w-full aspect-[16/9] sm:aspect-[21/9] rounded-lg bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 animate-pulse" />
+            <div className="skeleton w-full aspect-video sm:aspect-[21/9] rounded-lg bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 animate-pulse" />
           </div>
 
           {/* Content Skeleton */}

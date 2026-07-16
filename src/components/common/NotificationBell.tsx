@@ -37,7 +37,8 @@ const NotificationBell = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full hover:bg-accent/10 cursor-pointer relative"
+          className="h-11 w-11 rounded-full hover:bg-accent/10 relative"
+          aria-label="Open notifications"
         >
           <Bell size={22} />
           {unreadCount > 0 && (
