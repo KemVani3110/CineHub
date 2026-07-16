@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { adminDb, serverTimestamp, toIsoString } from "@/lib/firebase-admin";
+import { createNotification } from "@/lib/notifications";
 
 type MediaType = "movie" | "tv";
 
@@ -100,6 +101,20 @@ export async function POST(request: NextRequest) {
       added_at: now,
       created_at: now,
       updated_at: now,
+    });
+
+    await createNotification({
+      userId: user.id,
+      title: "Added to watchlist",
+      message: `${body.title} is now saved in your watchlist.`,
+      type: "success",
+      href: "/watchlist",
+      source: "watchlist",
+      metadata: {
+        mediaType,
+        mediaId,
+        title: body.title,
+      },
     });
 
     return NextResponse.json(

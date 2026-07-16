@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb, numericIdFromUid, serverTimestamp, toIsoString } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/admin-firestore";
+import { createNotification } from "@/lib/notifications";
 
 const VALID_REASONS = new Set([
   "wrong_title",
@@ -49,6 +50,34 @@ function serializeReport(id: string, data: any) {
     created_at: toIsoString(data.created_at),
     updated_at: toIsoString(data.updated_at),
   };
+}
+
+function mediaHref(data: {
+  media_type?: string;
+  media_id?: number;
+  season_number?: number | null;
+  episode_number?: number | null;
+}) {
+  if (data.media_type === "tv") {
+    const season = data.season_number || 1;
+    const episode = data.episode_number || 1;
+    return `/watch-tv/${data.media_id}/season/${season}/episode/${episode}`;
+  }
+
+  return `/watch-movie/${data.media_id}`;
+}
+
+function statusLabel(status: string) {
+  switch (status) {
+    case "reviewing":
+      return "being reviewed";
+    case "resolved":
+      return "resolved";
+    case "dismissed":
+      return "closed";
+    default:
+      return "open";
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -128,6 +157,26 @@ export async function POST(request: NextRequest) {
       updated_at: now,
     });
 
+    await createNotification({
+      userId,
+      title: "Source report submitted",
+      message: `Thanks for reporting ${body.title}. We'll review this source soon.`,
+      type: "info",
+      href: mediaHref({
+        media_type: mediaType,
+        media_id: mediaId,
+        season_number: body.seasonNumber ? Number(body.seasonNumber) : null,
+        episode_number: body.episodeNumber ? Number(body.episodeNumber) : null,
+      }),
+      source: "source_report",
+      metadata: {
+        reportId: ref.id,
+        mediaType,
+        mediaId,
+        reason,
+      },
+    });
+
     return NextResponse.json(
       { message: "Source report submitted", id: ref.id },
       { status: 201 }
@@ -153,9 +202,40 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await adminDb.collection("source_reports").doc(id).update({
+    const reportRef = adminDb.collection("source_reports").doc(id);
+    const existing = await reportRef.get();
+
+    if (!existing.exists) {
+      return NextResponse.json(
+        { message: "Source report not found" },
+        { status: 404 }
+      );
+    }
+
+    await reportRef.update({
       status,
       updated_at: serverTimestamp(),
+    });
+
+    const report = existing.data() || {};
+    await createNotification({
+      userId: report.user_id,
+      title: "Source report updated",
+      message: `Your report for ${report.title || "this title"} is now ${statusLabel(status)}.`,
+      type:
+        status === "resolved"
+          ? "success"
+          : status === "dismissed"
+            ? "warning"
+            : "info",
+      href: mediaHref(report),
+      source: "source_report",
+      metadata: {
+        reportId: id,
+        status,
+        mediaType: report.media_type,
+        mediaId: report.media_id,
+      },
     });
 
     return NextResponse.json({ message: "Source report updated" });
