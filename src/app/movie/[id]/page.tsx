@@ -4,18 +4,18 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchMovieDetails } from "@/services/tmdb";
 import { TMDBMovieDetails } from "@/types/tmdb";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Share2, Star, Clock, Calendar } from "lucide-react";
+import { Clapperboard, Images, ScrollText, Share2, Star, Clock, Calendar, Users } from "lucide-react";
 import { getImageUrl } from "@/services/tmdb";
 import { TMDBGenre } from "@/types/tmdb";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { WatchlistButton } from "@/components/common/WatchlistButton";
 import { WatchButton } from "@/components/common/WatchButton";
 import { TrailerActionButton } from "@/components/common/TrailerActionButton";
 import Image from "next/image";
 import { isFutureDate } from "@/lib/trailer-utils";
+import DetailTabsNav, { DetailTabItem } from "@/components/common/DetailTabsNav";
 
 import {
   MovieOverview,
@@ -26,6 +26,14 @@ import {
 } from "@/components/lazy";
 import MovieRating from "@/components/movie/MovieRating";
 import DetailSkeleton from "@/components/common/DetailSkeleton";
+
+const movieTabs: DetailTabItem[] = [
+  { value: "overview", label: "Overview", icon: ScrollText },
+  { value: "cast", label: "Cast & Crew", icon: Users },
+  { value: "reviews", label: "Reviews", icon: Star },
+  { value: "media", label: "Photos & Videos", icon: Images },
+  { value: "similar", label: "Similar Movies", icon: Clapperboard },
+];
 
 export default function MovieDetail() {
   const { id } = useParams();
@@ -265,28 +273,7 @@ export default function MovieDetail() {
             onValueChange={handleTabChange}
             className="w-full"
           >
-            <div className="mb-8">
-              <ScrollArea className="w-full">
-                <TabsList className="min-w-max bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-2 flex flex-nowrap shadow-2xl">
-                  {[
-                    { value: "overview", label: "Overview" },
-                    { value: "cast", label: "Cast & Crew" },
-                    { value: "reviews", label: "Reviews" },
-                    { value: "media", label: "Photos & Videos" },
-                    { value: "similar", label: "Similar Movies" },
-                  ].map((tab) => (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="min-h-11 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#4fd1c5] data-[state=active]:to-[#38b2ac] data-[state=active]:text-slate-900 text-slate-300 hover:text-white cursor-pointer transition-all duration-300 whitespace-nowrap px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-xl flex-shrink-0 data-[state=active]:shadow-lg"
-                    >
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                <ScrollBar orientation="horizontal" className="mt-4" />
-              </ScrollArea>
-            </div>
+            <DetailTabsNav tabs={movieTabs} />
 
             {/* Tab Content */}
             <div className="bg-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-4 sm:p-6 md:p-8">

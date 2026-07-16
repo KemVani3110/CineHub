@@ -63,6 +63,33 @@ export const TMDB_ENDPOINTS = {
   },
 };
 
+const emptyTmdbResponse = <T>(): TMDBResponse<T> => ({
+  page: 1,
+  results: [],
+  total_pages: 0,
+  total_results: 0,
+});
+
+function getTmdbErrorDetails(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    return {
+      message: error.message,
+      status: error.response?.status,
+      code: error.code,
+      url: error.config?.url,
+      params: error.config?.params,
+    };
+  }
+
+  return {
+    message: error instanceof Error ? error.message : String(error),
+  };
+}
+
+function logTmdbFallback(label: string, error: unknown) {
+  console.warn(`${label}; using fallback data`, getTmdbErrorDetails(error));
+}
+
 // API functions
 export const fetchMovies = async (listType: TMDBMovieListType = 'popular', page: number = 1): Promise<TMDBResponse<TMDBMovie>> => {
   try {
@@ -71,21 +98,8 @@ export const fetchMovies = async (listType: TMDBMovieListType = 'popular', page:
     });
     return response.data;
   } catch (error: any) {
-    console.error('Error fetching movies:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      config: {
-        url: error.config?.url,
-        params: error.config?.params,
-      }
-    });
-    return {
-      page: 1,
-      results: [],
-      total_pages: 0,
-      total_results: 0,
-    };
+    logTmdbFallback('TMDB movies request failed', error);
+    return emptyTmdbResponse<TMDBMovie>();
   }
 };
 
@@ -96,21 +110,8 @@ export const fetchTVShows = async (listType: TMDBTVListType = 'popular', page: n
     });
     return response.data;
   } catch (error: any) {
-    console.error('Error fetching TV shows:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      config: {
-        url: error.config?.url,
-        params: error.config?.params,
-      }
-    });
-    return {
-      page: 1,
-      results: [],
-      total_pages: 0,
-      total_results: 0,
-    };
+    logTmdbFallback('TMDB TV shows request failed', error);
+    return emptyTmdbResponse<TMDBTVShow>();
   }
 };
 
@@ -119,7 +120,7 @@ export const fetchGenres = async (type: 'movie' | 'tv'): Promise<TMDBGenre[]> =>
     const response = await tmdbApi.get(`/genre/${type}/list`);
     return response.data.genres;
   } catch (error) {
-    console.error(`Error fetching ${type} genres:`, error);
+    logTmdbFallback(`TMDB ${type} genres request failed`, error);
     return [];
   }
 };
@@ -137,10 +138,7 @@ const safeTmdbGet = async <T>(url: string, fallback: T): Promise<T> => {
     const response = await tmdbApi.get(url);
     return response.data;
   } catch (error: any) {
-    console.warn(`Optional TMDB request failed: ${url}`, {
-      message: error.message,
-      status: error.response?.status,
-    });
+    logTmdbFallback(`Optional TMDB request failed: ${url}`, error);
     return fallback;
   }
 };
@@ -212,7 +210,7 @@ export const fetchEpisodeVideos = async (
     );
     return data;
   } catch (error) {
-    console.error("Error fetching episode videos:", error);
+    logTmdbFallback("TMDB episode videos request failed", error);
     return { results: [] };
   }
 };
@@ -224,7 +222,7 @@ export const searchMulti = async (query: string, page: number = 1) => {
     });
     return data;
   } catch (error) {
-    console.error('Error searching:', error);
+    logTmdbFallback('TMDB multi search request failed', error);
     return { results: [], page: 1, total_pages: 1, total_results: 0 };
   }
 };
@@ -236,7 +234,7 @@ export const searchMovies = async (query: string, page: number = 1) => {
     });
     return data;
   } catch (error) {
-    console.error('Error searching movies:', error);
+    logTmdbFallback('TMDB movie search request failed', error);
     return { results: [], page: 1, total_pages: 1, total_results: 0 };
   }
 };
@@ -248,7 +246,7 @@ export const searchTVShows = async (query: string, page: number = 1) => {
     });
     return data;
   } catch (error) {
-    console.error('Error searching TV shows:', error);
+    logTmdbFallback('TMDB TV search request failed', error);
     return { results: [], page: 1, total_pages: 1, total_results: 0 };
   }
 };
@@ -260,7 +258,7 @@ export const searchPeople = async (query: string, page: number = 1) => {
     });
     return data;
   } catch (error) {
-    console.error('Error searching people:', error);
+    logTmdbFallback('TMDB people search request failed', error);
     return { results: [], page: 1, total_pages: 1, total_results: 0 };
   }
 };
@@ -280,13 +278,8 @@ export const discoverMovies = async (params: Record<string, any> = {}): Promise<
       results: adjustedItems,
     };
   } catch (error) {
-    console.error('Error discovering movies:', error);
-    return {
-      page: 1,
-      results: [],
-      total_pages: 0,
-      total_results: 0,
-    };
+    logTmdbFallback('TMDB discover movies request failed', error);
+    return emptyTmdbResponse<TMDBMovie>();
   }
 };
 
@@ -305,13 +298,8 @@ export const discoverTVShows = async (params: Record<string, any> = {}): Promise
       results: adjustedItems,
     };
   } catch (error) {
-    console.error('Error discovering TV shows:', error);
-    return {
-      page: 1,
-      results: [],
-      total_pages: 0,
-      total_results: 0,
-    };
+    logTmdbFallback('TMDB discover TV shows request failed', error);
+    return emptyTmdbResponse<TMDBTVShow>();
   }
 };
 
@@ -340,21 +328,8 @@ export const fetchTrendingMovies = async (page: number = 1): Promise<TMDBRespons
     });
     return response.data;
   } catch (error: any) {
-    console.error('Error fetching trending movies:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      config: {
-        url: error.config?.url,
-        params: error.config?.params,
-      }
-    });
-    return {
-      page: 1,
-      results: [],
-      total_pages: 0,
-      total_results: 0,
-    };
+    logTmdbFallback('TMDB trending movies request failed', error);
+    return emptyTmdbResponse<TMDBMovie>();
   }
 };
 
@@ -365,20 +340,7 @@ export const fetchTrendingTVShows = async (page: number = 1): Promise<TMDBRespon
     });
     return response.data;
   } catch (error: any) {
-    console.error('Error fetching trending TV shows:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      config: {
-        url: error.config?.url,
-        params: error.config?.params,
-      }
-    });
-    return {
-      page: 1,
-      results: [],
-      total_pages: 0,
-      total_results: 0,
-    };
+    logTmdbFallback('TMDB trending TV shows request failed', error);
+    return emptyTmdbResponse<TMDBTVShow>();
   }
 }; 

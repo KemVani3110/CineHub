@@ -7,7 +7,7 @@
 <h3 align="center">A modern movie and TV discovery platform built with Next.js, Firebase, Firestore, and TMDB.</h3>
 
 <p align="center">
-  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.5.0-14b8a6?style=for-the-badge" /></a>
+  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.6.1-14b8a6?style=for-the-badge" /></a>
   <a href="#"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.19-black?style=for-the-badge&logo=nextdotjs" /></a>
   <a href="#"><img alt="React" src="https://img.shields.io/badge/React-19.1.8-61dafb?style=for-the-badge&logo=react&logoColor=111827" /></a>
   <a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-Firestore-f59e0b?style=for-the-badge&logo=firebase&logoColor=111827" /></a>
@@ -251,8 +251,12 @@ After deployment, verify:
 Current application version:
 
 ```text
-2.5.0
+2.6.1
 ```
+
+Version 2.6.1 redesigns the movie and TV detail tab navigation with a lighter responsive tab bar, icon-led scanning, stronger touch targets, and safer horizontal scrolling on mobile.
+
+Version 2.6.0 adds the real notification bell: Firestore-backed notifications, unread counts, read controls, watchlist notifications, and source report status updates.
 
 Version 2.5.0 adds the responsive foundation pass: shared touch targets, stronger form controls, mobile Explore filters, responsive detail/watch pages, and admin mobile card views for key workflows.
 
