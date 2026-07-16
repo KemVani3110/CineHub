@@ -28,12 +28,110 @@ import {
   TMDBGenre,
   TMDBMovieDetails,
   TMDBTVDetails,
+  TMDBResponse,
 } from "@/types/tmdb";
 import { motion } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
 import { Button } from "@/components/ui/button";
 
 const MAX_ITEMS = 10;
+
+interface HeroSectionProps {
+  onReady?: () => void;
+}
+
+const FALLBACK_HERO_MOVIES: TMDBResponse<TMDBMovie> = {
+  page: 1,
+  total_pages: 1,
+  total_results: 5,
+  results: [
+    {
+      id: 550,
+      title: "Fight Club",
+      original_title: "Fight Club",
+      overview:
+        "An insomniac office worker and a soap maker form an underground fight club that evolves into something much more.",
+      release_date: "1999-10-15",
+      poster_path: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+      backdrop_path: "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg",
+      adult: false,
+      genre_ids: [18],
+      original_language: "en",
+      popularity: 80,
+      vote_count: 29000,
+      vote_average: 8.4,
+      video: false,
+    },
+    {
+      id: 27205,
+      title: "Inception",
+      original_title: "Inception",
+      overview:
+        "A skilled thief enters dreams to steal secrets and is offered a chance to erase his past.",
+      release_date: "2010-07-15",
+      poster_path: "/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
+      backdrop_path: "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg",
+      adult: false,
+      genre_ids: [28, 878, 12],
+      original_language: "en",
+      popularity: 95,
+      vote_count: 36000,
+      vote_average: 8.4,
+      video: false,
+    },
+    {
+      id: 157336,
+      title: "Interstellar",
+      original_title: "Interstellar",
+      overview:
+        "A team of explorers travels through a wormhole in space in an attempt to save humanity.",
+      release_date: "2014-11-05",
+      poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+      backdrop_path: "/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
+      adult: false,
+      genre_ids: [12, 18, 878],
+      original_language: "en",
+      popularity: 90,
+      vote_count: 35000,
+      vote_average: 8.5,
+      video: false,
+    },
+    {
+      id: 155,
+      title: "The Dark Knight",
+      original_title: "The Dark Knight",
+      overview:
+        "Batman faces the Joker, a criminal mastermind who pushes Gotham into chaos.",
+      release_date: "2008-07-16",
+      poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+      backdrop_path: "/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg",
+      adult: false,
+      genre_ids: [18, 28, 80],
+      original_language: "en",
+      popularity: 100,
+      vote_count: 33000,
+      vote_average: 8.5,
+      video: false,
+    },
+    {
+      id: 496243,
+      title: "Parasite",
+      original_title: "Gisaengchung",
+      overview:
+        "A poor family schemes to become employed by a wealthy household, with unexpected consequences.",
+      release_date: "2019-05-30",
+      poster_path: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+      backdrop_path: "/ApiBzeaa95TNYliSbQ8pJv4Fje7.jpg",
+      adult: false,
+      genre_ids: [35, 53, 18],
+      original_language: "ko",
+      popularity: 70,
+      vote_count: 18000,
+      vote_average: 8.5,
+      video: false,
+    },
+  ],
+};
 
 // Available movie categories for random selection
 const MOVIE_CATEGORIES = [
@@ -52,22 +150,23 @@ const TV_CATEGORIES = [
   { key: "trending", label: "Trending", fetchFn: fetchTrendingTVShows },
 ] as const;
 
-const HeroSection = () => {
+type MovieCategory = (typeof MOVIE_CATEGORIES)[number];
+type TVCategory = (typeof TV_CATEGORIES)[number];
+
+const HeroSection = ({ onReady }: HeroSectionProps) => {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<"movies" | "tv">("movies");
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
   // Random select a movie category on component mount
-  const [selectedMovieCategory, setSelectedMovieCategory] = useState(() => {
-    const randomIndex = Math.floor(Math.random() * MOVIE_CATEGORIES.length);
-    return MOVIE_CATEGORIES[randomIndex];
+  const [selectedMovieCategory, setSelectedMovieCategory] = useState<MovieCategory>(() => {
+    return MOVIE_CATEGORIES[0];
   });
 
   // Random select a TV category on component mount
-  const [selectedTVCategory, setSelectedTVCategory] = useState(() => {
-    const randomIndex = Math.floor(Math.random() * TV_CATEGORIES.length);
-    return TV_CATEGORIES[randomIndex];
+  const [selectedTVCategory, setSelectedTVCategory] = useState<TVCategory>(() => {
+    return TV_CATEGORIES[0];
   });
 
   // Function to randomly select a new movie category
@@ -82,36 +181,42 @@ const HeroSection = () => {
     setSelectedTVCategory(TV_CATEGORIES[randomIndex]);
   };
 
-  const { data: moviesData } = useQuery({
+  const { data: moviesData, isPlaceholderData: isMoviesPlaceholder } = useQuery({
     queryKey: ["movies", selectedMovieCategory.key],
-    queryFn: () => {
-      if (selectedMovieCategory.key === "trending") {
-        return fetchTrendingMovies(1);
-      } else {
-        return fetchMovies(selectedMovieCategory.key as any, 1);
+    queryFn: async () => {
+      const data =
+        selectedMovieCategory.key === "trending"
+          ? await fetchTrendingMovies(1)
+          : await fetchMovies(selectedMovieCategory.key as any, 1);
+
+      if (data.results?.length || selectedMovieCategory.key === "popular") {
+        return data;
       }
+
+      return fetchMovies("popular", 1);
     },
+    enabled: activeTab === "movies",
+    placeholderData:
+      selectedMovieCategory.key === "popular" ? FALLBACK_HERO_MOVIES : undefined,
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: tvData } = useQuery({
     queryKey: ["tv", selectedTVCategory.key],
-    queryFn: () => {
-      if (selectedTVCategory.key === "trending") {
-        return fetchTrendingTVShows(1);
-      } else {
-        return fetchTVShows(selectedTVCategory.key as any, 1);
+    queryFn: async () => {
+      const data =
+        selectedTVCategory.key === "trending"
+          ? await fetchTrendingTVShows(1)
+          : await fetchTVShows(selectedTVCategory.key as any, 1);
+
+      if (data.results?.length || selectedTVCategory.key === "popular") {
+        return data;
       }
+
+      return fetchTVShows("popular", 1);
     },
-  });
-
-  const { data: movieGenres } = useQuery({
-    queryKey: ["movieGenres"],
-    queryFn: () => fetchGenres("movie"),
-  });
-
-  const { data: tvGenres } = useQuery({
-    queryKey: ["tvGenres"],
-    queryFn: () => fetchGenres("tv"),
+    enabled: activeTab === "tv",
+    staleTime: 1000 * 60 * 5,
   });
 
   const items =
@@ -120,6 +225,22 @@ const HeroSection = () => {
       : tvData?.results?.slice(0, MAX_ITEMS);
 
   const currentItem = items?.[currentIndex];
+  const isUsingPlaceholder =
+    activeTab === "movies" && Boolean(isMoviesPlaceholder);
+
+  const { data: movieGenres } = useQuery({
+    queryKey: ["movieGenres"],
+    queryFn: () => fetchGenres("movie"),
+    enabled: activeTab === "movies" && !!items?.length,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const { data: tvGenres } = useQuery({
+    queryKey: ["tvGenres"],
+    queryFn: () => fetchGenres("tv"),
+    enabled: activeTab === "tv" && !!items?.length,
+    staleTime: 1000 * 60 * 60,
+  });
 
   // Fetch detailed information for the current item
   const { data: currentItemDetails } = useQuery({
@@ -128,7 +249,7 @@ const HeroSection = () => {
       activeTab === "movies"
         ? fetchMovieDetails(currentItem?.id as number)
         : fetchTVShowDetails(currentItem?.id as number),
-    enabled: !!currentItem?.id,
+    enabled: !!currentItem?.id && !isUsingPlaceholder,
   });
 
   const scrollPrev = useCallback(() => {
@@ -160,6 +281,12 @@ const HeroSection = () => {
     }, 8000);
     return () => clearInterval(timer);
   }, [items?.length, scrollNext]);
+
+  useEffect(() => {
+    if (currentItem && !isUsingPlaceholder) {
+      onReady?.();
+    }
+  }, [currentItem, isUsingPlaceholder, onReady]);
 
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "Coming Soon";

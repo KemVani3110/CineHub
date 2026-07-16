@@ -14,7 +14,6 @@ import {
 import {
   Header,
   Footer,
-  HeroSection,
   PopularMovies,
   TopRatedMovies,
   NowPlayingMovies,
@@ -26,6 +25,7 @@ import {
   withLazyLoading,
   MovieCard,
 } from "@/components/lazy";
+import HeroSection from "@/components/sections/HeroSection";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import BackToTop from "@/components/common/BackToTop";
 import Loading from "@/components/common/Loading";
@@ -35,7 +35,6 @@ import { Recommendations } from "@/components/common/Recommendations";
 // Wrap components with lazy loading
 const LazyHeader = withLazyLoading(Header, "Loading header...");
 const LazyFooter = withLazyLoading(Footer, "Loading footer...");
-const LazyHeroSection = withLazyLoading(HeroSection, "Loading hero section...");
 const LazyRecommendations = withLazyLoading(
   Recommendations,
   "Loading recommendations..."
@@ -305,6 +304,7 @@ export default function HomePage() {
   const [activeSection, setActiveSection] = useState<"movies" | "tv">("movies");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  const [canLoadBelowFold, setCanLoadBelowFold] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -312,6 +312,14 @@ export default function HomePage() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fallbackTimer = window.setTimeout(() => {
+      setCanLoadBelowFold(true);
+    }, 2500);
+
+    return () => window.clearTimeout(fallbackTimer);
   }, []);
 
   return (
@@ -359,73 +367,75 @@ export default function HomePage() {
         >
           <div className="container mx-auto px-4 py-8">
             {/* Hero Section */}
-            <LazyHeroSection />
+            <HeroSection onReady={() => setCanLoadBelowFold(true)} />
 
-            <SectionDivider />
+            {canLoadBelowFold && (
+              <>
+                <SectionDivider />
 
-            {/* Recommendations Section */}
-            <section className="mb-20">
-              <SectionTitle
-                icon={Star}
-                subtitle="Personalized picks from your watchlist and recent history"
-              >
-                Recommended for You
-              </SectionTitle>
-              <React.Suspense
-                fallback={
-                  <Loading
-                    message="Loading recommendations..."
-                    showBackdrop={false}
-                  />
-                }
-              >
-                <LazyRecommendations />
-              </React.Suspense>
-            </section>
-
-            <SectionDivider />
-
-            {/* Enhanced Section Toggle - Mobile Responsive */}
-            <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 mb-20 justify-center items-center px-2">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full max-w-md lg:max-w-none">
-                <ToggleButton
-                  active={activeSection === "movies"}
-                  onClick={() => setActiveSection("movies")}
-                  icon={Film}
-                  label="Movies"
-                  count="Latest blockbusters"
-                />
-                <ToggleButton
-                  active={activeSection === "tv"}
-                  onClick={() => setActiveSection("tv")}
-                  icon={Tv}
-                  label="TV Shows"
-                  count="Trending series"
-                />
-              </div>
-            </div>
-
-            {/* Movies Section */}
-            {activeSection === "movies" && (
-              <div className="space-y-20">
-                <section className="relative">
+                {/* Recommendations Section */}
+                <section className="mb-20">
                   <SectionTitle
-                    icon={Flame}
-                    subtitle="Discover what everyone's watching right now"
+                    icon={Star}
+                    subtitle="Personalized picks from your watchlist and recent history"
                   >
-                    Trending Movies
+                    Recommended for You
                   </SectionTitle>
                   <React.Suspense
                     fallback={
                       <Loading
-                        message="Loading trending movies..."
+                        message="Loading recommendations..."
                         showBackdrop={false}
                       />
                     }
                   >
-                    <LazyPopularMovies />
+                    <LazyRecommendations />
                   </React.Suspense>
                 </section>
+
+                <SectionDivider />
+
+                {/* Enhanced Section Toggle - Mobile Responsive */}
+                <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 mb-20 justify-center items-center px-2">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full max-w-md lg:max-w-none">
+                    <ToggleButton
+                      active={activeSection === "movies"}
+                      onClick={() => setActiveSection("movies")}
+                      icon={Film}
+                      label="Movies"
+                      count="Latest blockbusters"
+                    />
+                    <ToggleButton
+                      active={activeSection === "tv"}
+                      onClick={() => setActiveSection("tv")}
+                      icon={Tv}
+                      label="TV Shows"
+                      count="Trending series"
+                    />
+                  </div>
+                </div>
+
+                {/* Movies Section */}
+                {activeSection === "movies" && (
+                  <div className="space-y-20">
+                    <section className="relative">
+                      <SectionTitle
+                        icon={Flame}
+                        subtitle="Discover what everyone's watching right now"
+                      >
+                        Trending Movies
+                      </SectionTitle>
+                      <React.Suspense
+                        fallback={
+                          <Loading
+                            message="Loading trending movies..."
+                            showBackdrop={false}
+                          />
+                        }
+                      >
+                        <LazyPopularMovies />
+                      </React.Suspense>
+                    </section>
 
                 <SectionDivider />
 
@@ -489,30 +499,30 @@ export default function HomePage() {
                     <LazyUpcomingMovies />
                   </React.Suspense>
                 </section>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {/* TV Shows Section */}
-            {activeSection === "tv" && (
-              <div className="space-y-20">
-                <section className="relative">
-                  <SectionTitle
-                    icon={Sparkles}
-                    subtitle="Discover what everyone's watching right now"
-                  >
-                    Trending TV Shows
-                  </SectionTitle>
-                  <React.Suspense
-                    fallback={
-                      <Loading
-                        message="Loading trending TV shows..."
-                        showBackdrop={false}
-                      />
-                    }
-                  >
-                    <LazyPopularTVShows />
-                  </React.Suspense>
-                </section>
+                {/* TV Shows Section */}
+                {activeSection === "tv" && (
+                  <div className="space-y-20">
+                    <section className="relative">
+                      <SectionTitle
+                        icon={Sparkles}
+                        subtitle="Discover what everyone's watching right now"
+                      >
+                        Trending TV Shows
+                      </SectionTitle>
+                      <React.Suspense
+                        fallback={
+                          <Loading
+                            message="Loading trending TV shows..."
+                            showBackdrop={false}
+                          />
+                        }
+                      >
+                        <LazyPopularTVShows />
+                      </React.Suspense>
+                    </section>
 
                 <SectionDivider />
 
@@ -573,7 +583,9 @@ export default function HomePage() {
                     <LazyOnTheAirTVShows />
                   </React.Suspense>
                 </section>
-              </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>
