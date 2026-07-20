@@ -7,7 +7,7 @@
 <h3 align="center">A modern movie and TV discovery platform built with Next.js, Firebase, Firestore, and TMDB.</h3>
 
 <p align="center">
-  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.10.0-14b8a6?style=for-the-badge" /></a>
+  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.10.1-14b8a6?style=for-the-badge" /></a>
   <a href="#"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.19-black?style=for-the-badge&logo=nextdotjs" /></a>
   <a href="#"><img alt="React" src="https://img.shields.io/badge/React-19.1.8-61dafb?style=for-the-badge&logo=react&logoColor=111827" /></a>
   <a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-Firestore-f59e0b?style=for-the-badge&logo=firebase&logoColor=111827" /></a>
@@ -251,8 +251,10 @@ After deployment, verify:
 Current application version:
 
 ```text
-2.10.0
+2.10.1
 ```
+
+Version 2.10.1 expands the bundled avatar library with more playful cinema-friendly character options, including cat, mouse, robot, astronaut, detective, director, and other stylized profile identities.
 
 Version 2.10.0 redesigns the Profile page with a cleaner account header, practical settings layout, improved avatar picker, and bundled local default avatars for user profiles.
 
