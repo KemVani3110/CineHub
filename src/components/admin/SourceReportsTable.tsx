@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { ExternalLink, Flag } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ExternalLink, Flag, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { authenticatedFetch } from "@/lib/firebase-auth-api";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,17 @@ const statusOptions = [
   { value: "dismissed", label: "Dismissed" },
 ];
 
+const statusFilterOptions = [
+  { value: "all", label: "All statuses" },
+  ...statusOptions,
+];
+
+const mediaFilterOptions = [
+  { value: "all", label: "All media" },
+  { value: "movie", label: "Movies" },
+  { value: "tv", label: "TV Shows" },
+];
+
 const reasonLabels: Record<string, string> = {
   wrong_title: "Wrong movie/show",
   wrong_episode: "Wrong episode",
@@ -56,6 +68,11 @@ const reasonLabels: Record<string, string> = {
   poor_quality: "Poor quality",
   other: "Other issue",
 };
+
+const reasonFilterOptions = [
+  { value: "all", label: "All reasons" },
+  ...Object.entries(reasonLabels).map(([value, label]) => ({ value, label })),
+];
 
 function statusClass(status: string) {
   if (status === "resolved") return "border-green-500/40 bg-green-500/10 text-green-300";
@@ -75,8 +92,56 @@ function mediaHref(report: SourceReport) {
 export function SourceReportsTable({ reports: initialReports }: { reports: SourceReport[] }) {
   const [reports, setReports] = useState(initialReports);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [mediaFilter, setMediaFilter] = useState("all");
+  const [reasonFilter, setReasonFilter] = useState("all");
   const router = useRouter();
   const { toast } = useToast();
+
+  const filteredReports = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return reports.filter((report) => {
+      const reasonLabel = reasonLabels[report.reason] || reasonLabels.other;
+      const searchableText = [
+        report.title,
+        report.source_name,
+        report.source_url,
+        report.notes,
+        report.media_id,
+        reasonLabel,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      const matchesSearch =
+        !normalizedSearch || searchableText.includes(normalizedSearch);
+      const matchesStatus =
+        statusFilter === "all" || report.status === statusFilter;
+      const matchesMedia =
+        mediaFilter === "all" || report.media_type === mediaFilter;
+      const matchesReason =
+        reasonFilter === "all" || report.reason === reasonFilter;
+
+      return matchesSearch && matchesStatus && matchesMedia && matchesReason;
+    });
+  }, [mediaFilter, reasonFilter, reports, searchTerm, statusFilter]);
+
+  const visibleOpenCount = filteredReports.filter((report) => report.status === "open").length;
+  const visibleReviewingCount = filteredReports.filter((report) => report.status === "reviewing").length;
+  const affectedSourceCount = new Set(
+    filteredReports.map((report) => `${report.media_type}:${report.media_id}:${report.source_name}`)
+  ).size;
+  const hasActiveFilters =
+    searchTerm || statusFilter !== "all" || mediaFilter !== "all" || reasonFilter !== "all";
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setMediaFilter("all");
+    setReasonFilter("all");
+  };
 
   const updateStatus = async (reportId: string, status: string) => {
     const previousReports = reports;
@@ -138,8 +203,104 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
 
   return (
     <>
+      <div className="space-y-4 border-b border-slate-800 p-4">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
+            <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">
+              {filteredReports.length} visible
+            </Badge>
+            <Badge variant="outline" className="border-red-500/40 bg-red-500/10 text-red-300">
+              {visibleOpenCount} open
+            </Badge>
+            <Badge variant="outline" className="border-blue-500/40 bg-blue-500/10 text-blue-300">
+              {visibleReviewingCount} reviewing
+            </Badge>
+            <span className="text-xs text-slate-500">
+              {affectedSourceCount} affected sources
+            </span>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={resetFilters}
+            disabled={!hasActiveFilters}
+            className="min-h-10 w-full border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset filters
+          </Button>
+        </div>
+
+        <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_repeat(3,minmax(150px,190px))]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search title, source, URL, note..."
+              className="min-h-11 border-slate-700 bg-slate-950/70 pl-10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-primary/40"
+            />
+          </div>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="min-h-11 border-slate-700 bg-slate-950/70 text-slate-200">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statusFilterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={mediaFilter} onValueChange={setMediaFilter}>
+            <SelectTrigger className="min-h-11 border-slate-700 bg-slate-950/70 text-slate-200">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {mediaFilterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={reasonFilter} onValueChange={setReasonFilter}>
+            <SelectTrigger className="min-h-11 border-slate-700 bg-slate-950/70 text-slate-200">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {reasonFilterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {filteredReports.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <div className="rounded-full bg-slate-800 p-4">
+            <SlidersHorizontal className="h-8 w-8 text-slate-400" />
+          </div>
+          <div>
+            <p className="text-lg font-medium text-white">No reports match these filters</p>
+            <p className="text-sm text-slate-400">
+              Try clearing search, status, media, or reason filters.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
       <div className="grid gap-4 md:hidden">
-        {reports.map((report) => (
+        {filteredReports.map((report) => (
           <article
             key={report.id}
             className="rounded-xl border border-slate-800 bg-slate-950/70 p-4"
@@ -189,6 +350,12 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
                 </span>
               </div>
 
+              {report.notes && (
+                <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-3 text-sm text-slate-300">
+                  {report.notes}
+                </div>
+              )}
+
               <div className="grid grid-cols-[1fr_auto] gap-2">
                 <Select
                   value={report.status}
@@ -235,7 +402,7 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
           </TableRow>
         </TableHeader>
         <TableBody>
-          {reports.map((report) => (
+          {filteredReports.map((report) => (
             <TableRow key={report.id} className="border-slate-800 hover:bg-slate-800/50">
               <TableCell>
                 <div className="space-y-1">
@@ -268,9 +435,16 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-200">
-                  {reasonLabels[report.reason] || reasonLabels.other}
-                </Badge>
+                <div className="space-y-2">
+                  <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-200">
+                    {reasonLabels[report.reason] || reasonLabels.other}
+                  </Badge>
+                  {report.notes && (
+                    <p className="max-w-[260px] text-xs leading-5 text-slate-400">
+                      {report.notes}
+                    </p>
+                  )}
+                </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
@@ -321,6 +495,8 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
         </TableBody>
       </Table>
       </div>
+        </>
+      )}
     </>
   );
 }

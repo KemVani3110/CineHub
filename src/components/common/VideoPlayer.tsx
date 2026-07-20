@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,6 +94,7 @@ export function VideoPlayer({
   const [showHeader, setShowHeader] = useState(false);
   const [isSourceMenuOpen, setIsSourceMenuOpen] = useState(false);
   const [isReportingSource, setIsReportingSource] = useState(false);
+  const [reportNote, setReportNote] = useState("");
   const { toast } = useToast();
 
   const {
@@ -251,6 +253,7 @@ export function VideoPlayer({
           sourceName: selectedSource.name,
           sourceUrl: selectedSource.url,
           reason,
+          notes: reportNote.trim(),
         }),
       });
 
@@ -263,6 +266,7 @@ export function VideoPlayer({
         title: "Report sent",
         description: "Thanks. Admin will review this source.",
       });
+      setReportNote("");
     } catch (error) {
       toast({
         title: "Report failed",
@@ -936,6 +940,24 @@ export function VideoPlayer({
                     <h4 className="text-slate-300 font-bold mb-3 px-3 text-xs uppercase tracking-wider">
                       Report Source
                     </h4>
+                    <div
+                      className="mb-3 px-1"
+                      onClick={(event) => event.stopPropagation()}
+                      onKeyDown={(event) => event.stopPropagation()}
+                    >
+                      <Textarea
+                        value={reportNote}
+                        onChange={(event) =>
+                          setReportNote(event.target.value.slice(0, 240))
+                        }
+                        placeholder="Optional note for admin..."
+                        className="min-h-20 resize-none rounded-xl border-slate-600/60 bg-slate-950/70 text-sm text-white placeholder:text-slate-500 focus-visible:ring-primary/40"
+                      />
+                      <div className="mt-1 text-right text-[11px] text-slate-500">
+                        {reportNote.length}/240
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator className="bg-slate-700/70" />
                     {reportReasons.map((reason) => (
                       <DropdownMenuItem
                         key={reason.value}
