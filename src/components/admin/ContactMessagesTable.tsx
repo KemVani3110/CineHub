@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Mail, Reply, Send } from "lucide-react";
 import { authenticatedFetch } from "@/lib/firebase-auth-api";
@@ -15,15 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+
+const PAGE_SIZE = 5;
 
 export type ContactMessage = {
   id: string;
@@ -54,7 +48,18 @@ export function ContactMessagesTable({
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+
+  const totalPages = Math.max(1, Math.ceil(messages.length / PAGE_SIZE));
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const paginatedMessages = messages.slice(pageStart, pageStart + PAGE_SIZE);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const openReplyDialog = (message: ContactMessage) => {
     setSelectedMessage(message);
@@ -124,9 +129,9 @@ export function ContactMessagesTable({
 
   return (
     <>
-      <div className="grid gap-4 md:hidden">
+      <div className="grid gap-4">
         {messages.length ? (
-          messages.map((message) => (
+          paginatedMessages.map((message) => (
             <article
               key={message.id}
               className="rounded-xl border border-slate-800 bg-slate-950/70 p-4"
@@ -192,91 +197,38 @@ export function ContactMessagesTable({
         )}
       </div>
 
-      <div className="hidden overflow-x-auto md:block">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-slate-700 bg-slate-800/80">
-              <TableHead className="min-w-[210px] text-slate-300">Sender</TableHead>
-              <TableHead className="min-w-[220px] text-slate-300">Subject</TableHead>
-              <TableHead className="min-w-[360px] text-slate-300">Message</TableHead>
-              <TableHead className="min-w-[150px] text-slate-300">Date</TableHead>
-              <TableHead className="min-w-[120px] text-right text-slate-300">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {messages.length ? (
-              messages.map((message) => (
-                <TableRow key={message.id} className="border-slate-800 hover:bg-slate-800/50">
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="font-medium text-white">{message.name}</div>
-                      <a
-                        href={`mailto:${message.email}`}
-                        className="block text-xs text-primary hover:underline"
-                      >
-                        {message.email}
-                      </a>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className={statusClass(message.status)}>
-                          {message.status}
-                        </Badge>
-                        <Badge variant="outline" className="border-slate-600 text-slate-300">
-                          email {message.email_status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium text-slate-200">
-                    {message.subject}
-                  </TableCell>
-                  <TableCell>
-                    <p className="max-w-xl whitespace-pre-wrap text-sm leading-6 text-slate-300">
-                      {message.message}
-                    </p>
-                    {message.reply_message && (
-                      <div className="mt-3 rounded-lg border border-green-500/20 bg-green-500/10 p-3 text-xs leading-5 text-green-100">
-                        <div className="mb-1 font-semibold">Last reply</div>
-                        <div className="whitespace-pre-wrap">{message.reply_message}</div>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-slate-200">
-                      {format(new Date(message.created_at), "MMM d, yyyy")}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {format(new Date(message.created_at), "HH:mm")}
-                    </div>
-                    {message.replied_at && (
-                      <div className="mt-2 text-xs text-green-300">
-                        Replied {format(new Date(message.replied_at), "MMM d, HH:mm")}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="border-slate-700"
-                      onClick={() => openReplyDialog(message)}
-                    >
-                      <Reply className="mr-2 h-4 w-4" />
-                      Reply
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="py-12 text-center text-slate-400">
-                  No contact messages yet
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {messages.length > PAGE_SIZE && (
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-800 p-4 sm:flex-row">
+          <p className="text-sm text-slate-400">
+            Showing {pageStart + 1}-{Math.min(pageStart + PAGE_SIZE, messages.length)} of {messages.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </Button>
+            <Badge variant="outline" className="border-slate-700 text-slate-300">
+              {currentPage}/{totalPages}
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog open={Boolean(selectedMessage)} onOpenChange={(open) => !open && setSelectedMessage(null)}>
         <DialogContent className="border-slate-700 bg-slate-900 text-white sm:max-w-2xl">

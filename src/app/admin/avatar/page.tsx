@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { Upload, Trash2, Loader2, ImageIcon, Plus } from "lucide-react";
 import Loading from "@/components/common/Loading";
@@ -23,9 +22,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAvatarStore } from "@/store/avatarStore";
 
+const AVATARS_PER_PAGE = 5;
+
 export default function AvatarManagementPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
   const {
     avatars,
     loading,
@@ -40,6 +42,19 @@ export default function AvatarManagementPage() {
   useEffect(() => {
     fetchAvatars();
   }, [fetchAvatars]);
+
+  const totalPages = Math.max(1, Math.ceil(avatars.length / AVATARS_PER_PAGE));
+  const pageStart = (currentPage - 1) * AVATARS_PER_PAGE;
+  const paginatedAvatars = useMemo(
+    () => avatars.slice(pageStart, pageStart + AVATARS_PER_PAGE),
+    [avatars, pageStart]
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -208,12 +223,12 @@ export default function AvatarManagementPage() {
               </Button>
             </div>
           ) : (
-            <ScrollArea className="w-full">
-              <div className="flex gap-4 pb-4 min-w-max">
-                {avatars.map((avatar) => (
+            <div className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                {paginatedAvatars.map((avatar) => (
                   <div
                     key={avatar.id}
-                    className="group relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden border-2 border-[var(--border)] bg-[var(--bg-main)]/30 hover:border-[var(--cinehub-accent)]/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[var(--cinehub-accent)]/20"
+                    className="group relative aspect-square rounded-xl overflow-hidden border-2 border-[var(--border)] bg-[var(--bg-main)]/30 hover:border-[var(--cinehub-accent)]/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[var(--cinehub-accent)]/20"
                   >
                     <Avatar className="w-full h-full rounded-none">
                       <AvatarImage
@@ -271,7 +286,40 @@ export default function AvatarManagementPage() {
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+
+              {avatars.length > AVATARS_PER_PAGE && (
+                <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-main)]/35 p-3 sm:flex-row">
+                  <p className="text-sm text-[var(--text-sub)]">
+                    Showing {pageStart + 1}-{Math.min(pageStart + AVATARS_PER_PAGE, avatars.length)} of {avatars.length}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      disabled={currentPage === 1}
+                      className="cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </Button>
+                    <span className="rounded-md border border-[var(--border)] px-3 py-1 text-sm text-[var(--text-sub)]">
+                      {currentPage}/{totalPages}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                      disabled={currentPage === totalPages}
+                      className="cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

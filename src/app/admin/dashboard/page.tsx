@@ -14,14 +14,6 @@ import {
   User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { Metadata } from "next";
@@ -477,149 +469,119 @@ export default async function AdminDashboardPage({
           </div>
         </CardHeader>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-700/50 border-slate-600">
-                  <TableHead className="font-semibold text-slate-300">
-                    Administrator
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-300">
-                    Action
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-300">
-                    Target User
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-300">
-                    Description
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-300">
-                    Date & Time
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(recentLogsData.logs as any).length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center py-12 border-slate-600"
-                    >
-                      <div className="flex flex-col items-center space-y-4">
-                        <div className="p-4 rounded-full bg-slate-700">
-                          <Activity className="h-8 w-8 text-slate-400" />
+        <CardContent className="p-4 sm:p-6">
+          {(recentLogsData.logs as any).length === 0 ? (
+            <div className="flex flex-col items-center space-y-4 py-12 text-center">
+              <div className="p-4 rounded-full bg-slate-700">
+                <Activity className="h-8 w-8 text-slate-400" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-medium text-slate-300">
+                  No recent activity
+                </p>
+                <p className="text-sm text-slate-400">
+                  Administrative actions will appear here when they occur
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {(recentLogsData.logs as any).map((log: any) => (
+                <div
+                  key={log.id}
+                  className="rounded-2xl border border-slate-700 bg-slate-950/35 p-4 transition-colors hover:border-primary/40 hover:bg-slate-800/70"
+                >
+                  <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_auto_minmax(190px,0.9fr)_minmax(260px,1.2fr)_minmax(120px,auto)] lg:items-center">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        {log.admin_avatar && (
+                          <AvatarImage
+                            src={log.admin_avatar}
+                            alt={log.admin_name || "Admin"}
+                            className="object-cover"
+                          />
+                        )}
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                          {log.admin_name
+                            ?.split(" ")
+                            .map((n: string) => n[0])
+                            .join("")
+                            .slice(0, 2) || "AD"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-white">
+                          {log.admin_name || "Unknown Admin"}
                         </div>
-                        <div className="space-y-2">
-                          <p className="text-lg font-medium text-slate-300">
-                            No recent activity
-                          </p>
-                          <p className="text-sm text-slate-400">
-                            Administrative actions will appear here when they
-                            occur
-                          </p>
+                        <div className="truncate text-xs text-slate-400">
+                          {log.admin_email}
                         </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  (recentLogsData.logs as any).map((log: any) => (
-                    <TableRow
-                      key={log.id}
-                      className="hover:bg-slate-700/50 transition-colors cursor-pointer group border-slate-600"
+                    </div>
+
+                    <Badge
+                      variant={getActionBadgeVariant(log.action)}
+                      className="h-8 w-fit cursor-pointer px-3 hover:opacity-80"
                     >
-                      <TableCell className="py-4">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            {log.admin_avatar && (
+                      {log.action}
+                    </Badge>
+
+                    <div className="min-w-0 rounded-xl border border-slate-700/80 bg-slate-900/70 px-3 py-2">
+                      {log.target_user_name ? (
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Avatar className="h-7 w-7">
+                            {log.target_user_avatar && (
                               <AvatarImage
-                                src={log.admin_avatar}
-                                alt={log.admin_name || "Admin"}
+                                src={log.target_user_avatar}
+                                alt={log.target_user_name || "User"}
                                 className="object-cover"
                               />
                             )}
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                              {log.admin_name
+                            <AvatarFallback className="bg-slate-600 text-slate-300 text-xs">
+                              {log.target_user_name
                                 ?.split(" ")
                                 .map((n: string) => n[0])
                                 .join("")
-                                .slice(0, 2) || "AD"}
+                                .slice(0, 2)}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <div className="font-medium text-sm text-white">
-                              {log.admin_name}
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium text-white">
+                              {log.target_user_name}
                             </div>
-                            <div className="text-xs text-slate-400">
-                              {log.admin_email}
+                            <div className="truncate text-xs text-slate-400">
+                              {log.target_user_email}
                             </div>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={getActionBadgeVariant(log.action)}
-                          className="cursor-pointer hover:opacity-80 transition-opacity"
-                        >
-                          {log.action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {log.target_user_name ? (
-                          <div className="flex items-center space-x-2">
-                            <Avatar className="h-6 w-6">
-                              {log.target_user_avatar && (
-                                <AvatarImage
-                                  src={log.target_user_avatar}
-                                  alt={log.target_user_name || "User"}
-                                  className="object-cover"
-                                />
-                              )}
-                              <AvatarFallback className="bg-slate-600 text-slate-300 text-xs">
-                                {log.target_user_name
-                                  ?.split(" ")
-                                  .map((n: string) => n[0])
-                                  .join("")
-                                  .slice(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium text-sm text-white">
-                                {log.target_user_name}
-                              </div>
-                              <div className="text-xs text-slate-400">
-                                {log.target_user_email}
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 text-sm">
-                            No target
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-md">
-                        <div
-                          className="text-sm truncate text-slate-300"
-                          title={log.description}
-                        >
-                          {log.description}
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-slate-400">
+                          <User className="h-4 w-4" />
+                          <span>No target</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm font-medium text-white">
+                      )}
+                    </div>
+
+                    <p className="min-w-0 text-sm leading-6 text-slate-300 lg:line-clamp-2">
+                      {log.description}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-sm text-slate-300 lg:justify-end">
+                      <Clock className="h-4 w-4 text-slate-400" />
+                      <div className="leading-tight">
+                        <div className="font-medium text-white">
                           {format(new Date(log.created_at), "MMM d, yyyy")}
                         </div>
                         <div className="text-xs text-slate-400">
                           {format(new Date(log.created_at), "HH:mm:ss")}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Pagination */}
           <DashboardPaginationComponent

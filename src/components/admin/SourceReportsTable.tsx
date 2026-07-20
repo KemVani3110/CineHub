@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Flag, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { authenticatedFetch } from "@/lib/firebase-auth-api";
@@ -17,14 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+
+const PAGE_SIZE = 5;
 
 export type SourceReport = {
   id: string;
@@ -96,6 +90,7 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
   const [statusFilter, setStatusFilter] = useState("all");
   const [mediaFilter, setMediaFilter] = useState("all");
   const [reasonFilter, setReasonFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -130,17 +125,32 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
 
   const visibleOpenCount = filteredReports.filter((report) => report.status === "open").length;
   const visibleReviewingCount = filteredReports.filter((report) => report.status === "reviewing").length;
+  const totalPages = Math.max(1, Math.ceil(filteredReports.length / PAGE_SIZE));
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const paginatedReports = filteredReports.slice(pageStart, pageStart + PAGE_SIZE);
   const affectedSourceCount = new Set(
     filteredReports.map((report) => `${report.media_type}:${report.media_id}:${report.source_name}`)
   ).size;
   const hasActiveFilters =
     searchTerm || statusFilter !== "all" || mediaFilter !== "all" || reasonFilter !== "all";
 
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   const resetFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setMediaFilter("all");
     setReasonFilter("all");
+    setCurrentPage(1);
+  };
+
+  const setFilterPage = <T,>(setter: (value: T) => void, value: T) => {
+    setter(value);
+    setCurrentPage(1);
   };
 
   const updateStatus = async (reportId: string, status: string) => {
@@ -238,13 +248,16 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <Input
               value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
+              onChange={(event) => {
+                setSearchTerm(event.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Search title, source, URL, note..."
               className="min-h-11 border-slate-700 bg-slate-950/70 pl-10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-primary/40"
             />
           </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value) => setFilterPage(setStatusFilter, value)}>
             <SelectTrigger className="min-h-11 border-slate-700 bg-slate-950/70 text-slate-200">
               <SelectValue />
             </SelectTrigger>
@@ -257,7 +270,7 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
             </SelectContent>
           </Select>
 
-          <Select value={mediaFilter} onValueChange={setMediaFilter}>
+          <Select value={mediaFilter} onValueChange={(value) => setFilterPage(setMediaFilter, value)}>
             <SelectTrigger className="min-h-11 border-slate-700 bg-slate-950/70 text-slate-200">
               <SelectValue />
             </SelectTrigger>
@@ -270,7 +283,7 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
             </SelectContent>
           </Select>
 
-          <Select value={reasonFilter} onValueChange={setReasonFilter}>
+          <Select value={reasonFilter} onValueChange={(value) => setFilterPage(setReasonFilter, value)}>
             <SelectTrigger className="min-h-11 border-slate-700 bg-slate-950/70 text-slate-200">
               <SelectValue />
             </SelectTrigger>
@@ -299,8 +312,8 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
         </div>
       ) : (
         <>
-      <div className="grid gap-4 md:hidden">
-        {filteredReports.map((report) => (
+      <div className="grid gap-4">
+        {paginatedReports.map((report) => (
           <article
             key={report.id}
             className="rounded-xl border border-slate-800 bg-slate-950/70 p-4"
@@ -388,114 +401,39 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
           </article>
         ))}
       </div>
-
-      <div className="hidden overflow-x-auto md:block">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-slate-700 bg-slate-800/80">
-            <TableHead className="min-w-[260px] text-slate-300">Media</TableHead>
-            <TableHead className="min-w-[140px] text-slate-300">Source</TableHead>
-            <TableHead className="min-w-[170px] text-slate-300">Reason</TableHead>
-            <TableHead className="min-w-[160px] text-slate-300">Status</TableHead>
-            <TableHead className="min-w-[160px] text-slate-300">Reported</TableHead>
-            <TableHead className="min-w-[110px] text-right text-slate-300">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredReports.map((report) => (
-            <TableRow key={report.id} className="border-slate-800 hover:bg-slate-800/50">
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="font-medium text-white">{report.title}</div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                    <Badge variant="outline" className="capitalize border-slate-600 text-slate-300">
-                      {report.media_type}
-                    </Badge>
-                    <span>ID {report.media_id}</span>
-                    {report.media_type === "tv" && report.season_number && report.episode_number && (
-                      <span>
-                        S{report.season_number}E{report.episode_number}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="font-medium text-slate-200">{report.source_name}</div>
-                  <a
-                    href={report.source_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block max-w-[220px] truncate text-xs text-primary hover:underline"
-                    title={report.source_url}
-                  >
-                    {report.source_url}
-                  </a>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="space-y-2">
-                  <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-200">
-                    {reasonLabels[report.reason] || reasonLabels.other}
-                  </Badge>
-                  {report.notes && (
-                    <p className="max-w-[260px] text-xs leading-5 text-slate-400">
-                      {report.notes}
-                    </p>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={statusClass(report.status)}>
-                    {report.status}
-                  </Badge>
-                  <Select
-                    value={report.status}
-                    disabled={pendingId === report.id}
-                    onValueChange={(status) => updateStatus(report.id, status)}
-                  >
-                    <SelectTrigger className="h-8 w-[118px] border-slate-700 text-slate-200">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="text-sm text-slate-200">
-                  {format(new Date(report.created_at), "MMM d, yyyy")}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {format(new Date(report.created_at), "HH:mm")}
-                </div>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="border-slate-700 text-slate-200 hover:bg-slate-800"
-                >
-                  <Link href={mediaHref(report)}>
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Open
-                  </Link>
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      </div>
         </>
+      )}
+      {filteredReports.length > PAGE_SIZE && (
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-800 p-4 sm:flex-row">
+          <p className="text-sm text-slate-400">
+            Showing {pageStart + 1}-{Math.min(pageStart + PAGE_SIZE, filteredReports.length)} of {filteredReports.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </Button>
+            <Badge variant="outline" className="border-slate-700 text-slate-300">
+              {currentPage}/{totalPages}
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
     </>
   );

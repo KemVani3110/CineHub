@@ -1,12 +1,4 @@
 import Link from "next/link";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
@@ -31,7 +23,7 @@ import {
 } from "lucide-react";
 import { listAdminLogs } from "@/lib/admin-firestore";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 5;
 
 async function getActivityLogs(page: number = 1) {
   const offset = (page - 1) * ITEMS_PER_PAGE;
@@ -280,7 +272,7 @@ export default async function ActivityLogs({
 
       <Separator className="bg-slate-600" />
 
-      {/* Activity Logs Table */}
+      {/* Activity Logs */}
       <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20">
         <CardHeader className="border-b border-slate-600">
           <CardTitle className="flex items-center space-x-2 text-white">
@@ -291,63 +283,61 @@ export default async function ActivityLogs({
             Page {pagination.currentPage} of {pagination.totalPages} - {pagination.totalItems} total activities
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-700/50 border-slate-600">
-                  <TableHead className="min-w-[200px] text-slate-300">Admin</TableHead>
-                  <TableHead className="min-w-[140px] text-slate-300">Action</TableHead>
-                  <TableHead className="min-w-[200px] hidden md:table-cell text-slate-300">Target User</TableHead>
-                  <TableHead className="min-w-[300px] hidden lg:table-cell text-slate-300">Description</TableHead>
-                  <TableHead className="min-w-[120px] hidden xl:table-cell text-slate-300">IP Address</TableHead>
-                  <TableHead className="min-w-[160px] text-slate-300">Date & Time</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(logs as any).map((log: any) => (
-                  <TableRow key={log.id} className="hover:bg-slate-700/30 transition-colors border-slate-600">
-                    {/* Admin Column */}
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-8 w-8">
-                          {log.admin_avatar && (
-                            <AvatarImage 
-                              src={log.admin_avatar} 
-                              alt={log.admin_name || "Admin"}
-                              className="object-cover"
-                            />
-                          )}
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                            {getUserInitials(log.admin_name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate text-white">
-                            {log.admin_name || 'Unknown Admin'}
-                          </div>
-                          <div className="text-xs text-slate-400 truncate">
-                            {log.admin_email}
-                          </div>
+        <CardContent className="p-4 sm:p-6">
+          {(logs as any).length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Activity className="h-12 w-12 text-slate-400 mb-4" />
+              <h3 className="text-lg font-medium text-slate-300 mb-2">
+                No activity logs found
+              </h3>
+              <p className="text-sm text-slate-400 max-w-md">
+                When admin activities occur, they will appear here for monitoring and audit purposes.
+              </p>
+            </div>
+          )}
+
+          {(logs as any).length > 0 && (
+            <div className="grid gap-3">
+              {(logs as any).map((log: any) => (
+                <div
+                  key={log.id}
+                  className="rounded-2xl border border-slate-700 bg-slate-950/35 p-4 transition-colors hover:border-primary/40 hover:bg-slate-800/70"
+                >
+                  <div className="grid gap-4 xl:grid-cols-[minmax(220px,1fr)_auto_minmax(200px,0.9fr)_minmax(280px,1.2fr)_minmax(130px,auto)_minmax(120px,auto)] xl:items-center">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        {log.admin_avatar && (
+                          <AvatarImage
+                            src={log.admin_avatar}
+                            alt={log.admin_name || "Admin"}
+                            className="object-cover"
+                          />
+                        )}
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                          {getUserInitials(log.admin_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-white">
+                          {log.admin_name || "Unknown Admin"}
+                        </div>
+                        <div className="truncate text-xs text-slate-400">
+                          {log.admin_email}
                         </div>
                       </div>
-                    </TableCell>
+                    </div>
 
-                    {/* Action Column */}
-                    <TableCell>
-                      <Badge
-                        variant={getActionVariant(log.action)}
-                        className="flex items-center space-x-1 w-fit cursor-pointer hover:opacity-80"
-                      >
-                        {getActionIcon(log.action)}
-                        <span className="text-xs">{log.action}</span>
-                      </Badge>
-                    </TableCell>
+                    <Badge
+                      variant={getActionVariant(log.action)}
+                      className="flex h-8 w-fit cursor-pointer items-center gap-1 px-3 hover:opacity-80"
+                    >
+                      {getActionIcon(log.action)}
+                      <span className="text-xs">{log.action}</span>
+                    </Badge>
 
-                    {/* Target User Column */}
-                    <TableCell className="hidden md:table-cell">
+                    <div className="min-w-0 rounded-xl border border-slate-700/80 bg-slate-900/70 px-3 py-2">
                       {log.target_user_name ? (
-                        <div className="flex items-center space-x-3">
+                        <div className="flex min-w-0 items-center gap-2">
                           <Avatar className="h-7 w-7">
                             {log.target_user_avatar && (
                               <AvatarImage 
@@ -360,71 +350,49 @@ export default async function ActivityLogs({
                               {getUserInitials(log.target_user_name)}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium text-sm truncate text-white">
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium text-white">
                               {log.target_user_name}
                             </div>
-                            <div className="text-xs text-slate-400 truncate">
+                            <div className="truncate text-xs text-slate-400">
                               {log.target_user_email}
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-sm">No target</span>
+                        <div className="flex items-center gap-2 text-sm text-slate-400">
+                          <User className="h-4 w-4" />
+                          <span>No target</span>
+                        </div>
                       )}
-                    </TableCell>
+                    </div>
 
-                    {/* Description Column */}
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="max-w-md">
-                        <p className="text-sm text-slate-300 line-clamp-2">
-                          {log.description}
-                        </p>
-                      </div>
-                    </TableCell>
+                    <p className="min-w-0 text-sm leading-6 text-slate-300 xl:line-clamp-2">
+                      {log.description}
+                    </p>
 
-                    {/* IP Address Column */}
-                    <TableCell className="hidden xl:table-cell">
-                      <div className="flex items-center space-x-1 text-sm text-slate-400">
-                        <Globe className="h-3 w-3" />
-                        <span className="font-mono">{log.ip_address}</span>
-                      </div>
-                    </TableCell>
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <Globe className="h-4 w-4" />
+                      <span className="font-mono">{log.ip_address || "Unknown"}</span>
+                    </div>
 
-                    {/* Date Column */}
-                    <TableCell>
-                      <div className="flex items-center space-x-1 text-sm">
-                        <Clock className="h-3 w-3 text-slate-400" />
-                        <div>
-                          <div className="font-medium text-white">
-                            {format(new Date(log.created_at), "MMM d, yyyy")}
-                          </div>
-                          <div className="text-xs text-slate-400">
-                            {format(new Date(log.created_at), "HH:mm")}
-                          </div>
+                    <div className="flex items-center gap-2 text-sm xl:justify-end">
+                      <Clock className="h-4 w-4 text-slate-400" />
+                      <div>
+                        <div className="font-medium text-white">
+                          {format(new Date(log.created_at), "MMM d, yyyy")}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {format(new Date(log.created_at), "HH:mm")}
                         </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {/* Empty State */}
-          {(logs as any).length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Activity className="h-12 w-12 text-slate-400 mb-4" />
-              <h3 className="text-lg font-medium text-slate-300 mb-2">
-                No activity logs found
-              </h3>
-              <p className="text-sm text-slate-400 max-w-md">
-                When admin activities occur, they will appear here for monitoring and audit purposes.
-              </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-          
-          {/* Pagination */}
+
           {pagination.totalPages > 1 && (
             <PaginationComponent 
               currentPage={pagination.currentPage}
@@ -434,74 +402,6 @@ export default async function ActivityLogs({
           )}
         </CardContent>
       </Card>
-
-      {/* Mobile-specific responsive cards for smaller screens */}
-      <div className="block md:hidden space-y-4">
-        <h3 className="text-lg font-semibold text-white">Recent Activities</h3>
-        {(logs as any).map((log: any) => (
-          <Card key={log.id} className="p-4 bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20">
-            <div className="space-y-3">
-              {/* Admin info */}
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-8 w-8">
-                  {log.admin_avatar && (
-                    <AvatarImage 
-                      src={log.admin_avatar} 
-                      alt={log.admin_name || "Admin"}
-                      className="object-cover"
-                    />
-                  )}
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                    {getUserInitials(log.admin_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate text-white">{log.admin_name}</p>
-                  <p className="text-xs text-slate-400 truncate">{log.admin_email}</p>
-                </div>
-                <Badge variant={getActionVariant(log.action)} className="flex items-center space-x-1 cursor-pointer">
-                  {getActionIcon(log.action)}
-                  <span className="text-xs">{log.action}</span>
-                </Badge>
-              </div>
-
-              {/* Description */}
-              <p className="text-sm text-slate-300">{log.description}</p>
-
-              {/* Target user if exists */}
-              {log.target_user_name && (
-                <div className="flex items-center space-x-2 text-sm text-slate-400">
-                  <User className="h-3 w-3" />
-                  <span>Target: {log.target_user_name}</span>
-                </div>
-              )}
-
-              {/* Footer info */}
-              <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-600">
-                <div className="flex items-center space-x-1">
-                  <Globe className="h-3 w-3" />
-                  <span className="font-mono">{log.ip_address}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Clock className="h-3 w-3" />
-                  <span>{format(new Date(log.created_at), "MMM d, HH:mm")}</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-        
-        {/* Mobile Pagination */}
-        {pagination.totalPages > 1 && (
-          <Card className="p-4 bg-gradient-to-br from-slate-800 to-slate-900 border-primary/20">
-            <PaginationComponent 
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              totalItems={pagination.totalItems}
-            />
-          </Card>
-        )}
-      </div>
     </div>
   );
 }

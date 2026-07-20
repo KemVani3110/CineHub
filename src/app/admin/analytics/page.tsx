@@ -136,7 +136,7 @@ function topMediaFromDocs(docs: FirebaseFirestore.QueryDocumentSnapshot[]) {
 
   return Array.from(map.values())
     .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
+    .slice(0, 5);
 }
 
 function ratingMediaFromDocs(docs: FirebaseFirestore.QueryDocumentSnapshot[]) {
@@ -178,7 +178,7 @@ function ratingMediaFromDocs(docs: FirebaseFirestore.QueryDocumentSnapshot[]) {
       average: Number((item.total / item.count).toFixed(1)),
     }))
     .sort((a, b) => b.count - a.count || b.average - a.average)
-    .slice(0, 8);
+    .slice(0, 5);
 }
 
 async function getAnalyticsData() {
