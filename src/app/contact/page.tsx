@@ -4,22 +4,29 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  CheckCircle,
-  Clock,
+  CheckCircle2,
+  Clock3,
+  Loader2,
   Mail,
   MapPin,
-  MessageSquare,
+  MessageSquareText,
   Send,
+  Sparkles,
   User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 
 const MAIN_CONTACT_EMAIL = "minhkhoi3110953@gmail.com";
 const SECONDARY_EMAIL = "chuminhkhoi3110@gmail.com";
+
+const fieldMotion = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0 },
+};
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -81,78 +88,124 @@ export default function ContactPage() {
     }
   };
 
+  const contactCards = [
+    {
+      title: "Email",
+      value: MAIN_CONTACT_EMAIL,
+      href: `mailto:${MAIN_CONTACT_EMAIL}`,
+      icon: Mail,
+      tone: "text-cyan-200",
+      bg: "bg-cyan-400/10",
+    },
+    {
+      title: "Response",
+      value: "Usually within 24 hours",
+      icon: Clock3,
+      tone: "text-amber-200",
+      bg: "bg-amber-300/10",
+    },
+    {
+      title: "Location",
+      value: "Ho Chi Minh City, Vietnam",
+      icon: MapPin,
+      tone: "text-emerald-200",
+      bg: "bg-emerald-300/10",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <section className="relative overflow-hidden px-3 py-14 sm:px-4 sm:py-20 lg:py-28">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background/90" />
-        <div className="relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+    <main className="min-h-screen overflow-hidden bg-[var(--bg-main)] text-[var(--text-main)]">
+      <section className="relative border-b border-[var(--border)]/60">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(20,184,166,0.16),rgba(15,23,42,0.96)_44%,rgba(248,113,113,0.12))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px] opacity-40" />
+
+        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,0.8fr)] lg:items-center lg:px-8 lg:py-20">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-6 sm:space-y-7"
+            transition={{ duration: 0.45 }}
+            className="space-y-7"
           >
-            <div className="inline-flex min-h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
-              <MessageSquare className="h-4 w-4" />
-              Contact the developer
+            <div className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--cinehub-accent)]/35 bg-slate-950/45 px-4 text-sm font-semibold text-[var(--cinehub-accent)] backdrop-blur">
+              <Sparkles className="h-4 w-4" />
+              Contact
             </div>
 
             <div className="space-y-5">
-              <h1 className="max-w-4xl text-3xl font-bold leading-tight sm:text-4xl md:text-6xl">
-                Send feedback, questions, or project inquiries.
+              <h1 className="max-w-4xl text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                Let&apos;s talk about CineHub or your next idea.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                This contact form saves your message into the CineHub admin
-                panel and sends it directly to my main email automatically.
+              <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+                Send feedback, collaboration requests, or anything you want me
+                to look at. I will reply from my main email.
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-xl border border-border bg-card/70 p-4">
-                <Mail className="mb-3 h-5 w-5 text-primary" />
-                <p className="text-sm font-semibold">Main Email</p>
-                <p className="mt-1 break-all text-xs text-muted-foreground">
-                  {MAIN_CONTACT_EMAIL}
-                </p>
-              </div>
-              <div className="rounded-xl border border-border bg-card/70 p-4">
-                <Clock className="mb-3 h-5 w-5 text-primary" />
-                <p className="text-sm font-semibold">Response</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Usually within 24 hours
-                </p>
-              </div>
-              <div className="rounded-xl border border-border bg-card/70 p-4">
-                <MapPin className="mb-3 h-5 w-5 text-primary" />
-                <p className="text-sm font-semibold">Location</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Ho Chi Minh City, Vietnam
-                </p>
-              </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {contactCards.map((item, index) => {
+                const Icon = item.icon;
+                const content = (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 * index }}
+                    className="h-full rounded-lg border border-white/10 bg-slate-950/45 p-4 backdrop-blur transition-colors hover:border-[var(--cinehub-accent)]/45 hover:bg-slate-900/70"
+                  >
+                    <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-lg ${item.bg}`}>
+                      <Icon className={`h-5 w-5 ${item.tone}`} />
+                    </div>
+                    <p className="text-sm font-semibold text-white">{item.title}</p>
+                    <p className="mt-1 break-words text-sm leading-6 text-slate-400">
+                      {item.value}
+                    </p>
+                  </motion.div>
+                );
+
+                return item.href ? (
+                  <a key={item.title} href={item.href} className="min-h-11 cursor-pointer">
+                    {content}
+                  </a>
+                ) : (
+                  <div key={item.title}>{content}</div>
+                );
+              })}
             </div>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+            initial={{ opacity: 0, x: 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.08 }}
           >
-            <Card className="border-primary/20 bg-card/90 shadow-2xl">
-              <CardHeader className="px-4 sm:px-6">
-                <CardTitle className="flex items-center text-xl text-primary sm:text-2xl">
-                  <Send className="mr-3 h-6 w-6" />
-                  Send a Message
-                </CardTitle>
-                <CardDescription>
-                  Saved to admin and sent to the main email automatically.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-4 sm:px-6">
-                <form onSubmit={handleSubmit} className="space-y-5">
+            <Card className="border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur-xl">
+              <CardContent className="p-5 sm:p-6">
+                <div className="mb-6 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--cinehub-accent)]/14">
+                      <MessageSquareText className="h-6 w-6 text-[var(--cinehub-accent)]" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">Send a message</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                      I read every message from this form.
+                    </p>
+                  </div>
+                  <div className="hidden rounded-lg border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-semibold text-emerald-200 sm:inline-flex">
+                    Online
+                  </div>
+                </div>
+
+                <motion.form
+                  onSubmit={handleSubmit}
+                  initial="hidden"
+                  animate="show"
+                  transition={{ staggerChildren: 0.05 }}
+                  className="space-y-4"
+                >
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <label htmlFor="name" className="flex items-center text-sm font-medium">
-                        <User className="mr-2 h-4 w-4 text-primary" />
-                        Full Name
+                    <motion.div variants={fieldMotion} className="space-y-2">
+                      <label htmlFor="name" className="flex items-center text-sm font-semibold text-slate-200">
+                        <User className="mr-2 h-4 w-4 text-[var(--cinehub-accent)]" />
+                        Full name
                       </label>
                       <Input
                         id="name"
@@ -160,14 +213,15 @@ export default function ContactPage() {
                         value={formData.name}
                         onChange={handleChange}
                         placeholder="Your name"
+                        className="min-h-12 rounded-lg border-slate-700 bg-slate-950/65 text-white placeholder:text-slate-500 hover:border-slate-600 focus-visible:border-[var(--cinehub-accent)] focus-visible:ring-[var(--cinehub-accent)]/30"
                         required
                       />
-                    </div>
+                    </motion.div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="email" className="flex items-center text-sm font-medium">
-                        <Mail className="mr-2 h-4 w-4 text-primary" />
-                        Email Address
+                    <motion.div variants={fieldMotion} className="space-y-2">
+                      <label htmlFor="email" className="flex items-center text-sm font-semibold text-slate-200">
+                        <Mail className="mr-2 h-4 w-4 text-[var(--cinehub-accent)]" />
+                        Email address
                       </label>
                       <Input
                         id="email"
@@ -176,13 +230,14 @@ export default function ContactPage() {
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="you@example.com"
+                        className="min-h-12 rounded-lg border-slate-700 bg-slate-950/65 text-white placeholder:text-slate-500 hover:border-slate-600 focus-visible:border-[var(--cinehub-accent)] focus-visible:ring-[var(--cinehub-accent)]/30"
                         required
                       />
-                    </div>
+                    </motion.div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="subject" className="text-sm font-medium">
+                  <motion.div variants={fieldMotion} className="space-y-2">
+                    <label htmlFor="subject" className="text-sm font-semibold text-slate-200">
                       Subject
                     </label>
                     <Input
@@ -191,12 +246,13 @@ export default function ContactPage() {
                       value={formData.subject}
                       onChange={handleChange}
                       placeholder="What would you like to discuss?"
+                      className="min-h-12 rounded-lg border-slate-700 bg-slate-950/65 text-white placeholder:text-slate-500 hover:border-slate-600 focus-visible:border-[var(--cinehub-accent)] focus-visible:ring-[var(--cinehub-accent)]/30"
                       required
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="message" className="text-sm font-medium">
+                  <motion.div variants={fieldMotion} className="space-y-2">
+                    <label htmlFor="message" className="text-sm font-semibold text-slate-200">
                       Message
                     </label>
                     <Textarea
@@ -205,67 +261,81 @@ export default function ContactPage() {
                       value={formData.message}
                       onChange={handleChange}
                       placeholder="Write your message here..."
-                      className="min-h-[160px]"
+                      className="min-h-40 resize-y rounded-lg border-slate-700 bg-slate-950/65 text-white placeholder:text-slate-500 hover:border-slate-600 focus-visible:border-[var(--cinehub-accent)] focus-visible:ring-[var(--cinehub-accent)]/30"
                       required
                     />
-                  </div>
+                  </motion.div>
 
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={isSubmitting}
-                    className="h-12 w-full"
-                  >
-                    <Send className="mr-2 h-5 w-5" />
-                    {isSubmitting ? "Sending..." : "Send Message"}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </form>
+                  <motion.div variants={fieldMotion}>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      disabled={isSubmitting}
+                      className="min-h-12 w-full cursor-pointer rounded-lg bg-[var(--cinehub-accent)] font-bold text-slate-950 shadow-lg shadow-[var(--cinehub-accent)]/15 hover:bg-[var(--cinehub-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="mr-2 h-5 w-5" />
+                      )}
+                      {isSubmitting ? "Sending..." : "Send message"}
+                      {!isSubmitting && <ArrowRight className="ml-2 h-5 w-5" />}
+                    </Button>
+                  </motion.div>
+                </motion.form>
               </CardContent>
             </Card>
           </motion.div>
         </div>
       </section>
 
-      <section className="px-3 pb-16 sm:px-4 sm:pb-20">
-        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
-          <Card className="border-border bg-card/80">
-            <CardContent className="space-y-3 p-6">
-              <CheckCircle className="h-7 w-7 text-primary" />
-              <h2 className="text-lg font-semibold">Admin readable</h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Every submitted message is saved to Firestore and can be read
-                from the admin panel.
-              </p>
-            </CardContent>
-          </Card>
+      <section className="px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
+          {[
+            {
+              title: "Direct email",
+              description: MAIN_CONTACT_EMAIL,
+              icon: Mail,
+            },
+            {
+              title: "Admin inbox",
+              description: "Messages stay available for review and replies.",
+              icon: CheckCircle2,
+            },
+            {
+              title: "Backup contact",
+              description: SECONDARY_EMAIL,
+              icon: MessageSquareText,
+              href: `mailto:${SECONDARY_EMAIL}`,
+            },
+          ].map((item, index) => {
+            const Icon = item.icon;
+            const block = (
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ delay: index * 0.06 }}
+                className="h-full rounded-lg border border-[var(--border)]/70 bg-slate-950/45 p-5 transition-colors hover:border-[var(--cinehub-accent)]/45 hover:bg-slate-900/70"
+              >
+                <Icon className="mb-4 h-6 w-6 text-[var(--cinehub-accent)]" />
+                <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                <p className="mt-2 break-words text-sm leading-6 text-slate-400">
+                  {item.description}
+                </p>
+              </motion.div>
+            );
 
-          <Card className="border-border bg-card/80">
-            <CardContent className="space-y-3 p-6">
-              <Mail className="h-7 w-7 text-primary" />
-              <h2 className="text-lg font-semibold">Main email flow</h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                The server sends the message directly to{" "}
-                {MAIN_CONTACT_EMAIL}.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border bg-card/80">
-            <CardContent className="space-y-3 p-6">
-              <MessageSquare className="h-7 w-7 text-primary" />
-              <h2 className="text-lg font-semibold">Second contact</h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                You can also reach me at{" "}
-                <a className="inline-flex min-h-10 items-center break-all text-primary hover:underline" href={`mailto:${SECONDARY_EMAIL}`}>
-                  {SECONDARY_EMAIL}
-                </a>
-                .
-              </p>
-            </CardContent>
-          </Card>
+            return item.href ? (
+              <a key={item.title} href={item.href} className="min-h-11 cursor-pointer">
+                {block}
+              </a>
+            ) : (
+              <div key={item.title}>{block}</div>
+            );
+          })}
         </div>
       </section>
-    </div>
+    </main>
   );
 }
