@@ -1,6 +1,6 @@
 {
   "name": "cinehub",
-  "version": "2.7.1",
+  "version": "2.8.0",
   "private": true,
   "scripts": {
     "dev": "set NODE_OPTIONS=--no-deprecation && next dev",

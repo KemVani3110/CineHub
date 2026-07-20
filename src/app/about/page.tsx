@@ -95,7 +95,7 @@ const timeline = [
   {
     date: "2026",
     title: "Continued Improvements",
-    desc: "Still maintaining the project with Firebase auth cleanup, Vercel deploy fixes, admin data upgrades, footer/About polish, and watch experience improvements.",
+    desc: "Still maintaining the project with Firebase auth cleanup, Vercel deploy fixes, admin analytics, source report ranking, SEO polish, and watch experience improvements.",
   },
 ];
 
@@ -224,14 +224,14 @@ export default function AboutPage() {
         <div className="mx-auto max-w-6xl space-y-10">
           <div className="max-w-3xl space-y-3">
             <Badge className="bg-[var(--cinehub-accent)]/15 text-[var(--cinehub-accent)]">
-              Project Overview
+              Portfolio Case Study
             </Badge>
             <h2 className="text-3xl font-bold md:text-4xl">
-              What CineHub does
+              What CineHub demonstrates
             </h2>
             <p className="text-[var(--text-sub)]">
-              The project is designed around practical movie app workflows
-              instead of a static demo page.
+              CineHub is designed as a working product case study instead of a
+              static demo page.
             </p>
           </div>
 

@@ -18,6 +18,7 @@ import {
   User,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { APP_VERSION } from "@/lib/app-info";
 
 interface FooterProps {
   isSidebarOpen?: boolean;
@@ -128,9 +129,9 @@ const Footer = ({ isSidebarOpen = false }: FooterProps) => {
             </Link>
 
             <p className="max-w-md text-sm leading-6 text-muted-foreground">
-              A personal final project built with Next.js, Firebase, TMDB, and a
-              practical admin workflow for watchlists, history, ratings, and
-              source reports.
+              A production-style portfolio project built with Next.js,
+              Firebase, TMDB, and practical admin workflows for analytics,
+              watchlists, ratings, and source reports.
             </p>
 
             <div className="flex flex-wrap gap-2">
@@ -239,10 +240,10 @@ const Footer = ({ isSidebarOpen = false }: FooterProps) => {
         <div className="flex flex-col items-center justify-between gap-4 text-center text-sm text-muted-foreground lg:flex-row lg:text-left">
           <div className="space-y-1">
             <p className="font-medium">
-              © {currentYear} CineHub. Built by Huynh Chu Minh Khoi.
+              Copyright {currentYear} CineHub. Built by Huynh Chu Minh Khoi.
             </p>
             <p className="text-xs">
-              Movie and TV metadata provided by TMDB.
+              Portfolio project v{APP_VERSION}. Movie and TV metadata provided by TMDB.
             </p>
           </div>
         </div>
