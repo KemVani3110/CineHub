@@ -18,14 +18,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { adminDb, toIsoString } from "@/lib/firebase-admin";
 import { listAdminLogs, listAdminUsers } from "@/lib/admin-firestore";
 
@@ -481,43 +473,40 @@ function TopMediaTable({
       <CardHeader className="pb-3">
         <CardTitle className="text-base text-white">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-slate-800">
-                <TableHead className="min-w-[220px] text-slate-400">Title</TableHead>
-                <TableHead className="text-slate-400">Type</TableHead>
-                <TableHead className="text-right text-slate-400">{countLabel}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.length ? (
-                items.map((item) => (
-                  <TableRow key={item.key} className="border-slate-900">
-                    <TableCell className="max-w-[260px] truncate font-medium text-white">
-                      {item.title}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize border-slate-700 text-slate-300">
-                        {item.mediaType}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-slate-200">
-                      {item.count}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="py-8 text-center text-slate-400">
-                    No data yet
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+      <CardContent className="space-y-2">
+        {items.length ? (
+          items.map((item, index) => (
+            <div
+              key={item.key}
+              className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/45 p-3"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-950 text-sm font-semibold text-slate-400">
+                {index + 1}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-medium text-white">{item.title}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="capitalize border-slate-700 text-slate-300"
+                  >
+                    {item.mediaType}
+                  </Badge>
+                  <span className="text-xs text-slate-500">
+                    {item.count} {countLabel.toLowerCase()}
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-sm font-semibold text-primary">
+                {item.count}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-xl border border-slate-800 bg-slate-900/45 p-8 text-center text-sm text-slate-400">
+            No data yet
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -529,47 +518,40 @@ function RatedMediaTable({ items }: { items: RatingMediaItem[] }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base text-white">Most rated media</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-slate-800">
-                <TableHead className="min-w-[220px] text-slate-400">Media</TableHead>
-                <TableHead className="text-slate-400">Type</TableHead>
-                <TableHead className="text-right text-slate-400">Ratings</TableHead>
-                <TableHead className="text-right text-slate-400">Average</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.length ? (
-                items.map((item) => (
-                  <TableRow key={item.key} className="border-slate-900">
-                    <TableCell className="max-w-[260px] truncate font-medium text-white">
-                      {item.title}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize border-slate-700 text-slate-300">
-                        {item.mediaType}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-slate-200">
-                      {item.count}
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-slate-200">
-                      {item.average}/5
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center text-slate-400">
-                    No ratings yet
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+      <CardContent className="space-y-2">
+        {items.length ? (
+          items.map((item, index) => (
+            <div
+              key={item.key}
+              className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/45 p-3"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-950 text-sm font-semibold text-slate-400">
+                {index + 1}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-medium text-white">{item.title}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="capitalize border-slate-700 text-slate-300"
+                  >
+                    {item.mediaType}
+                  </Badge>
+                  <span className="text-xs text-slate-500">
+                    {item.count} ratings
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-sm font-semibold text-amber-200">
+                {item.average}/5
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-xl border border-slate-800 bg-slate-900/45 p-8 text-center text-sm text-slate-400">
+            No ratings yet
+          </div>
+        )}
       </CardContent>
     </Card>
   );

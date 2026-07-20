@@ -18,6 +18,8 @@ import {
   Menu,
   Flag,
   MessageSquare,
+  Settings,
+  Gauge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,47 +47,70 @@ import { useAuth } from "@/hooks/useAuth";
 const navItems = [
   {
     title: "Dashboard",
-    href: "/admin/dashboard",
+    href: "/admin",
     icon: LayoutDashboard,
     badge: null,
+    section: "Core",
   },
   {
-    title: "User Management",
-    href: "/admin/users",
-    icon: Users,
+    title: "Operations",
+    href: "/admin/operations",
+    icon: Gauge,
     badge: null,
-  },
-  {
-    title: "Activity Logs",
-    href: "/admin/activity-logs",
-    icon: Activity,
-    badge: null,
+    section: "Core",
   },
   {
     title: "Analytics",
     href: "/admin/analytics",
     icon: BarChart3,
     badge: null,
+    section: "Core",
+  },
+  {
+    title: "User Management",
+    href: "/admin/users",
+    icon: Users,
+    badge: null,
+    section: "Management",
   },
   {
     title: "Source Reports",
     href: "/admin/source-reports",
     icon: Flag,
     badge: null,
+    section: "Management",
   },
   {
     title: "Contact Messages",
     href: "/admin/contact-messages",
     icon: MessageSquare,
     badge: null,
+    section: "Management",
   },
   {
     title: "User Avatar",
     href: "/admin/avatar",
     icon: CircleUser,
     badge: null,
+    section: "System",
+  },
+  {
+    title: "Activity Logs",
+    href: "/admin/activity-logs",
+    icon: Activity,
+    badge: null,
+    section: "System",
+  },
+  {
+    title: "Settings",
+    href: "/admin/settings",
+    icon: Settings,
+    badge: null,
+    section: "System",
   },
 ];
+
+const navSections = ["Core", "Management", "System"];
 
 interface AdminSidebarProps {
   className?: string;
@@ -172,7 +197,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
             <div className="flex items-center justify-between min-h-[48px]">
               {!isCollapsed ? (
                 <Link
-                  href="/admin/dashboard"
+                  href="/admin"
                   className="flex items-center space-x-2 hover:opacity-90 transition-opacity flex-1 min-w-0"
                 >
                   <div className="relative w-8 h-8 flex-shrink-0">
@@ -272,65 +297,83 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
           )}
 
           {/* Navigation Section */}
-          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto min-h-0">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
+          <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4 min-h-0">
+            {navSections.map((section) => {
+              const items = navItems.filter((item) => item.section === section);
 
-              const navButton = (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "group relative flex min-h-11 items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-105"
-                      : "text-muted-foreground hover:text-primary hover:bg-accent/50 hover:scale-102"
-                  )}
-                >
-                  <div className="relative">
-                    <Icon size={20} className="flex-shrink-0" />
-                    {isActive && (
-                      <div className="absolute inset-0 bg-primary-foreground/20 rounded-full animate-pulse"></div>
-                    )}
-                  </div>
-
+              return (
+                <div key={section} className="space-y-1.5">
                   {!isCollapsed && (
-                    <>
-                      <span className="flex-1">{item.title}</span>
-                      {item.badge && (
-                        <Badge
-                          variant={isActive ? "secondary" : "outline"}
-                          className="text-xs h-5 px-2 ml-auto"
-                        >
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </>
-                  )}
-
-                  {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-foreground rounded-r-full"></div>
-                  )}
-                </Link>
-              );
-
-              return isCollapsed ? (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>{navButton}</TooltipTrigger>
-                  <TooltipContent side="right" className="ml-2">
-                    <div className="flex items-center space-x-2">
-                      <span>{item.title}</span>
-                      {item.badge && (
-                        <Badge variant="outline" className="text-xs">
-                          {item.badge}
-                        </Badge>
-                      )}
+                    <div className="px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      {section}
                     </div>
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                navButton
+                  )}
+
+                  {items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive =
+                      pathname === item.href ||
+                      (item.href === "/admin" && pathname === "/admin/dashboard");
+
+                    const navButton = (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "group relative flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                          isActive
+                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                            : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors",
+                            isActive ? "bg-primary-foreground/15" : "bg-background/40"
+                          )}
+                        >
+                          <Icon size={18} />
+                        </div>
+
+                        {!isCollapsed && (
+                          <>
+                            <span className="flex-1 truncate">{item.title}</span>
+                            {item.badge && (
+                              <Badge
+                                variant={isActive ? "secondary" : "outline"}
+                                className="ml-auto h-5 px-2 text-xs"
+                              >
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+
+                        {isActive && (
+                          <div className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground" />
+                        )}
+                      </Link>
+                    );
+
+                    return isCollapsed ? (
+                      <Tooltip key={item.href}>
+                        <TooltipTrigger asChild>{navButton}</TooltipTrigger>
+                        <TooltipContent side="right" className="ml-2">
+                          <div className="flex items-center space-x-2">
+                            <span>{item.title}</span>
+                            {item.badge && (
+                              <Badge variant="outline" className="text-xs">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      navButton
+                    );
+                  })}
+                </div>
               );
             })}
           </nav>
