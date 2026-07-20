@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb, numericIdFromUid, serverTimestamp } from "@/lib/firebase-admin";
+import { applySourceHealth, getSourceHealthMap } from "@/lib/source-health";
 
 const STREAMING_SERVICES = {
   movies111: {
@@ -158,10 +159,18 @@ export async function GET(
       embed: true
     });
 
+    const sourceHealthMap = await getSourceHealthMap({
+      mediaType: "tv",
+      mediaId: Number(id),
+      seasonNumber,
+      episodeNumber,
+    });
+    const rankedSources = applySourceHealth(streamingSources, sourceHealthMap);
+
     // Return multiple streaming sources with comprehensive episode info
     return NextResponse.json({
       success: true,
-      sources: streamingSources,
+      sources: rankedSources,
       tvShowInfo: {
         id: tvShowData.id,
         name: tvShowData.name,

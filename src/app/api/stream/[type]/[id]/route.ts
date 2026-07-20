@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb, numericIdFromUid, serverTimestamp } from "@/lib/firebase-admin";
+import { applySourceHealth, getSourceHealthMap } from "@/lib/source-health";
 
 const STREAMING_SERVICES = {
   movies111: {
@@ -215,10 +216,18 @@ export async function GET(
       });
     }
 
+    const sourceHealthMap = await getSourceHealthMap({
+      mediaType: type as "movie" | "tv",
+      mediaId: Number(id),
+      seasonNumber: type === "tv" ? season : null,
+      episodeNumber: type === "tv" ? episode : null,
+    });
+    const rankedSources = applySourceHealth(streamingSources, sourceHealthMap);
+
     // Return multiple streaming sources
     return NextResponse.json({
       success: true,
-      sources: streamingSources,
+      sources: rankedSources,
       mediaInfo: {
         id: mediaData.id,
         title: mediaData.title || mediaData.name,

@@ -39,6 +39,10 @@ interface StreamingSource {
   quality: string;
   type: "iframe" | "video";
   embed: boolean;
+  healthStatus?: "healthy" | "reported";
+  reportCount?: number;
+  reportReasons?: string[];
+  healthMessage?: string | null;
 }
 
 interface VideoPlayerProps {
@@ -113,11 +117,15 @@ export function VideoPlayer({
   useEffect(() => {
     if (sources.length > 0 && !selectedSource) {
       // Prefer TMDB-explicit sources first to reduce wrong-title matches.
+      const healthySources = sources.filter(
+        (source) => source.healthStatus !== "reported"
+      );
+      const candidateSources = healthySources.length ? healthySources : sources;
       const stableSource =
-        sources.find((s) => s.name === "VidEasy") ||
-        sources.find((s) => s.name === "MultiEmbed") ||
-        sources.find((s) => s.name === "111Movies");
-      const defaultSource = stableSource || sources[0];
+        candidateSources.find((s) => s.name === "VidEasy") ||
+        candidateSources.find((s) => s.name === "MultiEmbed") ||
+        candidateSources.find((s) => s.name === "111Movies");
+      const defaultSource = stableSource || candidateSources[0];
       setSelectedSource(defaultSource);
       setIsIframeMode(defaultSource.type === "iframe");
     }
@@ -852,11 +860,25 @@ export function VideoPlayer({
                             {selectedSource?.name === source.name && (
                               <div className="w-2.5 h-2.5 bg-teal-400 rounded-full shadow-lg shadow-teal-400/50"></div>
                             )}
-                            <span className="font-semibold">{source.name}</span>
+                            <div className="flex flex-col">
+                              <span className="font-semibold">{source.name}</span>
+                              {source.healthStatus === "reported" && (
+                                <span className="text-[11px] font-medium text-amber-300">
+                                  {source.healthMessage || "Reported by users"}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <span className="text-xs text-slate-300 bg-slate-700/60 px-3 py-1 rounded-full font-medium">
-                            {source.quality}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {source.healthStatus === "reported" && (
+                              <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-200">
+                                Reported
+                              </span>
+                            )}
+                            <span className="text-xs text-slate-300 bg-slate-700/60 px-3 py-1 rounded-full font-medium">
+                              {source.quality}
+                            </span>
+                          </div>
                         </div>
                       </DropdownMenuItem>
                     ))}
