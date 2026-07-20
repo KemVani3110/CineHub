@@ -470,18 +470,18 @@ export default function WatchTVEpisodePage() {
 
                         {tvShow.spoken_languages &&
                           tvShow.spoken_languages.length > 0 && (
-                            <div className="flex items-center gap-2 bg-blue-500/20 px-4 py-3 rounded-full border border-blue-400/30">
-                              <Globe className="h-4 w-4 text-blue-400" />
-                              <span className="text-sm text-blue-100 font-medium">
+                            <div className="flex items-center gap-2 rounded-full border border-[#4FD1C5]/30 bg-[#4FD1C5]/12 px-4 py-3">
+                              <Globe className="h-4 w-4 text-[#4FD1C5]" />
+                              <span className="text-sm font-medium text-slate-100">
                                 {tvShow.spoken_languages[0].english_name}
                               </span>
                             </div>
                           )}
 
                         {episodeInfo?.runtime && (
-                          <div className="flex items-center gap-2 bg-purple-500/20 px-4 py-3 rounded-full border border-purple-400/30">
-                            <Clock className="h-4 w-4 text-purple-400" />
-                            <span className="text-sm text-purple-100 font-medium">
+                          <div className="flex items-center gap-2 rounded-full border border-[#4FD1C5]/30 bg-[#4FD1C5]/12 px-4 py-3">
+                            <Clock className="h-4 w-4 text-[#4FD1C5]" />
+                            <span className="text-sm font-medium text-slate-100">
                               {episodeInfo.runtime} min
                             </span>
                           </div>
@@ -606,9 +606,9 @@ export default function WatchTVEpisodePage() {
                     )}
 
                     {episodeInfo?.runtime && (
-                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-purple-400/30">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-purple-400" />
+                          <Clock className="h-4 w-4 text-[#4FD1C5]" />
                           Duration
                         </span>
                         <span className="text-white text-sm font-bold">
@@ -617,7 +617,7 @@ export default function WatchTVEpisodePage() {
                       </div>
                     )}
 
-                    <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-blue-400/30">
+                    <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                       <span className="text-slate-200 text-sm font-medium">
                         Season
                       </span>
@@ -626,7 +626,7 @@ export default function WatchTVEpisodePage() {
                       </span>
                     </div>
 
-                    <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-green-400/30">
+                    <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                       <span className="text-slate-200 text-sm font-medium">
                         Episode
                       </span>
@@ -636,7 +636,7 @@ export default function WatchTVEpisodePage() {
                     </div>
 
                     {episodeInfo?.vote_count && episodeInfo.vote_count > 0 && (
-                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-yellow-400/30">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
                           <Star className="h-4 w-4 text-yellow-400" />
                           Votes
@@ -671,7 +671,7 @@ export default function WatchTVEpisodePage() {
                     )}
 
                     {tvShow.number_of_seasons && (
-                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-blue-400/30 transition-all duration-200">
+                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-[#4FD1C5]/30 transition-all duration-200">
                         <span className="text-slate-200 text-sm font-medium">
                           Seasons
                         </span>
@@ -682,7 +682,7 @@ export default function WatchTVEpisodePage() {
                     )}
 
                     {tvShow.number_of_episodes && (
-                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-purple-400/30 transition-all duration-200">
+                      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50 hover:border-[#4FD1C5]/30 transition-all duration-200">
                         <span className="text-slate-200 text-sm font-medium">
                           Episodes
                         </span>

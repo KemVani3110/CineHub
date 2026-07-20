@@ -125,8 +125,8 @@ const EpisodeCard = memo(
           {/* Play Button Overlay or Coming Soon */}
           {isComingSoon ? (
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col items-center justify-center">
-              <div className="bg-gradient-to-r from-[#f4b400] to-[#e6a800] rounded-full px-4 py-2 shadow-lg mb-2 border border-[#f4b400]/30">
-                <span className="text-[#0d1b2a] text-xs font-bold">
+              <div className="bg-cinehub-accent/90 rounded-full px-4 py-2 shadow-lg mb-2 border border-cinehub-accent/30">
+                <span className="text-slate-950 text-xs font-bold">
                   Coming Soon
                 </span>
               </div>
@@ -159,7 +159,7 @@ const EpisodeCard = memo(
           {/* Rating Badge */}
           {episode.vote_average > 0 && (
             <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
-              <Star className="w-3 h-3 text-yellow-500" fill="currentColor" />
+              <Star className="w-3 h-3 text-cinehub-accent" fill="currentColor" />
               <span className="text-white text-xs font-medium">
                 {episode.vote_average.toFixed(1)}
               </span>
@@ -191,7 +191,7 @@ const EpisodeCard = memo(
                 <Calendar className="w-3 h-3 flex-shrink-0" />
                 <span
                   className={`truncate ${
-                    isComingSoon ? "text-[#f4b400] font-medium" : ""
+                    isComingSoon ? "text-cinehub-accent font-medium" : ""
                   }`}
                 >
                   {format(new Date(episode.air_date), "MMM d")}
@@ -292,7 +292,7 @@ const SeasonCard = memo(
               {season.vote_average > 0 && (
                 <div className="flex items-center gap-2 text-[#9aafc3]">
                   <Star
-                    className="w-4 h-4 text-yellow-500"
+                    className="w-4 h-4 text-cinehub-accent"
                     fill="currentColor"
                   />
                   <span>{season.vote_average.toFixed(1)}</span>

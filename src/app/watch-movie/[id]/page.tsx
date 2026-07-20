@@ -272,18 +272,18 @@ export default function WatchMoviePage() {
                   onTheaterModeChange={setIsTheaterMode}
                 />
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-black/60 to-black/90 flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#4FD1C5]/15 via-black/60 to-black/90 flex items-center justify-center">
                   <div className="text-center text-white">
                     {loadingStreams ? (
                       <div className="space-y-4">
-                        <div className="w-16 h-16 mx-auto rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
-                          <RefreshCw className="w-8 h-8 text-blue-400 animate-spin" />
+                        <div className="w-16 h-16 mx-auto rounded-full bg-[#4FD1C5]/15 flex items-center justify-center border border-[#4FD1C5]/30">
+                          <RefreshCw className="w-8 h-8 text-[#4FD1C5] animate-spin" />
                         </div>
                         <div className="space-y-2">
-                          <p className="text-lg font-semibold text-blue-100">
+                          <p className="text-lg font-semibold text-slate-100">
                             Loading streaming sources...
                           </p>
-                          <p className="text-sm text-blue-200/70">
+                          <p className="text-sm text-slate-300">
                             Please wait while we prepare your content
                           </p>
                         </div>
@@ -380,18 +380,18 @@ export default function WatchMoviePage() {
 
                         {movie.spoken_languages &&
                           movie.spoken_languages.length > 0 && (
-                            <div className="flex items-center gap-2 bg-blue-500/20 px-4 py-3 rounded-full border border-blue-400/30">
-                              <Globe className="h-4 w-4 text-blue-400" />
-                              <span className="text-sm text-blue-100 font-medium">
+                            <div className="flex items-center gap-2 rounded-full border border-[#4FD1C5]/30 bg-[#4FD1C5]/12 px-4 py-3">
+                              <Globe className="h-4 w-4 text-[#4FD1C5]" />
+                              <span className="text-sm font-medium text-slate-100">
                                 {movie.spoken_languages[0].english_name}
                               </span>
                             </div>
                           )}
 
                         {movie.runtime && (
-                          <div className="flex items-center gap-2 bg-purple-500/20 px-4 py-3 rounded-full border border-purple-400/30">
-                            <Clock className="h-4 w-4 text-purple-400" />
-                            <span className="text-sm text-purple-100 font-medium">
+                          <div className="flex items-center gap-2 rounded-full border border-[#4FD1C5]/30 bg-[#4FD1C5]/12 px-4 py-3">
+                            <Clock className="h-4 w-4 text-[#4FD1C5]" />
+                            <span className="text-sm font-medium text-slate-100">
                               {movie.runtime} min
                             </span>
                           </div>
@@ -473,9 +473,9 @@ export default function WatchMoviePage() {
                     )}
 
                     {movie.runtime && (
-                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-purple-400/30">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-purple-400" />
+                          <Clock className="h-4 w-4 text-[#4FD1C5]" />
                           Duration
                         </span>
                         <span className="text-white text-sm font-bold">
@@ -486,9 +486,9 @@ export default function WatchMoviePage() {
                     )}
 
                     {movie.budget > 0 && (
-                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-green-400/30">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
-                          <div className="h-4 w-4 text-green-400">💰</div>
+                          <div className="h-4 w-4 text-[#4FD1C5]">💰</div>
                           Budget
                         </span>
                         <span className="text-white text-sm font-bold">
@@ -498,9 +498,9 @@ export default function WatchMoviePage() {
                     )}
 
                     {movie.revenue > 0 && (
-                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-yellow-400/30">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
-                          <div className="h-4 w-4 text-yellow-400">💵</div>
+                          <div className="h-4 w-4 text-[#4FD1C5]">💵</div>
                           Revenue
                         </span>
                         <span className="text-white text-sm font-bold">
@@ -510,9 +510,9 @@ export default function WatchMoviePage() {
                     )}
 
                     {movie.vote_count > 0 && (
-                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-blue-400/30">
+                      <div className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-slate-600/50 bg-gradient-to-r from-slate-800/60 to-slate-700/60 p-4 transition-all duration-200 hover:border-[#4FD1C5]/30">
                         <span className="text-slate-200 text-sm font-medium flex items-center gap-2">
-                          <Star className="h-4 w-4 text-blue-400" />
+                          <Star className="h-4 w-4 text-[#4FD1C5]" />
                           Votes
                         </span>
                         <span className="text-white text-sm font-bold">

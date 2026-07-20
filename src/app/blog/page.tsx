@@ -164,7 +164,7 @@ const BlogPage = () => {
             }}
           />
           <motion.div
-            className="absolute top-40 right-20 w-48 h-48 lg:w-96 lg:h-96 bg-blue-500/8 rounded-full blur-3xl"
+            className="absolute top-40 right-20 w-48 h-48 lg:w-96 lg:h-96 bg-primary/8 rounded-full blur-3xl"
             animate={{
               scale: [1.2, 1, 1.2],
               opacity: [0.4, 0.2, 0.4],
@@ -189,7 +189,7 @@ const BlogPage = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-primary via-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
+              <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-primary via-cinehub-accent to-cinehub-accent-hover bg-clip-text text-transparent leading-tight">
                 CineHub Blog
                 <br />
                 <span className="text-3xl md:text-4xl lg:text-6xl">
@@ -616,4 +616,4 @@ const BlogPage = () => {
   );
 };
 
-export default BlogPage; 
+export default BlogPage;

@@ -191,7 +191,7 @@ export default function Settings() {
                 <Button
                   type="button"
                   onClick={handleSaveProfile}
-                  className="min-h-11 cursor-pointer rounded-full bg-emerald-400 px-6 font-semibold text-slate-950 hover:bg-emerald-300"
+                  className="min-h-11 cursor-pointer rounded-full bg-cinehub-accent px-6 font-semibold text-slate-950 hover:bg-cinehub-accent-hover"
                 >
                   <Save className="mr-2 h-4 w-4" />
                   Save changes
@@ -205,8 +205,8 @@ export default function Settings() {
       <Card className="border-[var(--border)]/70 bg-slate-950/55 shadow-xl">
         <CardHeader className="border-b border-[var(--border)]/60 p-5 sm:p-6">
           <CardTitle className="flex items-center gap-3 text-white">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-400/12">
-              <Lock className="h-5 w-5 text-amber-300" />
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cinehub-accent/12">
+              <Lock className="h-5 w-5 text-cinehub-accent" />
             </span>
             <span>
               <span className="block text-xl font-bold">Security</span>
@@ -249,7 +249,7 @@ export default function Settings() {
               return (
                 <div key={item.id} className="space-y-3">
                   <Label htmlFor={item.id} className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-                    <Icon className="h-4 w-4 text-amber-300" />
+                    <Icon className="h-4 w-4 text-cinehub-accent" />
                     {item.label}
                   </Label>
                   <div className="relative">
@@ -259,14 +259,14 @@ export default function Settings() {
                       type={item.visible ? "text" : "password"}
                       value={(formData as any)[item.name] || ""}
                       onChange={handleInputChange}
-                      className="min-h-12 rounded-xl border border-slate-700 bg-slate-950/70 px-4 pr-12 text-base text-white placeholder:text-slate-500 hover:border-slate-600 focus-visible:border-amber-300 focus-visible:ring-amber-300/30"
+                      className="min-h-12 rounded-xl border border-slate-700 bg-slate-950/70 px-4 pr-12 text-base text-white placeholder:text-slate-500 hover:border-slate-600 focus-visible:border-cinehub-accent focus-visible:ring-cinehub-accent/30"
                       placeholder={item.label}
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 cursor-pointer rounded-lg text-slate-400 hover:bg-amber-300/10 hover:text-amber-200"
+                      className="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 cursor-pointer rounded-lg text-slate-400 hover:bg-cinehub-accent/10 hover:text-cinehub-accent"
                       onClick={() => togglePasswordVisibility(item.field)}
                       aria-label={`Toggle ${item.label.toLowerCase()} visibility`}
                     >
@@ -285,13 +285,13 @@ export default function Settings() {
                   <span
                     className={`flex h-5 w-5 items-center justify-center rounded-full border ${
                       item.valid
-                        ? "border-emerald-400 bg-emerald-400 text-slate-950"
+                        ? "border-cinehub-accent bg-cinehub-accent text-slate-950"
                         : "border-slate-700 bg-slate-950 text-slate-500"
                     }`}
                   >
                     <Check className="h-3 w-3" />
                   </span>
-                  <span className={item.valid ? "text-emerald-200" : "text-slate-400"}>
+                  <span className={item.valid ? "text-cinehub-accent" : "text-slate-400"}>
                     {item.label}
                   </span>
                 </div>
@@ -303,7 +303,7 @@ export default function Settings() {
             type="button"
             onClick={handleChangePassword}
             disabled={isChangingPassword || !passwordReady}
-            className="min-h-12 w-full cursor-pointer rounded-full bg-amber-300 font-bold text-slate-950 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-12 w-full cursor-pointer rounded-full bg-cinehub-accent font-bold text-slate-950 hover:bg-cinehub-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Lock className="mr-2 h-5 w-5" />
             {isChangingPassword ? "Updating..." : "Update password"}

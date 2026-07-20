@@ -7,6 +7,16 @@ interface MovieOverviewProps {
   movie: TMDBMovieDetails;
 }
 
+const statCardClass =
+  "group relative overflow-hidden bg-gradient-to-br from-slate-900/95 via-slate-800/80 to-slate-950/95 border-slate-700/50 hover:border-cinehub-accent/45 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-cinehub-accent/10";
+const statGlowClass =
+  "absolute inset-0 bg-gradient-to-br from-cinehub-accent/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300";
+const statIconWrapClass =
+  "absolute inset-0 bg-cinehub-accent/15 rounded-full blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500";
+const statIconClass = "w-10 h-10 text-cinehub-accent mx-auto relative z-10";
+const statValueClass =
+  "font-bold text-white mb-2 group-hover:text-cinehub-accent transition-colors";
+
 export default function MovieOverview({ movie }: MovieOverviewProps) {
   return (
     <div className="space-y-10">
@@ -30,14 +40,14 @@ export default function MovieOverview({ movie }: MovieOverviewProps) {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {/* Rating Card */}
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-amber-900/30 via-yellow-900/20 to-amber-800/30 border-amber-700/40 hover:border-amber-500/60 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-amber-500/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <Card className={statCardClass}>
+          <div className={statGlowClass} />
           <CardContent className="p-8 text-center relative z-10">
             <div className="mb-4 relative">
-              <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              <Star className="w-10 h-10 text-yellow-400 mx-auto fill-current relative z-10" />
+              <div className="absolute inset-0 bg-cinehub-accent/15 rounded-full blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500" />
+              <Star className="w-10 h-10 text-cinehub-accent mx-auto fill-current relative z-10" />
             </div>
-            <div className="text-4xl font-bold text-white mb-2 group-hover:text-yellow-100 transition-colors">
+            <div className={`text-4xl ${statValueClass}`}>
               {movie.vote_average.toFixed(1)}
             </div>
             <div className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">
@@ -47,14 +57,14 @@ export default function MovieOverview({ movie }: MovieOverviewProps) {
         </Card>
 
         {/* Runtime Card */}
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-purple-900/30 via-violet-900/20 to-purple-800/30 border-purple-700/40 hover:border-purple-500/60 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <Card className={statCardClass}>
+          <div className={statGlowClass} />
           <CardContent className="p-8 text-center relative z-10">
             <div className="mb-4 relative">
-              <div className="absolute inset-0 bg-purple-400/20 rounded-full blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              <Clock className="w-10 h-10 text-purple-400 mx-auto relative z-10" />
+              <div className={statIconWrapClass} />
+              <Clock className={statIconClass} />
             </div>
-            <div className="text-4xl font-bold text-white mb-2 group-hover:text-purple-100 transition-colors">
+            <div className={`text-4xl ${statValueClass}`}>
               {movie.runtime ? Math.floor(movie.runtime / 60) : 0}h{" "}
               {movie.runtime ? movie.runtime % 60 : 0}m
             </div>
@@ -63,14 +73,14 @@ export default function MovieOverview({ movie }: MovieOverviewProps) {
         </Card>
 
         {/* Release Date Card */}
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/30 via-green-900/20 to-emerald-800/30 border-emerald-700/40 hover:border-emerald-500/60 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <Card className={statCardClass}>
+          <div className={statGlowClass} />
           <CardContent className="p-8 text-center relative z-10">
             <div className="mb-4 relative">
-              <div className="absolute inset-0 bg-emerald-400/20 rounded-full blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              <Calendar className="w-10 h-10 text-emerald-400 mx-auto relative z-10" />
+              <div className={statIconWrapClass} />
+              <Calendar className={statIconClass} />
             </div>
-            <div className="text-3xl font-bold text-white mb-2 group-hover:text-emerald-100 transition-colors">
+            <div className={`text-3xl ${statValueClass}`}>
               {new Date(movie.release_date).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -82,14 +92,14 @@ export default function MovieOverview({ movie }: MovieOverviewProps) {
         </Card>
 
         {/* Language Card */}
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-orange-900/30 via-red-900/20 to-orange-800/30 border-orange-700/40 hover:border-orange-500/60 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-orange-500/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <Card className={statCardClass}>
+          <div className={statGlowClass} />
           <CardContent className="p-8 text-center relative z-10">
             <div className="mb-4 relative">
-              <div className="absolute inset-0 bg-orange-400/20 rounded-full blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              <Globe className="w-10 h-10 text-orange-400 mx-auto relative z-10" />
+              <div className={statIconWrapClass} />
+              <Globe className={statIconClass} />
             </div>
-            <div className="text-2xl font-bold text-white mb-2 group-hover:text-orange-100 transition-colors">
+            <div className={`text-2xl ${statValueClass}`}>
               {movie.spoken_languages?.[0]?.english_name || 'English'}
             </div>
             <div className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">Primary Language</div>
@@ -111,7 +121,7 @@ export default function MovieOverview({ movie }: MovieOverviewProps) {
             <div className="space-y-6">
               <div className="flex justify-between items-center py-4 border-b border-slate-700/30 hover:border-slate-600/50 transition-colors">
                 <span className="text-slate-400 font-semibold">Status</span>
-                <Badge variant="outline" className="border-success/40 text-success bg-success/10 px-3 py-1">
+                <Badge variant="outline" className="border-cinehub-accent/40 text-cinehub-accent bg-cinehub-accent/10 px-3 py-1">
                   {movie.status}
                 </Badge>
               </div>
@@ -175,7 +185,7 @@ export default function MovieOverview({ movie }: MovieOverviewProps) {
                     <DollarSign className="w-5 h-5 text-cinehub-accent" />
                     Budget
                   </span>
-                  <span className="text-success font-bold text-lg">
+                  <span className="text-cinehub-accent font-bold text-lg">
                     ${movie.budget.toLocaleString()}
                   </span>
                 </div>
@@ -187,7 +197,7 @@ export default function MovieOverview({ movie }: MovieOverviewProps) {
                     <TrendingUp className="w-5 h-5 text-cinehub-accent" />
                     Revenue
                   </span>
-                  <span className="text-success font-bold text-lg">
+                  <span className="text-cinehub-accent font-bold text-lg">
                     ${movie.revenue.toLocaleString()}
                   </span>
                 </div>
@@ -197,7 +207,7 @@ export default function MovieOverview({ movie }: MovieOverviewProps) {
                 <div className="flex justify-between items-center py-4 border-b border-slate-700/30 hover:border-slate-600/50 transition-colors">
                   <span className="text-slate-400 font-semibold">Profit</span>
                   <span className={`font-bold text-lg ${
-                    movie.revenue - movie.budget > 0 ? 'text-success' : 'text-danger'
+                    movie.revenue - movie.budget > 0 ? 'text-cinehub-accent' : 'text-red-400'
                   }`}>
                     ${(movie.revenue - movie.budget).toLocaleString()}
                   </span>

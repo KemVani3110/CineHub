@@ -92,7 +92,7 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col h-auto py-4 px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-blue-500/20 hover:to-blue-600/20 hover:text-blue-400 hover:border-blue-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-blue-500/20"
+          className="flex-col h-auto py-4 px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-cinehub-accent/15 hover:to-cinehub-accent-hover/15 hover:text-cinehub-accent hover:border-cinehub-accent/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-cinehub-accent/20"
         >
           <MessageCircle className="w-6 h-6 mb-2" />
           <span className="text-xs font-semibold">Review</span>
@@ -101,7 +101,7 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col h-auto py-4 px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-green-500/20 hover:to-green-600/20 hover:text-green-400 hover:border-green-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-green-500/20"
+          className="flex-col h-auto py-4 px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-cinehub-accent/15 hover:to-cinehub-accent-hover/15 hover:text-cinehub-accent hover:border-cinehub-accent/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-cinehub-accent/20"
         >
           <Download className="w-6 h-6 mb-2" />
           <span className="text-xs font-semibold">Download</span>
@@ -123,8 +123,8 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
           </div>
           
           <div className="text-center group cursor-pointer">
-            <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-500/30 group-hover:border-blue-500/50 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[60px] sm:min-h-[80px] flex flex-col justify-center">
-              <div className="text-sm sm:text-2xl font-bold text-blue-400 mb-0.5 sm:mb-1 leading-tight">
+            <div className="bg-gradient-to-br from-cinehub-accent/16 to-cinehub-accent-hover/16 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-cinehub-accent/25 group-hover:border-cinehub-accent/45 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[60px] sm:min-h-[80px] flex flex-col justify-center">
+              <div className="text-sm sm:text-2xl font-bold text-cinehub-accent mb-0.5 sm:mb-1 leading-tight">
                 {voteCount >= 1000 
                   ? `${(voteCount / 1000).toFixed(1)}K` 
                   : voteCount.toLocaleString()
@@ -147,13 +147,13 @@ export function MovieActions({ title, onShare, id, posterPath, voteAverage, vote
             </div>
           )}
           {voteAverage >= 7.0 && (
-            <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-green-500/20 to-green-600/20 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-full border border-green-500/40 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-green-500/25">
-              <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 flex-shrink-0" />
-              <span className="text-[9px] sm:text-sm font-bold text-green-400 whitespace-nowrap">Good Rating</span>
+            <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-cinehub-accent/18 to-cinehub-accent-hover/18 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-full border border-cinehub-accent/35 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-cinehub-accent/25">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-cinehub-accent flex-shrink-0" />
+              <span className="text-[9px] sm:text-sm font-bold text-cinehub-accent whitespace-nowrap">Good Rating</span>
             </div>
           )}
         </div>
       </div>
     </div>
   );
-} 
+}

@@ -229,12 +229,12 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
             className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
-              <Star className="w-4 h-4 text-yellow-400" />
+              <Star className="w-4 h-4 text-cinehub-accent" />
               <span className="font-medium text-slate-200">Sort By</span>
             </div>
             <ChevronDown className={cn(
               "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
-              openSections.sort ? "transform rotate-180 text-blue-400" : ""
+              openSections.sort ? "transform rotate-180 text-cinehub-accent" : ""
             )} />
           </button>
           
@@ -269,17 +269,17 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
             className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
-              <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
+              <div className="w-4 h-4 rounded-full bg-cinehub-accent shadow-[0_0_14px_rgba(79,209,197,0.4)]"></div>
               <span className="font-medium text-slate-200">Genres</span>
               {(selectedGenres.length > 0 || filters.originalLanguage) && (
-                <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">
+                <span className="px-2 py-1 bg-cinehub-accent/15 text-cinehub-accent text-xs rounded-full border border-cinehub-accent/30">
                   {selectedGenres.length + (filters.originalLanguage ? 1 : 0)}
                 </span>
               )}
             </div>
             <ChevronDown className={cn(
               "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
-              openSections.genres ? "transform rotate-180 text-purple-400" : ""
+              openSections.genres ? "transform rotate-180 text-cinehub-accent" : ""
             )} />
           </button>
           
@@ -291,8 +291,8 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
                   className={cn(
                     "min-h-9 px-3 py-1.5 cursor-pointer transition-all duration-200 border",
                     filters.originalLanguage === 'vi'
-                      ? "bg-gradient-to-r from-emerald-500 to-cyan-500 border-emerald-300/50 text-white hover:from-emerald-600 hover:to-cyan-600 shadow-lg shadow-emerald-500/20"
-                      : "bg-slate-800/70 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/15 hover:border-emerald-400/60 hover:text-white"
+                      ? "bg-cinehub-accent border-cinehub-accent/60 text-slate-950 hover:bg-cinehub-accent-hover shadow-lg shadow-cinehub-accent/20"
+                      : "bg-slate-800/70 border-cinehub-accent/35 text-cinehub-accent hover:bg-cinehub-accent/12 hover:border-cinehub-accent/60 hover:text-white"
                   )}
                   onClick={handleVietnameseToggle}
                 >
@@ -313,7 +313,7 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
                       className={cn(
                         "min-h-9 px-3 py-1.5 cursor-pointer transition-all duration-200 border",
                         selectedGenres.includes(genre.id)
-                          ? "bg-gradient-to-r from-blue-500 to-purple-600 border-blue-400/50 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25"
+                          ? "bg-cinehub-accent border-cinehub-accent/60 text-slate-950 hover:bg-cinehub-accent-hover shadow-lg shadow-cinehub-accent/20"
                           : "bg-slate-800/70 border-slate-600/50 text-slate-300 hover:bg-slate-700/70 hover:border-slate-500/50 hover:text-white"
                       )}
                       onClick={() => handleGenreToggle(genre.id)}
@@ -334,17 +334,17 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
             className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
-              <Calendar className="w-4 h-4 text-green-400" />
+              <Calendar className="w-4 h-4 text-cinehub-accent" />
               <span className="font-medium text-slate-200">Year</span>
               {filters.year && (
-                <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
+                <span className="px-2 py-1 bg-cinehub-accent/15 text-cinehub-accent text-xs rounded-full border border-cinehub-accent/30">
                   {filters.year}
                 </span>
               )}
             </div>
             <ChevronDown className={cn(
               "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
-              openSections.year ? "transform rotate-180 text-green-400" : ""
+              openSections.year ? "transform rotate-180 text-cinehub-accent" : ""
             )} />
           </button>
           
@@ -367,7 +367,7 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
                     min={1900}
                     max={currentYear}
                     className={cn(
-                      "w-20 bg-slate-800/70 border-slate-600/50 text-slate-200 hover:bg-slate-700/70 hover:border-slate-500/50 focus:border-green-400/50 transition-all duration-200",
+                      "w-20 bg-slate-800/70 border-slate-600/50 text-slate-200 hover:bg-slate-700/70 hover:border-slate-500/50 focus:border-cinehub-accent/50 transition-all duration-200",
                       yearError && "border-red-400/50 focus:border-red-400/50"
                     )}
                   />
@@ -379,7 +379,7 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
                 </div>
               </div>
               <div className="text-sm text-slate-400">
-                Selected: <span className="text-green-400 font-medium">
+                Selected: <span className="text-cinehub-accent font-medium">
                   {hasYearFilter ? yearValue : 'Any year'}
                 </span>
               </div>
@@ -394,17 +394,17 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
             className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
-              <Clock className="w-4 h-4 text-orange-400" />
+              <Clock className="w-4 h-4 text-cinehub-accent" />
               <span className="font-medium text-slate-200">Runtime</span>
               {runtimeValue > 0 && (
-                <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full border border-orange-500/30">
+                <span className="px-2 py-1 bg-cinehub-accent/15 text-cinehub-accent text-xs rounded-full border border-cinehub-accent/30">
                   {runtimeValue}m
                 </span>
               )}
             </div>
             <ChevronDown className={cn(
               "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
-              openSections.runtime ? "transform rotate-180 text-orange-400" : ""
+              openSections.runtime ? "transform rotate-180 text-cinehub-accent" : ""
             )} />
           </button>
           
@@ -427,7 +427,7 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
                     min={0}
                     max={240}
                     className={cn(
-                      "w-20 bg-slate-800/70 border-slate-600/50 text-slate-200 hover:bg-slate-700/70 hover:border-slate-500/50 focus:border-orange-400/50 transition-all duration-200",
+                      "w-20 bg-slate-800/70 border-slate-600/50 text-slate-200 hover:bg-slate-700/70 hover:border-slate-500/50 focus:border-cinehub-accent/50 transition-all duration-200",
                       runtimeError && "border-red-400/50 focus:border-red-400/50"
                     )}
                   />
@@ -439,7 +439,7 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
                 </div>
               </div>
               <div className="text-sm text-slate-400">
-                Duration: <span className="text-orange-400 font-medium">
+                Duration: <span className="text-cinehub-accent font-medium">
                   {runtimeValue ? `${runtimeValue} minutes` : 'Any length'}
                 </span>
               </div>
@@ -454,17 +454,17 @@ export function ExploreFilters({ genres, className }: ExploreFiltersProps) {
             className="group flex min-h-12 items-center justify-between w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-slate-700/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
-              <Calendar className="w-4 h-4 text-cyan-400" />
+              <Calendar className="w-4 h-4 text-cinehub-accent" />
               <span className="font-medium text-slate-200">Date Range</span>
               {(dateRange.from || dateRange.to) && (
-                <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded-full border border-cyan-500/30">
+                <span className="px-2 py-1 bg-cinehub-accent/15 text-cinehub-accent text-xs rounded-full border border-cinehub-accent/30">
                   Set
                 </span>
               )}
             </div>
             <ChevronDown className={cn(
               "w-4 h-4 text-slate-400 transition-all duration-300 group-hover:text-slate-200",
-              openSections.dateRange ? "transform rotate-180 text-cyan-400" : ""
+              openSections.dateRange ? "transform rotate-180 text-cinehub-accent" : ""
             )} />
           </button>
           

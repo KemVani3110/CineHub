@@ -131,19 +131,19 @@ export default function ProfilePage() {
       label: "Member since",
       value: formatProfileDate(user?.created_at),
       icon: CalendarDays,
-      tone: "text-emerald-300",
+      tone: "text-[var(--cinehub-accent)]",
     },
     {
       label: "Last active",
       value: formatProfileDate(user?.last_login_at),
       icon: Clock3,
-      tone: "text-sky-300",
+      tone: "text-[var(--cinehub-accent)]",
     },
     {
       label: "Sign-in method",
       value: providerLabel,
       icon: Shield,
-      tone: "text-amber-300",
+      tone: "text-[var(--cinehub-accent)]",
     },
   ];
 
@@ -180,7 +180,7 @@ export default function ProfilePage() {
                         alt={user?.name || "User"}
                         className="object-cover"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-[var(--cinehub-accent)]/25 to-emerald-400/15 text-3xl font-bold text-[var(--cinehub-accent)]">
+                      <AvatarFallback className="bg-gradient-to-br from-[var(--cinehub-accent)]/25 to-[var(--cinehub-accent-hover)]/15 text-3xl font-bold text-[var(--cinehub-accent)]">
                         {getUserInitials(user?.name || "User")}
                       </AvatarFallback>
                     </Avatar>

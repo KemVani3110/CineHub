@@ -95,7 +95,7 @@ export default function TVShowCast({
             <div className="flex items-center gap-2 pt-1">
               {person.popularity && (
                 <div className="flex items-center gap-1">
-                  <Star className="w-3 h-3 text-warning fill-current" />
+                  <Star className="w-3 h-3 text-cinehub-accent fill-current" />
                   <span className="text-xs text-text-sub/80 font-medium">
                     {person.popularity.toFixed(1)}
                   </span>
@@ -124,13 +124,13 @@ export default function TVShowCast({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div className="space-y-2">
               <h3 className="text-2xl sm:text-3xl font-bold text-text-main flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                  <Users className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cinehub-accent/25 to-cinehub-accent/10 border border-cinehub-accent/25 flex items-center justify-center shadow-lg shadow-cinehub-accent/10">
+                  <Users className="w-5 h-5 text-cinehub-accent" />
                 </div>
                 Main Cast
                 <Badge
                   variant="secondary"
-                  className="bg-blue-500/20 text-blue-400 border-blue-500/30 hidden sm:inline-flex"
+                  className="bg-cinehub-accent/10 text-cinehub-accent border-cinehub-accent/30 hidden sm:inline-flex"
                 >
                   {cast.length} members
                 </Badge>
@@ -144,7 +144,7 @@ export default function TVShowCast({
               <Button
                 variant="ghost"
                 onClick={() => setShowAllCast(!showAllCast)}
-                className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 cursor-pointer group self-start sm:self-auto"
+                className="text-cinehub-accent hover:text-cinehub-accent-hover hover:bg-cinehub-accent/10 border border-cinehub-accent/20 hover:border-cinehub-accent/40 transition-all duration-300 cursor-pointer group self-start sm:self-auto"
               >
                 {showAllCast ? "Show Less" : `Show All (${cast.length})`}
                 <ChevronRight

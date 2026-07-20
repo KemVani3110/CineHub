@@ -154,7 +154,7 @@ export function EpisodeActions({
             value={seasonNumber.toString()}
             onValueChange={handleSeasonChange}
           >
-            <SelectTrigger className="w-full h-12 px-4 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-purple-500/20 hover:to-purple-600/20 hover:text-purple-400 hover:border-purple-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-purple-500/20 data-[state=open]:scale-105 data-[state=open]:border-purple-400/50">
+            <SelectTrigger className="w-full h-12 px-4 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-cinehub-accent/15 hover:to-cinehub-accent-hover/15 hover:text-cinehub-accent hover:border-cinehub-accent/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-cinehub-accent/20 data-[state=open]:scale-105 data-[state=open]:border-cinehub-accent/50">
               <div className="flex items-center justify-center gap-2 w-full">
                 <Calendar className="w-4 h-4" />
                 <span className="text-sm font-semibold">
@@ -222,7 +222,7 @@ export function EpisodeActions({
               "flex items-center justify-center gap-2 h-12 px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl",
               !hasPreviousEpisode || !isPreviousEpisodeAvailable
                 ? "opacity-50 cursor-not-allowed hover:scale-100"
-                : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
+                : "text-slate-300 hover:text-cinehub-accent hover:border-cinehub-accent/40 hover:shadow-cinehub-accent/20"
             )}
           >
             <SkipBack className="w-4 h-4" />
@@ -237,7 +237,7 @@ export function EpisodeActions({
               "flex items-center justify-center gap-2 h-12 px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl",
               !hasNextEpisode || !isNextEpisodeAvailable
                 ? "opacity-50 cursor-not-allowed hover:scale-100"
-                : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
+                : "text-slate-300 hover:text-cinehub-accent hover:border-cinehub-accent/40 hover:shadow-cinehub-accent/20"
             )}
           >
             <span className="text-xs font-semibold">Next</span>
@@ -257,7 +257,7 @@ export function EpisodeActions({
                 "flex items-center gap-3 h-14 px-8 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl min-w-[140px]",
                 !hasPreviousEpisode || !isPreviousEpisodeAvailable
                   ? "opacity-50 cursor-not-allowed hover:scale-100"
-                  : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
+                  : "text-slate-300 hover:text-cinehub-accent hover:border-cinehub-accent/40 hover:shadow-cinehub-accent/20"
               )}
             >
               <SkipBack className="w-5 h-5" />
@@ -271,7 +271,7 @@ export function EpisodeActions({
               value={seasonNumber.toString()}
               onValueChange={handleSeasonChange}
             >
-              <SelectTrigger className="w-full max-w-[280px] h-14 px-6 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-purple-500/20 hover:to-purple-600/20 hover:text-purple-400 hover:border-purple-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-purple-500/20 data-[state=open]:scale-105 data-[state=open]:border-purple-400/50">
+              <SelectTrigger className="w-full max-w-[280px] h-14 px-6 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-cinehub-accent/15 hover:to-cinehub-accent-hover/15 hover:text-cinehub-accent hover:border-cinehub-accent/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-cinehub-accent/20 data-[state=open]:scale-105 data-[state=open]:border-cinehub-accent/50">
                 <div className="flex items-center justify-center gap-3 w-full">
                   <Calendar className="w-5 h-5" />
                   <span className="text-base font-semibold">
@@ -339,7 +339,7 @@ export function EpisodeActions({
                 "flex items-center gap-3 h-14 px-8 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 hover:from-slate-700/70 hover:to-slate-800/70 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl min-w-[140px]",
                 !hasNextEpisode || !isNextEpisodeAvailable
                   ? "opacity-50 cursor-not-allowed hover:scale-100"
-                  : "text-slate-300 hover:text-blue-400 hover:border-blue-400/40 hover:shadow-blue-500/20"
+                  : "text-slate-300 hover:text-cinehub-accent hover:border-cinehub-accent/40 hover:shadow-cinehub-accent/20"
               )}
             >
               <span className="text-sm font-semibold">Next</span>
@@ -415,7 +415,7 @@ export function EpisodeActions({
             "flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-lg",
             !isCurrentEpisodeAvailable
               ? "opacity-50 cursor-not-allowed text-slate-500"
-              : "text-slate-300 hover:from-blue-500/20 hover:to-blue-600/20 hover:text-blue-400 hover:border-blue-400/40 hover:scale-105 cursor-pointer hover:shadow-xl hover:shadow-blue-500/20"
+              : "text-slate-300 hover:from-cinehub-accent/15 hover:to-cinehub-accent-hover/15 hover:text-cinehub-accent hover:border-cinehub-accent/40 hover:scale-105 cursor-pointer hover:shadow-xl hover:shadow-cinehub-accent/20"
           )}
         >
           <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2" />
@@ -427,7 +427,7 @@ export function EpisodeActions({
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-green-500/20 hover:to-green-600/20 hover:text-green-400 hover:border-green-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-green-500/20"
+          className="flex-col h-auto py-3 sm:py-4 px-2 sm:px-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/40 text-slate-300 hover:from-cinehub-accent/15 hover:to-cinehub-accent-hover/15 hover:text-cinehub-accent hover:border-cinehub-accent/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm rounded-xl cursor-pointer shadow-lg hover:shadow-xl hover:shadow-cinehub-accent/20"
         >
           <Download className="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2" />
           <span className="text-[10px] sm:text-xs font-semibold">Download</span>
@@ -449,8 +449,8 @@ export function EpisodeActions({
           </div>
 
           <div className="text-center group cursor-pointer">
-            <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-500/30 group-hover:border-blue-500/50 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[50px] sm:min-h-[80px] flex flex-col justify-center">
-              <div className="text-base sm:text-2xl font-bold text-blue-400 mb-0.5 sm:mb-1 leading-tight">
+            <div className="bg-gradient-to-br from-cinehub-accent/16 to-cinehub-accent-hover/16 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-cinehub-accent/25 group-hover:border-cinehub-accent/45 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[50px] sm:min-h-[80px] flex flex-col justify-center">
+              <div className="text-base sm:text-2xl font-bold text-cinehub-accent mb-0.5 sm:mb-1 leading-tight">
                 {voteCount >= 1000
                   ? `${(voteCount / 1000).toFixed(1)}K`
                   : voteCount > 0
@@ -468,8 +468,8 @@ export function EpisodeActions({
         <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
           {runtime && (
             <div className="text-center group cursor-pointer">
-              <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-lg p-2 sm:p-3 border border-purple-500/30 group-hover:border-purple-500/50 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[40px] sm:min-h-[60px] flex flex-col justify-center">
-                <div className="text-sm sm:text-lg font-bold text-purple-400 mb-0.5 leading-tight">
+              <div className="bg-gradient-to-br from-cinehub-accent/12 to-cinehub-accent-hover/12 rounded-lg p-2 sm:p-3 border border-cinehub-accent/25 group-hover:border-cinehub-accent/45 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[40px] sm:min-h-[60px] flex flex-col justify-center">
+                <div className="text-sm sm:text-lg font-bold text-cinehub-accent mb-0.5 leading-tight">
                   {runtime}m
                 </div>
                 <div className="text-[9px] sm:text-[10px] text-slate-300 font-medium uppercase tracking-wide leading-tight">
@@ -481,8 +481,8 @@ export function EpisodeActions({
 
           {airDate && (
             <div className="text-center group cursor-pointer">
-              <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-lg p-2 sm:p-3 border border-emerald-500/30 group-hover:border-emerald-500/50 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[40px] sm:min-h-[60px] flex flex-col justify-center">
-                <div className="text-sm sm:text-lg font-bold text-emerald-400 mb-0.5 leading-tight">
+              <div className="bg-gradient-to-br from-cinehub-accent/12 to-cinehub-accent-hover/12 rounded-lg p-2 sm:p-3 border border-cinehub-accent/25 group-hover:border-cinehub-accent/45 transition-all duration-300 group-hover:scale-105 shadow-lg min-h-[40px] sm:min-h-[60px] flex flex-col justify-center">
+                <div className="text-sm sm:text-lg font-bold text-cinehub-accent mb-0.5 leading-tight">
                   {new Date(airDate).getFullYear()}
                 </div>
                 <div className="text-[9px] sm:text-[10px] text-slate-300 font-medium uppercase tracking-wide leading-tight">
@@ -511,9 +511,9 @@ export function EpisodeActions({
             </div>
           )}
           {voteAverage >= 7.0 && isCurrentEpisodeAvailable && (
-            <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-green-500/20 to-green-600/20 px-2 sm:px-4 py-1 sm:py-2.5 rounded-full border border-green-500/40 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-green-500/25">
-              <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 flex-shrink-0" />
-              <span className="text-[10px] sm:text-sm font-bold text-green-400 whitespace-nowrap">
+            <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-cinehub-accent/18 to-cinehub-accent-hover/18 px-2 sm:px-4 py-1 sm:py-2.5 rounded-full border border-cinehub-accent/35 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-cinehub-accent/25">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-cinehub-accent flex-shrink-0" />
+              <span className="text-[10px] sm:text-sm font-bold text-cinehub-accent whitespace-nowrap">
                 Good Rating
               </span>
             </div>

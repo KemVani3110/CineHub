@@ -57,7 +57,7 @@ const PressPage = () => {
             className="text-center space-y-6"
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
-              <span className="bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-cinehub-accent to-cinehub-accent-hover bg-clip-text text-transparent">
                 Press & Media
               </span>
             </h1>
@@ -88,7 +88,7 @@ const PressPage = () => {
                       fill
                       className="object-cover transition-transform group-hover:scale-105"
                     />
-                    <Badge className="absolute top-4 right-4 bg-blue-500/20 text-blue-300 border-blue-500/30">
+                    <Badge className="absolute top-4 right-4 bg-cinehub-accent/15 text-cinehub-accent border-cinehub-accent/30">
                       {release.category}
                     </Badge>
                   </CardHeader>
@@ -97,7 +97,7 @@ const PressPage = () => {
                       <Calendar className="w-4 h-4" />
                       <span>{release.date}</span>
                     </div>
-                    <CardTitle className="text-xl font-semibold text-white group-hover:text-blue-400 transition-colors">
+                    <CardTitle className="text-xl font-semibold text-white group-hover:text-cinehub-accent transition-colors">
                       {release.title}
                     </CardTitle>
                     <div className="flex items-center justify-between">
@@ -108,7 +108,7 @@ const PressPage = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-blue-400 hover:text-blue-300"
+                        className="text-cinehub-accent hover:text-cinehub-accent-hover"
                       >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Read More
@@ -123,7 +123,7 @@ const PressPage = () => {
       </section>
 
       {/* Media Kit Section */}
-      <section className="py-12 px-4 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-emerald-600/10">
+      <section className="py-12 px-4 bg-gradient-to-r from-cinehub-accent/10 via-slate-800/40 to-cinehub-accent-hover/10">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -150,7 +150,7 @@ const PressPage = () => {
               >
                 <Card className="h-full bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-colors cursor-pointer group">
                   <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-cinehub-accent/15 transition-colors">
                       <Image
                         src={value}
                         alt={key}
@@ -165,7 +165,7 @@ const PressPage = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-blue-400 hover:text-blue-300"
+                      className="text-cinehub-accent hover:text-cinehub-accent-hover"
                     >
                       Download
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -195,7 +195,7 @@ const PressPage = () => {
             </p>
             <Button
               size="lg"
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-cinehub-accent text-slate-950 hover:bg-cinehub-accent-hover"
             >
               Contact Press Team
             </Button>
@@ -206,4 +206,4 @@ const PressPage = () => {
   );
 };
 
-export default PressPage; 
+export default PressPage;

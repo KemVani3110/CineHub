@@ -316,8 +316,8 @@ export default async function AdminDashboardPage({
             <CardTitle className="text-sm font-medium text-slate-300">
               Watchlist Items
             </CardTitle>
-            <div className="p-3 rounded-2xl bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
-              <TrendingUp className="h-6 w-6 text-purple-400" />
+            <div className="p-3 rounded-2xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <TrendingUp className="h-6 w-6 text-primary" />
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -325,7 +325,7 @@ export default async function AdminDashboardPage({
               {stats.totalWatchlist.toLocaleString()}
             </div>
             <p className="text-xs text-slate-400">Items in watchlists</p>
-            <div className="flex items-center text-xs text-purple-400">
+            <div className="flex items-center text-xs text-primary">
               <TrendingUp className="h-3 w-3 mr-1" />
               <span>Movies & TV shows saved</span>
             </div>
@@ -396,39 +396,39 @@ export default async function AdminDashboardPage({
           </CardContent>
         </Card>
 
-        <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 text-white">
+        <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border border-primary/25 shadow-lg bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white hover:border-primary/45">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <p className="text-purple-100 text-sm font-medium">
+                <p className="text-primary text-sm font-medium">
                   Administrators
                 </p>
                 <p className="text-3xl font-bold">
                   {(userStats?.admin_users || 0).toLocaleString()}
                 </p>
-                <p className="text-purple-200 text-xs">Full system access</p>
+                <p className="text-slate-400 text-xs">Full system access</p>
               </div>
-              <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                <Shield className="h-8 w-8 text-white" />
+              <div className="p-4 rounded-2xl bg-primary/12 backdrop-blur-sm group-hover:bg-primary/20 transition-colors">
+                <Shield className="h-8 w-8 text-primary" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg bg-gradient-to-br from-orange-600 via-orange-700 to-orange-800 text-white">
+        <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer border border-primary/25 shadow-lg bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white hover:border-primary/45">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <p className="text-orange-100 text-sm font-medium">
+                <p className="text-primary text-sm font-medium">
                   Moderators
                 </p>
                 <p className="text-3xl font-bold">
                   {(userStats?.moderator_users || 0).toLocaleString()}
                 </p>
-                <p className="text-orange-200 text-xs">Content moderation</p>
+                <p className="text-slate-400 text-xs">Content moderation</p>
               </div>
-              <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                <Activity className="h-8 w-8 text-white" />
+              <div className="p-4 rounded-2xl bg-primary/12 backdrop-blur-sm group-hover:bg-primary/20 transition-colors">
+                <Activity className="h-8 w-8 text-primary" />
               </div>
             </div>
           </CardContent>

@@ -110,7 +110,7 @@ export default function MovieCast({
             </p>
             {person.popularity && (
               <div className="flex items-center gap-1.5 pt-1">
-                <Star className="w-3 h-3 text-warning fill-current" />
+                <Star className="w-3 h-3 text-cinehub-accent fill-current" />
                 <span className="text-xs text-text-sub/80 font-medium">
                   {person.popularity.toFixed(1)}
                 </span>
@@ -179,13 +179,13 @@ export default function MovieCast({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div className="space-y-2">
               <h3 className="text-2xl sm:text-3xl font-bold text-text-main flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                  <Users className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cinehub-accent/25 to-cinehub-accent/10 border border-cinehub-accent/25 flex items-center justify-center shadow-lg shadow-cinehub-accent/10">
+                  <Users className="w-5 h-5 text-cinehub-accent" />
                 </div>
                 Main Cast
                 <Badge
                   variant="secondary"
-                  className="bg-blue-500/20 text-blue-400 border-blue-500/30 hidden sm:inline-flex"
+                  className="bg-cinehub-accent/10 text-cinehub-accent border-cinehub-accent/30 hidden sm:inline-flex"
                 >
                   {credits.cast.length} members
                 </Badge>
@@ -199,7 +199,7 @@ export default function MovieCast({
               <Button
                 variant="ghost"
                 onClick={() => setShowAllCast(!showAllCast)}
-                className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 cursor-pointer group self-start sm:self-auto"
+                className="text-cinehub-accent hover:text-cinehub-accent-hover hover:bg-cinehub-accent/10 border border-cinehub-accent/20 hover:border-cinehub-accent/40 transition-all duration-300 cursor-pointer group self-start sm:self-auto"
               >
                 {showAllCast
                   ? "Show Less"
@@ -227,13 +227,13 @@ export default function MovieCast({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div className="space-y-2">
               <h3 className="text-2xl sm:text-3xl font-bold text-text-main flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg">
-                  <Camera className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cinehub-accent/25 to-cinehub-accent/10 border border-cinehub-accent/25 flex items-center justify-center shadow-lg shadow-cinehub-accent/10">
+                  <Camera className="w-5 h-5 text-cinehub-accent" />
                 </div>
                 Key Crew
                 <Badge
                   variant="secondary"
-                  className="bg-orange-500/20 text-orange-400 border-orange-500/30 hidden sm:inline-flex"
+                  className="bg-cinehub-accent/10 text-cinehub-accent border-cinehub-accent/30 hidden sm:inline-flex"
                 >
                   {keyCrew.length} professionals
                 </Badge>
@@ -247,7 +247,7 @@ export default function MovieCast({
               <Button
                 variant="ghost"
                 onClick={() => setShowAllCrew(!showAllCrew)}
-                className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 border border-orange-500/20 hover:border-orange-500/40 transition-all duration-300 cursor-pointer group self-start sm:self-auto"
+                className="text-cinehub-accent hover:text-cinehub-accent-hover hover:bg-cinehub-accent/10 border border-cinehub-accent/20 hover:border-cinehub-accent/40 transition-all duration-300 cursor-pointer group self-start sm:self-auto"
               >
                 {showAllCrew ? "Show Less" : `Show All (${keyCrew.length})`}
                 <ChevronRight
@@ -276,8 +276,8 @@ export default function MovieCast({
           <CardContent className="p-6 sm:p-8">
             <div className="mb-8 space-y-2">
               <h3 className="text-2xl sm:text-3xl font-bold text-text-main flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <Award className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cinehub-accent/25 to-cinehub-accent/10 border border-cinehub-accent/25 flex items-center justify-center shadow-lg shadow-cinehub-accent/10">
+                  <Award className="w-5 h-5 text-cinehub-accent" />
                 </div>
                 Crew by Department
               </h3>
@@ -295,14 +295,14 @@ export default function MovieCast({
                 );
                 return (
                   <div key={department} className="group cursor-pointer">
-                    <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-5 space-y-4 hover:border-purple-500/40 hover:bg-purple-500/10 transition-all duration-300">
+                    <div className="bg-gradient-to-br from-cinehub-accent/10 to-cinehub-accent/5 border border-cinehub-accent/20 rounded-xl p-5 space-y-4 hover:border-cinehub-accent/40 hover:bg-cinehub-accent/10 transition-all duration-300">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-lg font-semibold text-purple-400 group-hover:text-purple-300 transition-colors duration-300">
+                        <h4 className="text-lg font-semibold text-cinehub-accent group-hover:text-cinehub-accent-hover transition-colors duration-300">
                           {department}
                         </h4>
                         <Badge
                           variant="outline"
-                          className="text-xs bg-purple-500/10 border-purple-500/30 text-purple-400"
+                          className="text-xs bg-cinehub-accent/10 border-cinehub-accent/30 text-cinehub-accent"
                         >
                           {departmentCrew.length}
                         </Badge>

@@ -631,7 +631,7 @@ export function VideoPlayer({
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="relative">
               <div className="w-16 h-16 border-4 border-slate-600 border-t-teal-400 rounded-full animate-spin"></div>
-              <RefreshCw className="w-8 h-8 text-teal-400 absolute inset-0 m-auto animate-pulse" />
+              <RefreshCw className="w-8 h-8 text-cinehub-accent absolute inset-0 m-auto animate-pulse" />
             </div>
             <div className="space-y-2">
               <p className="text-white text-lg font-semibold">Loading Stream</p>
@@ -703,7 +703,7 @@ export function VideoPlayer({
           <div className="text-center text-white space-y-6">
             <div className="relative">
               <div className="w-20 h-20 border-4 border-slate-600 border-t-teal-400 rounded-full mx-auto animate-spin"></div>
-              <Tv className="w-10 h-10 text-teal-400 absolute inset-0 m-auto" />
+              <Tv className="w-10 h-10 text-cinehub-accent absolute inset-0 m-auto" />
             </div>
             <div className="space-y-2">
               <p className="text-xl font-bold text-white">
@@ -757,12 +757,12 @@ export function VideoPlayer({
                 >
                   <div
                     className={cn(
-                      "flex items-center gap-2 rounded-2xl border border-teal-400/45 bg-teal-500/15 backdrop-blur-md shadow-lg",
+                      "flex items-center gap-2 rounded-2xl border border-cinehub-accent/45 bg-cinehub-accent/15 backdrop-blur-md shadow-lg",
                       isMobile ? "px-3 py-1.5" : "px-4 py-2"
                     )}
                   >
-                    <div className="w-2.5 h-2.5 bg-teal-400 rounded-full animate-pulse shadow-lg shadow-teal-400/50"></div>
-                    <span className="text-teal-100 font-semibold">
+                    <div className="w-2.5 h-2.5 bg-cinehub-accent rounded-full animate-pulse shadow-lg shadow-cinehub-accent/50"></div>
+                    <span className="text-cinehub-accent font-semibold">
                       {selectedSource.name}
                     </span>
                   </div>
@@ -794,7 +794,7 @@ export function VideoPlayer({
                   ? "h-10 min-w-10 px-3 active:scale-95"
                   : "h-11 px-4",
                 isTheaterMode &&
-                  "border-teal-400/50 bg-teal-500/25 hover:bg-teal-500/35"
+                  "border-cinehub-accent/50 bg-cinehub-accent/25 hover:bg-cinehub-accent/35"
               )}
               title={isTheaterMode ? "Exit Theater Mode" : "Enter Theater Mode"}
             >
@@ -856,13 +856,13 @@ export function VideoPlayer({
                         className={cn(
                           "text-white hover:bg-gradient-to-r hover:from-slate-700/50 hover:to-slate-600/50 cursor-pointer rounded-xl p-4 mb-2 transition-all duration-300 hover:scale-105",
                           selectedSource?.name === source.name &&
-                            "bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-teal-400/40 shadow-lg"
+                            "bg-gradient-to-r from-cinehub-accent/20 to-cinehub-accent-hover/20 border border-cinehub-accent/40 shadow-lg"
                         )}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-3">
                             {selectedSource?.name === source.name && (
-                              <div className="w-2.5 h-2.5 bg-teal-400 rounded-full shadow-lg shadow-teal-400/50"></div>
+                              <div className="w-2.5 h-2.5 bg-cinehub-accent rounded-full shadow-lg shadow-cinehub-accent/50"></div>
                             )}
                             <div className="flex flex-col">
                               <span className="font-semibold">{source.name}</span>
@@ -993,7 +993,7 @@ export function VideoPlayer({
                 onClick={togglePlay}
                 size="lg"
                 className={cn(
-                  "bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 cursor-pointer border-4 border-white/20",
+                  "bg-gradient-to-r from-cinehub-accent to-cinehub-accent-hover hover:from-cinehub-accent-hover hover:to-cinehub-accent text-slate-950 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 cursor-pointer border-4 border-white/20",
                   isMobile
                     ? "p-6 sm:p-8 min-w-[72px] min-h-[72px] sm:min-w-[96px] sm:min-h-[96px] active:scale-95"
                     : "p-8"

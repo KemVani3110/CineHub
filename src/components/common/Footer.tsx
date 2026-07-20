@@ -54,19 +54,19 @@ const developerLinks = [
     name: "LinkedIn",
     href: "https://www.linkedin.com/in/kh%C3%B4i-chu-7b2857308",
     icon: Linkedin,
-    color: "hover:bg-blue-700",
+    color: "hover:bg-cinehub-accent hover:text-slate-950",
   },
   {
     name: "Facebook",
     href: "https://www.facebook.com/MrKemVani/",
     icon: Facebook,
-    color: "hover:bg-blue-600",
+    color: "hover:bg-cinehub-accent hover:text-slate-950",
   },
   {
     name: "Email",
     href: "mailto:minhkhoi3110953@gmail.com",
     icon: Mail,
-    color: "hover:bg-emerald-600",
+    color: "hover:bg-cinehub-accent hover:text-slate-950",
   },
 ];
 

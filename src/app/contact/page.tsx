@@ -94,22 +94,22 @@ export default function ContactPage() {
       value: MAIN_CONTACT_EMAIL,
       href: `mailto:${MAIN_CONTACT_EMAIL}`,
       icon: Mail,
-      tone: "text-cyan-200",
-      bg: "bg-cyan-400/10",
+      tone: "text-[var(--cinehub-accent)]",
+      bg: "bg-[var(--cinehub-accent)]/12",
     },
     {
       title: "Response",
       value: "Usually within 24 hours",
       icon: Clock3,
-      tone: "text-amber-200",
-      bg: "bg-amber-300/10",
+      tone: "text-[var(--cinehub-accent)]",
+      bg: "bg-[var(--cinehub-accent)]/12",
     },
     {
       title: "Location",
       value: "Ho Chi Minh City, Vietnam",
       icon: MapPin,
-      tone: "text-emerald-200",
-      bg: "bg-emerald-300/10",
+      tone: "text-[var(--cinehub-accent)]",
+      bg: "bg-[var(--cinehub-accent)]/12",
     },
   ];
 
@@ -189,7 +189,7 @@ export default function ContactPage() {
                       I read every message from this form.
                     </p>
                   </div>
-                  <div className="hidden rounded-lg border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-semibold text-emerald-200 sm:inline-flex">
+                  <div className="hidden rounded-lg border border-[var(--cinehub-accent)]/25 bg-[var(--cinehub-accent)]/10 px-3 py-2 text-xs font-semibold text-[var(--cinehub-accent)] sm:inline-flex">
                     Online
                   </div>
                 </div>
