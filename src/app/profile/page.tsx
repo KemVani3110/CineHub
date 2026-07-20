@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import { useToast } from "@/components/ui/use-toast";
-import { Card, CardContent} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Image as ImageIcon,
-  ChevronLeft,
-  Shield,
+  ArrowLeft,
+  BadgeCheck,
+  CalendarDays,
   Camera,
+  Clock3,
+  Image as ImageIcon,
   Mail,
+  Shield,
+  UserRound,
 } from "lucide-react";
 import Link from "next/link";
 import { useProfileStore } from "@/store/profileStore";
@@ -28,6 +30,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Settings from "@/components/profile/Settings";
 import { AuthProvider } from "@/types/auth";
+
+function formatProfileDate(value?: string) {
+  if (!value) return "Not available";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not available";
+
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function getProviderLabel(provider?: AuthProvider) {
+  if (provider === AuthProvider.GOOGLE) return "Google";
+  if (provider === AuthProvider.FACEBOOK) return "Facebook";
+  return "Email";
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -61,7 +82,7 @@ export default function ProfilePage() {
         await fetchAvatars();
         setActiveTab("settings");
       } catch (error) {
-        console.error('Error initializing profile:', error);
+        console.error("Error initializing profile:", error);
         toast({
           title: "Error",
           description: "Failed to load profile data. Please try again.",
@@ -104,161 +125,231 @@ export default function ProfilePage() {
     return <Loading message="Loading profile..." />;
   }
 
+  const providerLabel = getProviderLabel(user?.provider);
+  const accountStats = [
+    {
+      label: "Member since",
+      value: formatProfileDate(user?.created_at),
+      icon: CalendarDays,
+      tone: "text-emerald-300",
+    },
+    {
+      label: "Last active",
+      value: formatProfileDate(user?.last_login_at),
+      icon: Clock3,
+      tone: "text-sky-300",
+    },
+    {
+      label: "Sign-in method",
+      value: providerLabel,
+      icon: Shield,
+      tone: "text-amber-300",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[var(--bg-main)]">
-      {/*  Header with Cover Background */}
-      <div className="relative">
-        {/* Cover Background */}
-        <div className="h-48 lg:h-64 bg-gradient-to-br from-[var(--cinehub-accent)]/20 via-[var(--bg-card)] to-[var(--cinehub-accent)]/10 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-main)] via-transparent to-transparent" />
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--cinehub-accent)]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[var(--success)]/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
-        </div>
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]">
+      <section className="border-b border-[var(--border)]/60 bg-[linear-gradient(135deg,rgba(20,184,166,0.18),rgba(15,23,42,0.96)_42%,rgba(248,113,113,0.12))]">
+        <div className="container mx-auto px-4 py-5 sm:px-6 lg:px-8">
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <Button
+              variant="ghost"
+              className="min-h-11 cursor-pointer rounded-full border border-[var(--border)]/70 bg-slate-950/30 px-4 text-[var(--text-main)] hover:bg-slate-800/80"
+              asChild
+            >
+              <Link href="/home">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to home
+              </Link>
+            </Button>
 
-        {/* Header Navigation */}
-        <div className="absolute top-0 left-0 right-0 p-4 lg:p-6">
-          <div className="container mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full bg-[var(--bg-card)]/80 backdrop-blur-md border border-[var(--border)]/50 hover:bg-[var(--bg-card)] transition-all duration-200"
-                asChild
-              >
-                <Link href="/home">
-                  <ChevronLeft size={20} />
-                </Link>
-              </Button>
-              <h1 className="text-xl lg:text-2xl font-bold gradient-text">Profile Settings</h1>
-            </div>
+            <Badge className="min-h-9 border border-[var(--cinehub-accent)]/30 bg-[var(--cinehub-accent)]/12 px-4 text-[var(--cinehub-accent)]">
+              <BadgeCheck className="mr-2 h-4 w-4" />
+              Account profile
+            </Badge>
           </div>
-        </div>
 
-        {/* Profile Header Card */}
-        <div className="container mx-auto px-4 lg:px-6 relative -mt-16">
-          <Card className="bg-[var(--bg-card)]/95 backdrop-blur-xl border-[var(--border)]/50 shadow-2xl">
-            <CardContent className="p-6 lg:p-8">
-              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                {/* Avatar Section */}
-                <div className="relative flex-shrink-0">
-                  <div className="relative">
-                    <Avatar className="h-28 w-28 lg:h-32 lg:w-32 border-4 border-[var(--cinehub-accent)]/30 shadow-xl">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] lg:items-end">
+            <Card className="overflow-hidden border-[var(--border)]/70 bg-slate-950/55 shadow-2xl backdrop-blur-xl">
+              <CardContent className="p-5 sm:p-7">
+                <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+                  <div className="relative w-fit shrink-0">
+                    <Avatar className="h-28 w-28 border-4 border-[var(--cinehub-accent)]/35 shadow-2xl sm:h-32 sm:w-32">
                       <AvatarImage
                         src={user?.avatar}
                         alt={user?.name || "User"}
                         className="object-cover"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-[var(--cinehub-accent)]/20 to-[var(--success)]/20 text-[var(--cinehub-accent)] text-2xl lg:text-3xl font-bold">
+                      <AvatarFallback className="bg-gradient-to-br from-[var(--cinehub-accent)]/25 to-emerald-400/15 text-3xl font-bold text-[var(--cinehub-accent)]">
                         {getUserInitials(user?.name || "User")}
                       </AvatarFallback>
                     </Avatar>
                     <Button
-                      variant="ghost"
+                      type="button"
                       size="icon"
-                      className="absolute -bottom-1 -right-1 h-10 w-10 rounded-full bg-[var(--cinehub-accent)] hover:bg-[var(--cinehub-accent-hover)] text-[var(--bg-main)] shadow-lg border-2 border-[var(--bg-card)]"
+                      className="absolute -bottom-2 -right-2 h-11 w-11 cursor-pointer rounded-full border-2 border-slate-950 bg-[var(--cinehub-accent)] text-slate-950 shadow-xl hover:bg-[var(--cinehub-accent-hover)]"
                       onClick={() => setIsAvatarDialogOpen(true)}
+                      aria-label="Change avatar"
                     >
-                      <Camera size={16} />
+                      <Camera className="h-5 w-5" />
                     </Button>
-                  </div>
-                  
-                  {/* Online Status */}
-                  <div className="absolute -top-1 -right-1">
-                    <div className="w-4 h-4 bg-[var(--success)] rounded-full border-2 border-[var(--bg-card)] animate-pulse" />
-                  </div>
-                </div>
-
-                {/* User Info */}
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-2xl lg:text-3xl font-bold text-[var(--text-main)]">{user?.name}</h2>
-                      <Badge className="bg-[var(--cinehub-accent)]/10 text-[var(--cinehub-accent)] border-[var(--cinehub-accent)]/30 px-3 py-1">
-                        <Shield size={12} className="mr-1" />
-                        {user?.role}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-[var(--text-sub)]">
-                      <Mail size={14} />
-                      <span className="text-sm lg:text-base">{user?.email}</span>
-                    </div>
+                    <span className="absolute right-1 top-1 h-4 w-4 rounded-full border-2 border-slate-950 bg-emerald-400" />
                   </div>
 
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="text-center p-3 rounded-lg bg-[var(--bg-main)]/50">
-                      <div className="text-lg lg:text-xl font-bold text-[var(--cinehub-accent)]">
-                        {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { 
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        }) : 'N/A'}
+                  <div className="min-w-0 flex-1 space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h1 className="break-words text-3xl font-bold tracking-normal text-white sm:text-4xl">
+                          {user?.name || "CineHub User"}
+                        </h1>
+                        <Badge variant="outline" className="h-8 border-[var(--cinehub-accent)]/40 bg-[var(--cinehub-accent)]/10 px-3 capitalize text-[var(--cinehub-accent)]">
+                          {user?.role || "user"}
+                        </Badge>
                       </div>
-                      <div className="text-xs text-[var(--text-sub)]">Member Since</div>
+                      <div className="flex min-w-0 items-center gap-2 text-sm text-[var(--text-sub)] sm:text-base">
+                        <Mail className="h-4 w-4 shrink-0 text-[var(--cinehub-accent)]" />
+                        <span className="truncate">{user?.email}</span>
+                      </div>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-[var(--bg-main)]/50">
-                      <div className="text-lg lg:text-xl font-bold text-[var(--success)]">
-                        {user?.last_login_at ? new Date(user.last_login_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        }) : 'Never'}
-                      </div>
-                      <div className="text-xs text-[var(--text-sub)]">Last Active</div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        type="button"
+                        className="min-h-11 cursor-pointer rounded-full bg-[var(--cinehub-accent)] px-5 font-semibold text-slate-950 hover:bg-[var(--cinehub-accent-hover)]"
+                        onClick={() => setIsAvatarDialogOpen(true)}
+                      >
+                        <ImageIcon className="mr-2 h-4 w-4" />
+                        Choose avatar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="min-h-11 cursor-pointer rounded-full border-[var(--border)]/70 bg-slate-950/25 px-5 text-[var(--text-main)] hover:bg-slate-800/80"
+                        asChild
+                      >
+                        <Link href="/watchlist">View watchlist</Link>
+                      </Button>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              {accountStats.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-[var(--border)]/70 bg-slate-950/45 p-4 backdrop-blur-xl"
+                  >
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/80">
+                      <Icon className={`h-5 w-5 ${item.tone}`} />
+                    </div>
+                    <p className="text-xs uppercase tracking-wider text-[var(--text-sub)]">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-white sm:text-base">
+                      {item.value}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Settings Content */}
-      <div className="container mx-auto px-4 lg:px-6 py-8">
+      <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--cinehub-accent)]/12">
+            <UserRound className="h-5 w-5 text-[var(--cinehub-accent)]" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Profile settings</h2>
+            <p className="text-sm text-[var(--text-sub)]">
+              Manage your public identity and account security.
+            </p>
+          </div>
+        </div>
+
         {user?.provider === AuthProvider.LOCAL ? (
           <Settings />
         ) : (
-          <Card className="bg-[var(--bg-card)]/95 backdrop-blur-xl border-[var(--border)]/50">
-            <CardContent className="p-6">
-              <div className="text-center space-y-4">
-                <h3 className="text-xl font-semibold text-[var(--text-main)]">Settings Not Available</h3>
-                <p className="text-[var(--text-sub)]">
-                  Settings are only available for users who registered with email and password.
-                  You are currently logged in with {user?.provider === AuthProvider.GOOGLE ? 'Google' : 'Facebook'}.
+          <Card className="border-[var(--border)]/70 bg-slate-950/55 shadow-xl">
+            <CardContent className="p-6 sm:p-8">
+              <div className="mx-auto max-w-2xl text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--cinehub-accent)]/12">
+                  <Shield className="h-6 w-6 text-[var(--cinehub-accent)]" />
+                </div>
+                <h3 className="text-xl font-semibold text-white">Managed by {providerLabel}</h3>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-sub)]">
+                  Profile editing and password changes are only available for email accounts.
+                  This account signs in with {providerLabel}, so authentication details are managed by that provider.
                 </p>
               </div>
             </CardContent>
           </Card>
         )}
-      </div>
+      </main>
 
-      {/*  Avatar Selection Dialog */}
       <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-[var(--bg-card)]/95 backdrop-blur-xl border-[var(--border)]/50">
+        <DialogContent className="border-[var(--border)]/70 bg-slate-950 text-white sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-[var(--text-main)] text-xl">Choose Your Avatar</DialogTitle>
+            <DialogTitle className="text-xl">Choose your public avatar</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="h-[400px] pr-4">
-            <div className="grid grid-cols-3 gap-4 p-2">
-              {availableAvatars.map((avatar, index) => (
-                <Button
-                  key={index}
-                  variant="ghost"
-                  className="h-auto p-2 hover:bg-[var(--cinehub-accent)]/10 hover:scale-105 transition-all duration-200 rounded-xl border-2 border-transparent hover:border-[var(--cinehub-accent)]/30"
-                  onClick={() => handleAvatarSelect(avatar)}
-                >
-                  <Image
-                    src={avatar}
-                    alt={`Avatar ${index + 1}`}
-                    width={100}
-                    height={100}
-                    className="rounded-lg shadow-lg"
-                  />
-                </Button>
-              ))}
+
+          <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+            <div className="rounded-2xl border border-[var(--border)]/70 bg-slate-900/65 p-5">
+              <p className="mb-4 text-sm font-medium text-[var(--text-sub)]">Current avatar</p>
+              <Avatar className="mx-auto h-32 w-32 border-4 border-[var(--cinehub-accent)]/30">
+                <AvatarImage src={user?.avatar} alt={user?.name || "User"} className="object-cover" />
+                <AvatarFallback className="bg-[var(--cinehub-accent)]/15 text-3xl font-bold text-[var(--cinehub-accent)]">
+                  {getUserInitials(user?.name || "User")}
+                </AvatarFallback>
+              </Avatar>
+              <p className="mt-4 text-center text-sm font-semibold text-white">
+                {user?.name || "CineHub User"}
+              </p>
             </div>
-          </ScrollArea>
+
+            <div className="max-h-[65vh] overflow-y-auto pr-1">
+              {availableAvatars.length ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                  {availableAvatars.map((avatar, index) => {
+                    const isSelected = user?.avatar === avatar;
+                    return (
+                      <Button
+                        key={avatar}
+                        type="button"
+                        variant="ghost"
+                        className={`h-auto min-h-28 cursor-pointer rounded-2xl border p-3 transition-all hover:-translate-y-0.5 hover:bg-[var(--cinehub-accent)]/10 ${
+                          isSelected
+                            ? "border-[var(--cinehub-accent)] bg-[var(--cinehub-accent)]/12"
+                            : "border-slate-800 bg-slate-900/55 hover:border-[var(--cinehub-accent)]/40"
+                        }`}
+                        onClick={() => handleAvatarSelect(avatar)}
+                      >
+                        <Avatar className="h-20 w-20 rounded-2xl">
+                          <AvatarImage
+                            src={avatar}
+                            alt={`Avatar ${index + 1}`}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="rounded-2xl bg-slate-800 text-slate-300">
+                            {index + 1}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center text-sm text-[var(--text-sub)]">
+                  No avatars available yet
+                </div>
+              )}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

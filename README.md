@@ -7,7 +7,7 @@
 <h3 align="center">A modern movie and TV discovery platform built with Next.js, Firebase, Firestore, and TMDB.</h3>
 
 <p align="center">
-  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.9.2-14b8a6?style=for-the-badge" /></a>
+  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.10.0-14b8a6?style=for-the-badge" /></a>
   <a href="#"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.19-black?style=for-the-badge&logo=nextdotjs" /></a>
   <a href="#"><img alt="React" src="https://img.shields.io/badge/React-19.1.8-61dafb?style=for-the-badge&logo=react&logoColor=111827" /></a>
   <a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-Firestore-f59e0b?style=for-the-badge&logo=firebase&logoColor=111827" /></a>
@@ -251,8 +251,10 @@ After deployment, verify:
 Current application version:
 
 ```text
-2.9.2
+2.10.0
 ```
+
+Version 2.10.0 redesigns the Profile page with a cleaner account header, practical settings layout, improved avatar picker, and bundled local default avatars for user profiles.
 
 Version 2.9.2 standardizes admin pagination so data-heavy admin lists show at most 5 items per page, including users, activity logs, source reports, contact messages, analytics highlights, and avatar management.
 

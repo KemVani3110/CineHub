@@ -5,11 +5,18 @@ import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { adminDb, toIsoString } from "@/lib/firebase-admin";
 
 const AVATAR_DIR = join(process.cwd(), "public", "uploads", "avatars");
-const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
+const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]);
 
 function getExtension(filename: string) {
   const dotIndex = filename.lastIndexOf(".");
   return dotIndex >= 0 ? filename.slice(dotIndex).toLowerCase() : "";
+}
+
+function getMimeType(filename: string) {
+  const extension = getExtension(filename);
+  if (extension === ".svg") return "image/svg+xml";
+  if (extension === ".jpg") return "image/jpeg";
+  return `image/${extension.slice(1)}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -33,7 +40,7 @@ export async function GET(request: NextRequest) {
             original_name: filename,
             file_path: `/uploads/avatars/${filename}`,
             file_size: fileStat.size,
-            mime_type: `image/${getExtension(filename).slice(1)}`,
+            mime_type: getMimeType(filename),
             uploaded_by: null,
             is_active: true,
             created_at: fileStat.birthtime.toISOString(),
