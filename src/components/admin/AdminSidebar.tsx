@@ -297,12 +297,22 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
           )}
 
           {/* Navigation Section */}
-          <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4 min-h-0">
+          <nav
+            className={cn(
+              "flex-1 min-h-0",
+              isCollapsed
+                ? "space-y-2 overflow-hidden px-2 py-3"
+                : "space-y-5 overflow-y-auto px-3 py-4"
+            )}
+          >
             {navSections.map((section) => {
               const items = navItems.filter((item) => item.section === section);
 
               return (
-                <div key={section} className="space-y-1.5">
+                <div
+                  key={section}
+                  className={cn(isCollapsed ? "space-y-1" : "space-y-1.5")}
+                >
                   {!isCollapsed && (
                     <div className="px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                       {section}
@@ -320,7 +330,10 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          "group relative flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                          "group relative flex items-center rounded-xl text-sm font-medium transition-all duration-200",
+                          isCollapsed
+                            ? "min-h-10 justify-center px-2 py-2"
+                            : "min-h-11 gap-3 px-4 py-3",
                           isActive
                             ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                             : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
@@ -328,11 +341,12 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                       >
                         <div
                           className={cn(
-                            "relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors",
+                            "relative flex flex-shrink-0 items-center justify-center rounded-lg transition-colors",
+                            isCollapsed ? "h-7 w-7" : "h-8 w-8",
                             isActive ? "bg-primary-foreground/15" : "bg-background/40"
                           )}
                         >
-                          <Icon size={18} />
+                          <Icon size={isCollapsed ? 17 : 18} />
                         </div>
 
                         {!isCollapsed && (
@@ -350,7 +364,12 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                         )}
 
                         {isActive && (
-                          <div className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground" />
+                          <div
+                            className={cn(
+                              "absolute left-0 top-1/2 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground",
+                              isCollapsed ? "h-6" : "h-7"
+                            )}
+                          />
                         )}
                       </Link>
                     );

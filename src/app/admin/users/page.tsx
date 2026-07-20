@@ -7,7 +7,7 @@ export default function UserManagementPage() {
   const { user } = useAuth();
 
   return (
-    <div className="p-6">
+    <div className="p-0">
       <UserManagement currentUserId={user?.id?.toString()} />
     </div>
   );
