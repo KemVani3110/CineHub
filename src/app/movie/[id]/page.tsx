@@ -7,7 +7,19 @@ import { TMDBMovieDetails } from "@/types/tmdb";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clapperboard, Images, ScrollText, Share2, Star, Clock, Calendar, Users } from "lucide-react";
+import {
+  CheckCircle2,
+  Clapperboard,
+  Hourglass,
+  Images,
+  ScrollText,
+  Share2,
+  Star,
+  Clock,
+  Calendar,
+  Users,
+  Video,
+} from "lucide-react";
 import { getImageUrl } from "@/services/tmdb";
 import { TMDBGenre } from "@/types/tmdb";
 import { WatchlistButton } from "@/components/common/WatchlistButton";
@@ -103,6 +115,14 @@ export default function MovieDetail() {
   };
 
   const isUpcoming = isFutureDate(movie.release_date);
+  const releaseLabel = movie.release_date
+    ? new Date(`${movie.release_date}T00:00:00Z`).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+    : "Release date unknown";
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -146,10 +166,9 @@ export default function MovieDetail() {
                       unoptimized={false}
                     />
                   ) : (
-                    // Fallback for missing poster
                     <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-400">
                       <div className="text-center">
-                        <div className="text-4xl mb-2">🎬</div>
+                        <Clapperboard className="mx-auto mb-2 h-10 w-10" />
                         <div className="text-sm">No Poster</div>
                       </div>
                     </div>
@@ -213,6 +232,48 @@ export default function MovieDetail() {
                     +{movie.genres.length - 4} more
                   </Badge>
                 )}
+              </div>
+
+              <div
+                className={`rounded-2xl border p-4 backdrop-blur-md ${
+                  isUpcoming
+                    ? "border-amber-400/30 bg-amber-400/10"
+                    : "border-emerald-400/30 bg-emerald-400/10"
+                }`}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3 text-left">
+                    <div
+                      className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        isUpcoming
+                          ? "bg-amber-400/15 text-amber-300"
+                          : "bg-emerald-400/15 text-emerald-300"
+                      }`}
+                    >
+                      {isUpcoming ? (
+                        <Hourglass className="h-5 w-5" />
+                      ) : (
+                        <CheckCircle2 className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-white">
+                        {isUpcoming ? "Coming soon" : "Available to watch"}
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-slate-300">
+                        {isUpcoming
+                          ? `This movie is scheduled for ${releaseLabel}. Watch the trailer while waiting for release.`
+                          : `Released on ${releaseLabel}. You can start watching now or save it for later.`}
+                      </p>
+                    </div>
+                  </div>
+                  {isUpcoming && (
+                    <div className="flex w-fit items-center gap-2 rounded-full border border-amber-300/25 bg-slate-950/35 px-3 py-2 text-sm font-semibold text-amber-200">
+                      <Video className="h-4 w-4" />
+                      Trailer mode
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Rating Section */}

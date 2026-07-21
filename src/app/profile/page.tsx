@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,13 +14,20 @@ import {
 } from "@/components/ui/dialog";
 import {
   ArrowLeft,
+  Activity,
   BadgeCheck,
+  BookOpen,
   CalendarDays,
   Camera,
   Clock3,
+  Heart,
   Image as ImageIcon,
+  KeyRound,
+  LockKeyhole,
   Mail,
+  PlayCircle,
   Shield,
+  Star,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +37,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Settings from "@/components/profile/Settings";
 import { AuthProvider } from "@/types/auth";
+import { authenticatedFetch } from "@/lib/firebase-auth-api";
+
+interface ProfileStats {
+  watched: number;
+  watchlist: number;
+  ratings: number;
+  favoriteActors: number;
+  recentActivity: Array<{
+    id: string;
+    type: string;
+    title: string;
+    mediaType: string;
+    date: string;
+  }>;
+}
 
 function formatProfileDate(value?: string) {
   if (!value) return "Not available";
@@ -50,6 +72,18 @@ function getProviderLabel(provider?: AuthProvider) {
   return "Email";
 }
 
+function formatActivityTime(value?: string) {
+  if (!value) return "Recently";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Recently";
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -65,6 +99,14 @@ export default function ProfilePage() {
     fetchUserData,
     fetchAvatars,
   } = useProfileStore();
+  const [profileStats, setProfileStats] = useState<ProfileStats>({
+    watched: 0,
+    watchlist: 0,
+    ratings: 0,
+    favoriteActors: 0,
+    recentActivity: [],
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) {
@@ -78,8 +120,16 @@ export default function ProfilePage() {
 
     const initializeProfile = async () => {
       try {
-        await fetchUserData();
-        await fetchAvatars();
+        const statsRequest = authenticatedFetch("/api/profile/stats", {
+          cache: "no-store",
+        });
+
+        await Promise.all([fetchUserData(), fetchAvatars()]);
+
+        const statsResponse = await statsRequest;
+        if (statsResponse.ok) {
+          setProfileStats(await statsResponse.json());
+        }
         setActiveTab("settings");
       } catch (error) {
         console.error("Error initializing profile:", error);
@@ -88,6 +138,8 @@ export default function ProfilePage() {
           description: "Failed to load profile data. Please try again.",
           variant: "destructive",
         });
+      } finally {
+        setStatsLoading(false);
       }
     };
 
@@ -144,6 +196,32 @@ export default function ProfilePage() {
       value: providerLabel,
       icon: Shield,
       tone: "text-[var(--cinehub-accent)]",
+    },
+  ];
+  const engagementStats = [
+    {
+      label: "Watched",
+      value: profileStats.watched,
+      icon: PlayCircle,
+      href: "/history",
+    },
+    {
+      label: "Watchlist",
+      value: profileStats.watchlist,
+      icon: BookOpen,
+      href: "/watchlist",
+    },
+    {
+      label: "Ratings",
+      value: profileStats.ratings,
+      icon: Star,
+      href: "/history",
+    },
+    {
+      label: "Favorite actors",
+      value: profileStats.favoriteActors,
+      icon: Heart,
+      href: "/favorite-actors",
     },
   ];
 
@@ -260,6 +338,131 @@ export default function ProfilePage() {
       </section>
 
       <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <section className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {engagementStats.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="group rounded-2xl border border-[var(--border)]/70 bg-slate-950/45 p-5 transition-colors hover:border-[var(--cinehub-accent)]/45 hover:bg-slate-900/75"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--cinehub-accent)]/12">
+                    <Icon className="h-5 w-5 text-[var(--cinehub-accent)]" />
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="border-[var(--cinehub-accent)]/25 bg-[var(--cinehub-accent)]/8 text-[var(--cinehub-accent)]"
+                  >
+                    Live
+                  </Badge>
+                </div>
+                <p className="mt-4 text-3xl font-bold text-white">
+                  {statsLoading ? "..." : item.value}
+                </p>
+                <p className="mt-1 text-sm text-[var(--text-sub)]">
+                  {item.label}
+                </p>
+              </Link>
+            );
+          })}
+        </section>
+
+        <section className="mb-8 grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <Card className="border-[var(--border)]/70 bg-slate-950/55 shadow-xl">
+            <CardContent className="p-5 sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--cinehub-accent)]/12">
+                  <Activity className="h-5 w-5 text-[var(--cinehub-accent)]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    Activity timeline
+                  </h2>
+                  <p className="text-sm text-[var(--text-sub)]">
+                    Your latest saved, watched, and favorite activity.
+                  </p>
+                </div>
+              </div>
+
+              {profileStats.recentActivity.length > 0 ? (
+                <div className="space-y-3">
+                  {profileStats.recentActivity.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 rounded-2xl border border-[var(--border)]/60 bg-slate-900/45 p-3"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-950/70">
+                        {item.mediaType === "actor" ? (
+                          <Heart className="h-4 w-4 text-[var(--cinehub-accent)]" />
+                        ) : item.mediaType === "tv" ? (
+                          <BookOpen className="h-4 w-4 text-[var(--cinehub-accent)]" />
+                        ) : (
+                          <PlayCircle className="h-4 w-4 text-[var(--cinehub-accent)]" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-white">
+                          {item.type}: {item.title}
+                        </p>
+                        <p className="text-xs text-[var(--text-sub)]">
+                          {formatActivityTime(item.date)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[var(--border)]/70 p-8 text-center text-sm text-[var(--text-sub)]">
+                  Start watching or saving titles and your timeline will appear
+                  here.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--border)]/70 bg-slate-950/55 shadow-xl">
+            <CardContent className="p-5 sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--cinehub-accent)]/12">
+                  <LockKeyhole className="h-5 w-5 text-[var(--cinehub-accent)]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    Account security
+                  </h2>
+                  <p className="text-sm text-[var(--text-sub)]">
+                    Sign-in method and password control.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-[var(--border)]/60 bg-slate-900/45 p-4">
+                  <p className="text-xs uppercase tracking-wider text-[var(--text-sub)]">
+                    Provider
+                  </p>
+                  <p className="mt-1 font-semibold text-white">
+                    {providerLabel}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--border)]/60 bg-slate-900/45 p-4">
+                  <p className="text-xs uppercase tracking-wider text-[var(--text-sub)]">
+                    Password changes
+                  </p>
+                  <p className="mt-1 flex items-center gap-2 font-semibold text-white">
+                    <KeyRound className="h-4 w-4 text-[var(--cinehub-accent)]" />
+                    {user?.provider === AuthProvider.LOCAL
+                      ? "Available below"
+                      : `Managed by ${providerLabel}`}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--cinehub-accent)]/12">
             <UserRound className="h-5 w-5 text-[var(--cinehub-accent)]" />

@@ -72,9 +72,9 @@ export default function MovieCast({
 
     return (
       <div className="group cursor-pointer" onClick={handleClick}>
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-card to-bg-card/80 border border-border hover:border-cinehub-accent/30 transition-all duration-300">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-bg-card/80 transition-all duration-300 hover:border-cinehub-accent/35 hover:bg-bg-card">
           {/* Profile Image */}
-          <div className="relative aspect-[3/4] overflow-hidden">
+          <div className="relative aspect-[4/5] overflow-hidden bg-slate-900">
             {person.profile_path ? (
               <Image
                 src={getImageUrl(person.profile_path, "w500")}
@@ -89,27 +89,25 @@ export default function MovieCast({
                 <User className="w-12 h-12 text-slate-400" />
               </div>
             )}
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-bg-main/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-bg-main/80 via-transparent to-transparent opacity-70" />
 
-            {/* Hover Effect Icon */}
-            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-              <div className="w-8 h-8 rounded-full bg-cinehub-accent/20 backdrop-blur-sm border border-cinehub-accent/30 flex items-center justify-center">
+            <div className="absolute right-2 top-2 opacity-0 transition-all duration-300 group-hover:opacity-100">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-cinehub-accent/30 bg-slate-950/70 backdrop-blur-sm">
                 <Sparkles className="w-4 h-4 text-cinehub-accent" />
               </div>
             </div>
           </div>
 
           {/* Info */}
-          <div className="p-4 space-y-2">
-            <h4 className="font-semibold text-text-main text-sm leading-tight group-hover:text-cinehub-accent transition-colors duration-300">
+          <div className="space-y-1.5 p-3">
+            <h4 className="line-clamp-1 text-sm font-semibold leading-tight text-text-main transition-colors duration-300 group-hover:text-cinehub-accent">
               {person.name}
             </h4>
             <p className="text-text-sub text-xs leading-tight line-clamp-2">
               {person.character}
             </p>
             {person.popularity && (
-              <div className="flex items-center gap-1.5 pt-1">
+              <div className="flex w-fit items-center gap-1.5 rounded-full border border-cinehub-accent/20 bg-cinehub-accent/10 px-2 py-1">
                 <Star className="w-3 h-3 text-cinehub-accent fill-current" />
                 <span className="text-xs text-text-sub/80 font-medium">
                   {person.popularity.toFixed(1)}
@@ -213,7 +211,7 @@ export default function MovieCast({
             )}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
             {displayCast.map((person, index) => (
               <CastCard key={`${person.id}-${index}`} person={person} />
             ))}

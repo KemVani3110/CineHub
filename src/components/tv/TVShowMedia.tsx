@@ -23,6 +23,8 @@ export default function TVShowMedia({ videos, tvShowTitle }: TVShowMediaProps) {
   const clips = videos.results.filter(
     (video) => video.type === 'Clip' && video.site === 'YouTube'
   );
+  const featuredTrailer =
+    trailers[0] || videos.results.find((video) => video.site === 'YouTube');
 
   if (!videos.results.length) {
     return (
@@ -116,15 +118,57 @@ export default function TVShowMedia({ videos, tvShowTitle }: TVShowMediaProps) {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Header Section */}
-      <div className="text-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-text-main mb-2 sm:mb-3">
-          Videos & Trailers
-        </h2>
-        <p className="text-sm sm:text-base text-text-sub max-w-2xl mx-auto">
-          Watch trailers, teasers, and exclusive clips from{" "}
-          {tvShowTitle || "this TV show"}
-        </p>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-stretch">
+        {featuredTrailer && (
+          <button
+            type="button"
+            onClick={() => setSelectedVideo(featuredTrailer.key)}
+            className="group relative min-h-[220px] cursor-pointer overflow-hidden rounded-2xl border border-cinehub-accent/25 bg-bg-card text-left shadow-2xl"
+          >
+            <img
+              src={`https://img.youtube.com/vi/${featuredTrailer.key}/maxresdefault.jpg`}
+              alt={featuredTrailer.name}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-5">
+              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-cinehub-accent text-slate-950 shadow-lg transition-transform duration-300 group-hover:scale-105">
+                <Play className="ml-1 h-6 w-6 fill-current" />
+              </div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-cinehub-accent">
+                Featured trailer
+              </p>
+              <h2 className="mt-1 line-clamp-2 text-2xl font-bold text-white">
+                {featuredTrailer.name}
+              </h2>
+            </div>
+          </button>
+        )}
+
+        <div className="flex flex-col justify-center rounded-2xl border border-border bg-bg-card/70 p-5">
+          <h2 className="text-xl font-bold text-text-main sm:text-2xl">
+            Videos & Trailers
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-text-sub sm:text-base">
+            Watch trailers, teasers, and official clips from{" "}
+            {tvShowTitle || "this TV show"}.
+          </p>
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {[
+              ["Trailers", trailers.length],
+              ["Teasers", teasers.length],
+              ["Clips", clips.length],
+            ].map(([label, count]) => (
+              <div
+                key={label}
+                className="rounded-xl border border-border bg-bg-main/45 p-3 text-center"
+              >
+                <p className="text-lg font-bold text-white">{count}</p>
+                <p className="text-xs text-text-sub">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Tabs Section */}
@@ -200,4 +244,4 @@ export default function TVShowMedia({ videos, tvShowTitle }: TVShowMediaProps) {
       </Dialog>
     </div>
   );
-} 
+}

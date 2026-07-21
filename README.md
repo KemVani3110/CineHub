@@ -7,7 +7,7 @@
 <h3 align="center">A modern movie and TV discovery platform built with Next.js, Firebase, Firestore, and TMDB.</h3>
 
 <p align="center">
-  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.10.2-14b8a6?style=for-the-badge" /></a>
+  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.11.0-14b8a6?style=for-the-badge" /></a>
   <a href="#"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.19-black?style=for-the-badge&logo=nextdotjs" /></a>
   <a href="#"><img alt="React" src="https://img.shields.io/badge/React-19.1.8-61dafb?style=for-the-badge&logo=react&logoColor=111827" /></a>
   <a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-Firestore-f59e0b?style=for-the-badge&logo=firebase&logoColor=111827" /></a>
@@ -27,8 +27,9 @@ The app is designed for Vercel deployment and no longer depends on MySQL or Next
 | Discovery | Browse movies and TV shows, search titles, view details, actors, seasons, and episodes. |
 | Watch Experience | Movie and TV watch pages, source selection, trailer fallback for unreleased content, and source report flow. |
 | Authentication | Firebase email/password auth plus social login support. |
-| User Data | Firestore watchlist, history, ratings, reviews, favorite actors, profile, and avatar data. |
+| User Data | Firestore watchlist, smarter history, ratings, reviews, favorite actors, profile stats, and avatar data. |
 | Admin | Dashboard, analytics, users, avatars, activity logs, source reports, and contact messages. |
+| Notifications | Firestore-backed notification bell with unread counts, source chips, refresh, read controls, and deep links. |
 | Contact | Server-side SMTP email delivery, Firestore message storage, and admin reply popup. |
 | Deployment | Vercel-ready Next.js App Router project with Firebase Admin session support. |
 
@@ -47,13 +48,14 @@ The app is designed for Vercel deployment and no longer depends on MySQL or Next
 - Multiple third-party source options through stream routes.
 - Source report button so users can report broken or wrong playback.
 - Trailer fallback for movies or episodes that have not released yet.
-- History tracking so users can return to recently watched content.
+- Smarter history with search, filtering, sorting, activity buckets, resume actions, and progress hints.
 
 ### Firebase Auth And Firestore
 
 - Email/password login and registration.
 - Social login support through Firebase providers.
 - Firestore-backed user profile data.
+- Profile dashboard with watched, watchlist, ratings, favorite actor stats, recent activity, account security, and avatar picker.
 - Server-side Firebase Admin checks for protected admin routes.
 - No MySQL, no NextAuth, and no legacy JWT auth flow.
 
@@ -93,6 +95,7 @@ The app is designed for Vercel deployment and no longer depends on MySQL or Next
 
 ```text
 cinehub/
+  docs/                   Feature notes and maintenance documentation
   public/                 Static assets and logo files
   src/
     app/                  Next.js App Router pages and API routes
@@ -104,6 +107,10 @@ cinehub/
   package.json
   README.md
 ```
+
+## Documentation
+
+- [Feature Guide](./docs/FEATURE_GUIDE.md) explains the latest notification, history, detail, and profile flows.
 
 ## Getting Started
 
@@ -251,8 +258,10 @@ After deployment, verify:
 Current application version:
 
 ```text
-2.10.2
+2.11.0
 ```
+
+Version 2.11.0 adds the smarter notification bell, upgraded watch history, movie/TV detail availability polish, featured trailer media sections, compact actor cards, profile stats/activity/security panels, and a feature guide document.
 
 Version 2.10.2 redesigns the Contact page with a more polished responsive layout, animated form states, clearer contact cards, and stronger dark-mode input contrast while keeping the existing mail/admin flow intact.
 

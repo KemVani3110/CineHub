@@ -8,6 +8,7 @@ import {
   Clock,
   Film,
   History,
+  ListFilter,
   Play,
   Search,
   Trash2,
@@ -16,6 +17,7 @@ import {
 import Header from "@/components/common/Header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { useAuth } from "@/hooks/useAuth";
@@ -88,6 +90,20 @@ function getEpisodeLabel(item: HistoryItem) {
   return `S${item.currentSeason}E${item.currentEpisode}`;
 }
 
+function getActivityBucket(value: string) {
+  if (isSameDay(value)) return "Today";
+  if (isThisWeek(value)) return "This week";
+  return "Earlier";
+}
+
+function getProgressValue(item: HistoryItem) {
+  if (typeof item.progress === "number" && Number.isFinite(item.progress)) {
+    return Math.min(100, Math.max(0, item.progress));
+  }
+
+  return item.mediaType === "movie" ? 12 : 18;
+}
+
 function HistoryPoster({ item, priority = false }: { item: HistoryItem; priority?: boolean }) {
   const poster = getPosterUrl(item.posterPath);
 
@@ -122,6 +138,8 @@ export default function HistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"recent" | "oldest" | "title">("recent");
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -133,21 +151,35 @@ export default function HistoryPage() {
     }
   }, [user, isAuthLoading, router]);
 
-  const sortedHistory = useMemo(
-    () =>
-      [...history].sort(
-        (a, b) =>
-          new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime()
-      ),
-    [history]
-  );
+  const sortedHistory = useMemo(() => {
+    const items = [...history];
+
+    return items.sort((a, b) => {
+      if (sortBy === "title") {
+        return a.title.localeCompare(b.title);
+      }
+
+      const aTime = new Date(a.watchedAt).getTime();
+      const bTime = new Date(b.watchedAt).getTime();
+      return sortBy === "oldest" ? aTime - bTime : bTime - aTime;
+    });
+  }, [history, sortBy]);
 
   const filteredHistory = useMemo(
-    () =>
-      filter === "all"
-        ? sortedHistory
-        : sortedHistory.filter((item) => item.mediaType === filter),
-    [filter, sortedHistory]
+    () => {
+      const normalizedQuery = query.trim().toLowerCase();
+
+      return sortedHistory.filter((item) => {
+        const matchesType = filter === "all" || item.mediaType === filter;
+        const matchesQuery =
+          !normalizedQuery ||
+          item.title.toLowerCase().includes(normalizedQuery) ||
+          getEpisodeLabel(item)?.toLowerCase().includes(normalizedQuery);
+
+        return matchesType && matchesQuery;
+      });
+    },
+    [filter, query, sortedHistory]
   );
 
   const latestItem = sortedHistory[0];
@@ -157,7 +189,7 @@ export default function HistoryPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter]);
+  }, [filter, query, sortBy]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -172,8 +204,19 @@ export default function HistoryPage() {
       tv: sortedHistory.filter((item) => item.mediaType === "tv").length,
       today: sortedHistory.filter((item) => isSameDay(item.watchedAt)).length,
       thisWeek: sortedHistory.filter((item) => isThisWeek(item.watchedAt)).length,
+      resumeReady: sortedHistory.filter((item) => getProgressValue(item) > 0).length,
     }),
     [sortedHistory]
+  );
+
+  const bucketCounts = useMemo(
+    () =>
+      filteredHistory.reduce<Record<string, number>>((acc, item) => {
+        const bucket = getActivityBucket(item.watchedAt);
+        acc[bucket] = (acc[bucket] || 0) + 1;
+        return acc;
+      }, {}),
+    [filteredHistory]
   );
 
   const handleRemove = async (id?: number) => {
@@ -348,10 +391,10 @@ export default function HistoryPage() {
                     <button
                       key={item.key}
                       onClick={() => setFilter(item.key as typeof filter)}
-                      className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                      className={`min-h-10 cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                         filter === item.key
                           ? "bg-accent text-slate-950"
-                          : "text-sub hover:text-white"
+                          : "text-sub hover:bg-slate-800/60 hover:text-white"
                       }`}
                     >
                       {item.label}
@@ -360,7 +403,56 @@ export default function HistoryPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid gap-3 rounded-2xl border border-custom/30 bg-card-custom/35 p-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                <label className="relative block">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sub" />
+                  <Input
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search your watch history"
+                    className="h-11 rounded-xl border-custom/40 bg-slate-950/40 pl-10 text-white"
+                  />
+                </label>
+                <label className="relative block">
+                  <ListFilter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sub" />
+                  <select
+                    value={sortBy}
+                    onChange={(event) =>
+                      setSortBy(event.target.value as typeof sortBy)
+                    }
+                    className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-custom/40 bg-slate-950/40 px-10 text-sm font-semibold text-white outline-none transition-colors hover:border-accent/50 focus:border-accent"
+                  >
+                    <option value="recent">Recently watched</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="title">Title A-Z</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {["Today", "This week", "Earlier"].map((bucket) => (
+                  <Badge
+                    key={bucket}
+                    variant="outline"
+                    className="min-h-8 border-custom/35 bg-card-custom/45 px-3 text-sub"
+                  >
+                    {bucket}: {bucketCounts[bucket] || 0}
+                  </Badge>
+                ))}
+              </div>
+
+              {currentItems.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-custom/40 bg-card-custom/25 px-4 py-12 text-center">
+                  <Search className="mx-auto mb-3 h-9 w-9 text-accent" />
+                  <h3 className="text-lg font-semibold text-white">
+                    No matching history
+                  </h3>
+                  <p className="mt-2 text-sm text-sub">
+                    Try another title, episode, or filter.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 lg:grid-cols-2">
                 {currentItems.map((item) => (
                   <article
                     key={`${item.mediaType}-${item.movieId || item.tvId}`}
@@ -393,6 +485,18 @@ export default function HistoryPage() {
                             <Clock className="h-4 w-4 text-accent" />
                             {getWatchedTime(item.watchedAt)}
                           </p>
+                          <div className="mt-3">
+                            <div className="mb-1 flex items-center justify-between text-xs text-sub">
+                              <span>Resume progress</span>
+                              <span>{getProgressValue(item)}%</span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
+                              <div
+                                className="h-full rounded-full bg-accent"
+                                style={{ width: `${getProgressValue(item)}%` }}
+                              />
+                            </div>
+                          </div>
                         </div>
 
                         <Button
@@ -424,9 +528,10 @@ export default function HistoryPage() {
                     </div>
                   </article>
                 ))}
-              </div>
+                </div>
+              )}
 
-              {totalPages > 1 && (
+              {totalPages > 1 && currentItems.length > 0 && (
                 <div className="flex justify-center pt-4">
                   <Pagination
                     currentPage={currentPage}
