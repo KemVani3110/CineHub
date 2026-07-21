@@ -14,7 +14,9 @@ interface FavoriteState {
   actors: FavoriteActor[];
   isLoading: boolean;
   error: string | null;
-  addFavoriteActor: (actor: Omit<FavoriteActor, "id" | "added_at">) => Promise<FavoriteActor | null>;
+  addFavoriteActor: (
+    actor: Omit<FavoriteActor, "id" | "added_at">
+  ) => Promise<FavoriteActor | null>;
   removeFavoriteActor: (actorId: number) => Promise<boolean | null>;
   fetchFavoriteActors: () => Promise<void>;
   isFavoriteActor: (actorId: number) => boolean;
@@ -31,6 +33,13 @@ export const useFavoriteStore = create<FavoriteState>()(
 
       addFavoriteActor: async (actor) => {
         try {
+          if (get().isFavoriteActor(actor.actor_id)) {
+            return (
+              get().actors.find((item) => item.actor_id === actor.actor_id) ||
+              null
+            );
+          }
+
           set({ isLoading: true, error: null });
           const response = await authenticatedFetch("/api/favorites", {
             method: "POST",
@@ -68,9 +77,12 @@ export const useFavoriteStore = create<FavoriteState>()(
       removeFavoriteActor: async (actorId) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await authenticatedFetch(`/api/favorites?actorId=${actorId}`, {
-            method: "DELETE",
-          });
+          const response = await authenticatedFetch(
+            `/api/favorites?actorId=${actorId}`,
+            {
+              method: "DELETE",
+            }
+          );
 
           const data = await response.json();
 

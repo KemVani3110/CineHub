@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { useFavoriteStore } from "@/store/favoriteStore";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,9 +19,15 @@ import {
   List,
   Filter,
   Search,
+  Trash2,
+  Eye,
+  ArrowUpDown,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import Loading from "@/components/common/Loading";
+import { getImageUrl } from "@/services/tmdb";
+import { useToast } from "@/components/ui/use-toast";
 
 interface FavoriteActor {
   id: number;
@@ -32,15 +39,19 @@ interface FavoriteActor {
 
 function FavoriteActorsPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const {
     actors,
     isLoading: favoriteLoading,
     fetchFavoriteActors,
+    removeFavoriteActor,
   } = useFavoriteStore();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [sortBy, setSortBy] = useState<"recent" | "name">("recent");
+  const [sortBy, setSortBy] = useState<"recent" | "oldest" | "name">("recent");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [removingActorId, setRemovingActorId] = useState<number | null>(null);
 
   useEffect(() => {
     const initializePage = async () => {
@@ -63,7 +74,7 @@ function FavoriteActorsPage() {
     initializePage();
   }, [user, authLoading, router, fetchFavoriteActors]);
 
-  if (isLoading || authLoading || favoriteLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 via-slate-900 to-black">
         <Loading message="Loading favorite actors..." />
@@ -75,13 +86,43 @@ function FavoriteActorsPage() {
     return null;
   }
 
-  const sortedActors = [...actors].sort((a, b) => {
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredActors = actors.filter((actor) =>
+    actor.name.toLowerCase().includes(normalizedSearch)
+  );
+
+  const sortedActors = [...filteredActors].sort((a, b) => {
     if (sortBy === "recent") {
       return new Date(b.added_at).getTime() - new Date(a.added_at).getTime();
-    } else {
-      return a.name.localeCompare(b.name);
     }
+    if (sortBy === "oldest") {
+      return new Date(a.added_at).getTime() - new Date(b.added_at).getTime();
+    }
+    return a.name.localeCompare(b.name);
   });
+
+  const handleRemoveActor = async (actor: FavoriteActor) => {
+    try {
+      setRemovingActorId(actor.actor_id);
+      const success = await removeFavoriteActor(actor.actor_id);
+      if (!success) {
+        throw new Error("Failed to remove actor");
+      }
+
+      toast({
+        title: "Removed from favorites",
+        description: `${actor.name} has been removed from your favorite actors.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Could not remove actor",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingActorId(null);
+    }
+  };
 
   return (
     <>
@@ -131,61 +172,121 @@ function FavoriteActorsPage() {
 
           {/* Controls */}
           {!isLoading && actors.length > 0 && (
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant={sortBy === "recent" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSortBy("recent")}
-                  className={`${
-                    sortBy === "recent"
-                      ? "bg-cinehub-accent text-white hover:bg-cinehub-accent/90"
-                      : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
-                  } border-cinehub-accent/30 cursor-pointer transition-colors`}
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Recently Added
-                </Button>
-                <Button
-                  variant={sortBy === "name" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSortBy("name")}
-                  className={`${
-                    sortBy === "name"
-                      ? "bg-cinehub-accent text-white hover:bg-cinehub-accent/90"
-                      : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
-                  } border-cinehub-accent/30 cursor-pointer transition-colors`}
-                >
-                  <Filter className="w-4 h-4 mr-2" />
-                  A-Z
-                </Button>
+            <div className="mb-8 space-y-4 rounded-2xl border border-border/50 bg-bg-card/50 p-4 backdrop-blur-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="relative w-full lg:max-w-sm">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cinehub-accent" />
+                  <input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search favorite actors..."
+                    className="h-11 w-full rounded-xl border border-border/60 bg-bg-main/70 pl-10 pr-10 text-sm text-white outline-none transition-colors placeholder:text-text-sub hover:border-cinehub-accent/40 focus:border-cinehub-accent focus:ring-2 focus:ring-cinehub-accent/20"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-text-sub transition-colors hover:bg-cinehub-accent/10 hover:text-cinehub-accent"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant={sortBy === "recent" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSortBy("recent")}
+                      className={`${
+                        sortBy === "recent"
+                          ? "bg-cinehub-accent text-slate-950 hover:bg-cinehub-accent/90"
+                          : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
+                      } border-cinehub-accent/30 cursor-pointer transition-colors`}
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Recent
+                    </Button>
+                    <Button
+                      variant={sortBy === "oldest" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSortBy("oldest")}
+                      className={`${
+                        sortBy === "oldest"
+                          ? "bg-cinehub-accent text-slate-950 hover:bg-cinehub-accent/90"
+                          : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
+                      } border-cinehub-accent/30 cursor-pointer transition-colors`}
+                    >
+                      <ArrowUpDown className="w-4 h-4 mr-2" />
+                      Oldest
+                    </Button>
+                    <Button
+                      variant={sortBy === "name" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSortBy("name")}
+                      className={`${
+                        sortBy === "name"
+                          ? "bg-cinehub-accent text-slate-950 hover:bg-cinehub-accent/90"
+                          : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
+                      } border-cinehub-accent/30 cursor-pointer transition-colors`}
+                    >
+                      <Filter className="w-4 h-4 mr-2" />
+                      A-Z
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={viewMode === "grid" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setViewMode("grid")}
+                      className={`${
+                        viewMode === "grid"
+                          ? "bg-cinehub-accent text-slate-950 hover:bg-cinehub-accent/90"
+                          : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
+                      } border-cinehub-accent/30 cursor-pointer transition-colors`}
+                      aria-label="Show favorite actors as grid"
+                      title="Grid view"
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === "list" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setViewMode("list")}
+                      className={`${
+                        viewMode === "list"
+                          ? "bg-cinehub-accent text-slate-950 hover:bg-cinehub-accent/90"
+                          : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
+                      } border-cinehub-accent/30 cursor-pointer transition-colors`}
+                      aria-label="Show favorite actors as list"
+                      title="List view"
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className={`${
-                    viewMode === "grid"
-                      ? "bg-cinehub-accent text-white hover:bg-cinehub-accent/90"
-                      : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
-                  } border-cinehub-accent/30 cursor-pointer transition-colors`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className={`${
-                    viewMode === "list"
-                      ? "bg-cinehub-accent text-white hover:bg-cinehub-accent/90"
-                      : "bg-bg-card/50 text-white hover:bg-bg-card hover:text-cinehub-accent"
-                  } border-cinehub-accent/30 cursor-pointer transition-colors`}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-text-sub">
+                <span>
+                  Showing{" "}
+                  <span className="font-semibold text-white">
+                    {sortedActors.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-white">
+                    {actors.length}
+                  </span>{" "}
+                  actors
+                </span>
+                {favoriteLoading && (
+                  <span className="rounded-full border border-cinehub-accent/30 bg-cinehub-accent/10 px-2 py-1 text-xs text-cinehub-accent">
+                    Syncing...
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -220,6 +321,32 @@ function FavoriteActorsPage() {
                 </div>
               </CardContent>
             </Card>
+          ) : sortedActors.length === 0 ? (
+            <Card className="bg-gradient-card border-border/50">
+              <CardContent className="p-12 text-center">
+                <div className="space-y-4">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-cinehub-accent/10">
+                    <Search className="h-7 w-7 text-cinehub-accent" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">
+                      No actors match your search
+                    </h3>
+                    <p className="mt-2 text-text-sub">
+                      Try another name or clear the search to see your full
+                      collection.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="bg-cinehub-accent text-white hover:bg-cinehub-accent/90"
+                  >
+                    Clear Search
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             <div
               className={
@@ -250,35 +377,85 @@ function FavoriteActorsPage() {
                         }}
                       />
                       <div className="mt-3 space-y-1">
-                        <Badge
-                          variant="outline"
-                          className="text-xs bg-cinehub-accent/10 border-cinehub-accent/30 text-cinehub-accent"
-                        >
-                          Added {new Date(actor.added_at).toLocaleDateString()}
-                        </Badge>
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-cinehub-accent/10 border-cinehub-accent/30 text-cinehub-accent"
+                          >
+                            Added{" "}
+                            {new Date(actor.added_at).toLocaleDateString()}
+                          </Badge>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={removingActorId === actor.actor_id}
+                            onClick={() => handleRemoveActor(actor)}
+                            className="h-8 w-8 shrink-0 rounded-lg text-red-300 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label={`Remove ${actor.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ) : (
                     <Card className="bg-gradient-card border-border/50 hover:border-cinehub-accent/50 transition-all duration-300">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-16 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                            <ActorCard
-                              actor={{
-                                id: actor.actor_id,
-                                name: actor.name,
-                                profile_path: actor.profile_path,
-                              }}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-white truncate">
-                              {actor.name}
-                            </h3>
+                          <Link
+                            href={`/actor/${actor.actor_id}`}
+                            className="relative h-24 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-bg-main"
+                            aria-label={`View ${actor.name}`}
+                          >
+                            {actor.profile_path ? (
+                              <Image
+                                src={getImageUrl(actor.profile_path, "w500")}
+                                alt={actor.name}
+                                fill
+                                sizes="64px"
+                                className="object-cover transition-transform duration-300 hover:scale-105"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <Users className="h-7 w-7 text-text-sub" />
+                              </div>
+                            )}
+                          </Link>
+                          <div className="min-w-0 flex-1">
+                            <Link href={`/actor/${actor.actor_id}`}>
+                              <h3 className="truncate font-semibold text-white transition-colors hover:text-cinehub-accent">
+                                {actor.name}
+                              </h3>
+                            </Link>
                             <p className="text-text-sub text-sm mt-1">
                               Added on{" "}
                               {new Date(actor.added_at).toLocaleDateString()}
                             </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <Button
+                                asChild
+                                size="sm"
+                                variant="outline"
+                                className="h-9 border-cinehub-accent/30 bg-cinehub-accent/10 text-cinehub-accent hover:bg-cinehub-accent hover:text-slate-950"
+                              >
+                                <Link href={`/actor/${actor.actor_id}`}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
+                                </Link>
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={removingActorId === actor.actor_id}
+                                onClick={() => handleRemoveActor(actor)}
+                                className="h-9 border-red-400/30 text-red-200 hover:bg-red-500/15 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove
+                              </Button>
+                            </div>
                           </div>
                           <Heart className="w-5 h-5 text-cinehub-accent fill-current" />
                         </div>

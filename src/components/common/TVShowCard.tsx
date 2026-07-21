@@ -23,9 +23,14 @@ const ImageWithFallback = ({
   alt: string;
   hasImage: boolean;
 }) => {
+  const [isMounted, setIsMounted] = React.useState(false);
   const [error, setError] = React.useState(false);
 
-  if (error || !hasImage) {
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || error || !hasImage) {
     return (
       <div className="relative aspect-[2/3] w-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
         <Film className="w-16 h-16 text-slate-400" />
