@@ -303,9 +303,9 @@ export default async function ActivityLogs({
                   key={log.id}
                   className="rounded-2xl border border-slate-700 bg-slate-950/35 p-4 transition-colors hover:border-primary/40 hover:bg-slate-800/70"
                 >
-                  <div className="grid gap-4 xl:grid-cols-[minmax(220px,1fr)_auto_minmax(200px,0.9fr)_minmax(280px,1.2fr)_minmax(130px,auto)_minmax(120px,auto)] xl:items-center">
+                  <div className="grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_minmax(0,1.6fr)_minmax(150px,auto)] lg:items-start">
                     <div className="flex min-w-0 items-center gap-3">
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-11 w-11 flex-shrink-0 border border-primary/20">
                         {log.admin_avatar && (
                           <AvatarImage
                             src={log.admin_avatar}
@@ -327,57 +327,61 @@ export default async function ActivityLogs({
                       </div>
                     </div>
 
-                    <Badge
-                      variant={getActionVariant(log.action)}
-                      className="flex h-8 w-fit cursor-pointer items-center gap-1 px-3 hover:opacity-80"
-                    >
-                      {getActionIcon(log.action)}
-                      <span className="text-xs">{log.action}</span>
-                    </Badge>
+                    <div className="min-w-0 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          variant={getActionVariant(log.action)}
+                          className="flex h-8 w-fit cursor-pointer items-center gap-1 px-3 hover:opacity-80"
+                        >
+                          {getActionIcon(log.action)}
+                          <span className="text-xs">{log.action}</span>
+                        </Badge>
 
-                    <div className="min-w-0 rounded-xl border border-slate-700/80 bg-slate-900/70 px-3 py-2">
-                      {log.target_user_name ? (
-                        <div className="flex min-w-0 items-center gap-2">
-                          <Avatar className="h-7 w-7">
-                            {log.target_user_avatar && (
-                              <AvatarImage 
-                                src={log.target_user_avatar} 
-                                alt={log.target_user_name || "User"}
-                                className="object-cover"
-                              />
-                            )}
-                            <AvatarFallback className="bg-slate-600 text-slate-300 text-xs">
-                              {getUserInitials(log.target_user_name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-medium text-white">
-                              {log.target_user_name}
-                            </div>
-                            <div className="truncate text-xs text-slate-400">
-                              {log.target_user_email}
+                        {log.target_user_name ? (
+                          <div className="flex min-w-0 max-w-full items-center gap-2 rounded-full border border-slate-700/80 bg-slate-900/70 px-3 py-1.5 sm:max-w-[360px]">
+                            <Avatar className="h-7 w-7 flex-shrink-0">
+                              {log.target_user_avatar && (
+                                <AvatarImage
+                                  src={log.target_user_avatar}
+                                  alt={log.target_user_name || "User"}
+                                  className="object-cover"
+                                />
+                              )}
+                              <AvatarFallback className="bg-slate-600 text-slate-300 text-xs">
+                                {getUserInitials(log.target_user_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-medium text-white">
+                                {log.target_user_name}
+                              </div>
+                              <div className="truncate text-xs text-slate-400">
+                                {log.target_user_email}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-slate-400">
-                          <User className="h-4 w-4" />
-                          <span>No target</span>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-900/70 px-3 py-1.5 text-sm text-slate-400">
+                            <User className="h-4 w-4" />
+                            <span>No target</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <p className="min-w-0 text-sm leading-6 text-slate-300">
+                        {log.description}
+                      </p>
+
+                      <div className="flex min-w-0 items-center gap-2 text-xs text-slate-400">
+                        <Globe className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate font-mono">
+                          {log.ip_address || "Unknown"}
+                        </span>
+                      </div>
                     </div>
 
-                    <p className="min-w-0 text-sm leading-6 text-slate-300 xl:line-clamp-2">
-                      {log.description}
-                    </p>
-
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
-                      <Globe className="h-4 w-4" />
-                      <span className="font-mono">{log.ip_address || "Unknown"}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm xl:justify-end">
-                      <Clock className="h-4 w-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-sm lg:justify-end">
+                      <Clock className="h-4 w-4 flex-shrink-0 text-slate-400" />
                       <div>
                         <div className="font-medium text-white">
                           {format(new Date(log.created_at), "MMM d, yyyy")}

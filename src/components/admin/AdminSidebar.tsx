@@ -193,7 +193,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
           )}
         >
           {/* Header Section */}
-          <div className="p-4 border-b border-border/50 flex-shrink-0">
+          <div className="p-3 border-b border-border/50 flex-shrink-0">
             <div className="flex items-center justify-between min-h-[48px]">
               {!isCollapsed ? (
                 <Link
@@ -251,7 +251,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
 
           {/* User Info Section */}
           {user && (
-            <div className="p-4 border-b border-border/50 flex-shrink-0">
+            <div className="p-3 border-b border-border/50 flex-shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="relative flex-shrink-0">
                   <Avatar className="h-10 w-10 border-2 border-primary/20 ring-2 ring-background">
@@ -302,7 +302,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
               "flex-1 min-h-0",
               isCollapsed
                 ? "space-y-2 overflow-hidden px-2 py-3"
-                : "space-y-5 overflow-y-auto px-3 py-4"
+                : "scrollbar-thin space-y-3 overflow-y-auto overscroll-contain px-3 py-3"
             )}
           >
             {navSections.map((section) => {
@@ -333,7 +333,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
                           "group relative flex items-center rounded-xl text-sm font-medium transition-all duration-200",
                           isCollapsed
                             ? "min-h-10 justify-center px-2 py-2"
-                            : "min-h-11 gap-3 px-4 py-3",
+                            : "min-h-10 gap-3 px-4 py-2.5",
                           isActive
                             ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                             : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
