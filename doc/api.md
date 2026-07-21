@@ -1,6 +1,6 @@
 # CineHub API Documentation
 
-This document lists the current app route handlers in CineHub v2.1.0. All routes live under `src/app/api`.
+This document lists the current Next.js route handlers in CineHub v2.11.0. All routes live under `src/app/api`.
 
 ## Auth Routes
 
@@ -8,10 +8,10 @@ This document lists the current app route handlers in CineHub v2.1.0. All routes
 | --- | --- | --- |
 | `GET` | `/api/auth/health` | Check required production environment variables. |
 | `POST` | `/api/auth/register` | Register a Firebase user and initialize app user data. |
-| `POST` | `/api/auth/login` | Verify login token and sync user data. |
+| `POST` | `/api/auth/login` | Verify a Firebase login token and sync user data. |
 | `POST` | `/api/auth/logout` | End the app session. |
 | `GET` | `/api/auth/me` | Return current authenticated user data. |
-| `POST` | `/api/auth/social-login` | Sync social login users with the app backend. |
+| `POST` | `/api/auth/social-login` | Sync Firebase social login users with the app backend. |
 
 ## Profile Routes
 
@@ -19,8 +19,9 @@ This document lists the current app route handlers in CineHub v2.1.0. All routes
 | --- | --- | --- |
 | `GET` | `/api/profile` | Get the current user's profile. |
 | `PUT` | `/api/profile` | Update the current user's profile. |
-| `PUT` | `/api/profile/avatar` | Update the current user's selected avatar. |
+| `GET` | `/api/profile/stats` | Return watched, watchlist, rating, favorite actor, and recent activity stats. |
 | `GET` | `/api/profile/avatars` | List available profile avatars. |
+| `PUT` | `/api/profile/avatar` | Update the current user's selected avatar. |
 | `PUT` | `/api/profile/password` | Update password-related account data. |
 
 ## Movie And TV Routes
@@ -28,11 +29,11 @@ This document lists the current app route handlers in CineHub v2.1.0. All routes
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/movies/trending` | Fetch trending movies. |
-| `GET` | `/api/movies/[listType]` | Fetch movie lists such as popular, top rated, or upcoming. |
+| `GET` | `/api/movies/[listType]` | Fetch movie lists such as `popular`, `top_rated`, `now_playing`, or `upcoming`. |
 | `GET` | `/api/tv` | Fetch TV discovery data. |
-| `GET` | `/api/tv/[listType]` | Fetch TV lists such as popular or top rated. |
+| `GET` | `/api/tv/[listType]` | Fetch TV lists such as `popular`, `top_rated`, or `on_the_air`. |
 
-TMDB remains the source for public movie and TV metadata.
+TMDB remains the source for public movie and TV metadata. Client pages also call the TMDB service layer for details, people, search, images, videos, reviews, and similar content.
 
 ## Watch And Stream Routes
 
@@ -43,6 +44,8 @@ TMDB remains the source for public movie and TV metadata.
 | `GET` | `/api/source-reports` | Admin list of source reports. |
 | `POST` | `/api/source-reports` | Submit a source report from the watch player. |
 | `PATCH` | `/api/source-reports` | Update a source report status. |
+
+Source reports help the player and admin workflows identify broken, wrong, slow, or low-quality providers.
 
 ## User Media Routes
 
@@ -57,7 +60,7 @@ TMDB remains the source for public movie and TV metadata.
 | `DELETE` | `/api/history` | Clear watch history. |
 | `PUT` | `/api/history/[id]` | Update one history item. |
 | `DELETE` | `/api/history/[id]` | Delete one history item. |
-| `GET` | `/api/favorites` | Get favorite items. |
+| `GET` | `/api/favorites` | Get favorite media or actor items. |
 | `POST` | `/api/favorites` | Add a favorite item. |
 | `DELETE` | `/api/favorites` | Remove a favorite item. |
 | `GET` | `/api/ratings` | Get ratings. |
@@ -65,11 +68,27 @@ TMDB remains the source for public movie and TV metadata.
 | `DELETE` | `/api/ratings` | Remove a rating. |
 | `GET` | `/api/reviews` | Get reviews. |
 
+## Notification Routes
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/notifications` | List current user notifications and unread count. |
+| `PATCH` | `/api/notifications` | Mark one notification or all notifications as read. |
+| `DELETE` | `/api/notifications` | Delete read notifications or clear notification items. |
+
+Notification sources include:
+
+- `watchlist`
+- `source_report`
+- `contact`
+- `admin`
+- `system`
+
 ## Contact Routes
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/contact` | Save a contact message and send an email notification. |
+| `POST` | `/api/contact` | Save a public contact message and send an email notification. |
 | `GET` | `/api/contact` | Admin list of contact messages. |
 | `PATCH` | `/api/contact` | Admin reply to a contact message. |
 
@@ -84,7 +103,7 @@ Contact behavior:
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/admin/stats` | Dashboard stats. |
+| `GET` | `/api/admin/stats` | Dashboard and analytics stats. |
 | `GET` | `/api/admin/users` | List users. |
 | `PATCH` | `/api/admin/users` | Update a user. |
 | `DELETE` | `/api/admin/users` | Delete or disable a user record. |
@@ -96,6 +115,14 @@ Contact behavior:
 Admin routes require server-side authorization.
 
 ## External Services
+
+### Firebase
+
+Firebase services used:
+
+- Firebase Authentication
+- Firestore
+- Firebase Admin SDK
 
 ### TMDB
 
@@ -111,38 +138,33 @@ Common TMDB areas used by the app:
 - TV shows
 - Seasons and episodes
 - Credits
+- People and actor details
 - Videos and trailers
 - Images
 - Search
+- Reviews
 - Similar content
-
-### Firebase
-
-Firebase services used:
-
-- Firebase Authentication
-- Firestore
-- Firebase Admin SDK
 
 ### SMTP
 
-SMTP is used by contact flows only:
+SMTP is used by:
 
 - `POST /api/contact`
 - `PATCH /api/contact`
 
-## Error Handling
+## Common Response Patterns
 
-The app generally returns JSON responses with a `message` field for errors.
+The app generally returns JSON. Error responses should include a readable `message` or `error` field.
 
 Common failure categories:
 
 | Category | Typical Cause |
 | --- | --- |
 | Unauthorized | Missing or invalid Firebase session/token. |
+| Forbidden | Authenticated user is not an admin. |
 | Validation | Missing required fields or invalid email format. |
 | Not found | Firestore document does not exist. |
-| Email failed | SMTP variables missing or provider rejected credentials. |
+| Email failed | SMTP variables are missing or the provider rejected credentials. |
 | External API failed | TMDB or stream provider request failed. |
 
 ## Health Check
@@ -153,7 +175,7 @@ Use this after deploy:
 GET /api/auth/health
 ```
 
-Expected result when all required env vars are present:
+Expected result when all required environment variables are present:
 
 ```json
 {
@@ -161,3 +183,5 @@ Expected result when all required env vars are present:
   "missing": []
 }
 ```
+
+If `missing` contains values, add them in Vercel and redeploy.

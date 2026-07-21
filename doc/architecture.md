@@ -1,46 +1,47 @@
 # CineHub Architecture
 
-CineHub v2.1.0 is a Next.js App Router application with Firebase as the auth and data backbone. The app uses TMDB for public movie and TV metadata, Firestore for user/admin data, and server route handlers for secure writes and admin operations.
+CineHub v2.11.0 is a Next.js App Router application with Firebase as the authentication and data backbone. TMDB provides public movie and TV metadata, Firestore stores user/admin data, and route handlers protect server-side writes and operational workflows.
 
-## High-Level Diagram
+## High-Level System
 
 ```mermaid
 flowchart LR
   Browser["Client Browser"]
-  App["Next.js App Router"]
-  API["Route Handlers"]
-  FirebaseAuth["Firebase Auth"]
+  NextApp["Next.js App Router"]
+  Routes["API Route Handlers"]
+  FirebaseAuth["Firebase Authentication"]
   Firestore["Firestore"]
   AdminSDK["Firebase Admin SDK"]
   TMDB["TMDB API"]
   SMTP["SMTP Email"]
-  Streams["Third-party Stream Sources"]
+  StreamProviders["Third-party Stream Providers"]
 
-  Browser --> App
-  App --> API
-  App --> FirebaseAuth
-  App --> TMDB
-  API --> AdminSDK
+  Browser --> NextApp
+  Browser --> FirebaseAuth
+  NextApp --> Routes
+  NextApp --> TMDB
+  Routes --> AdminSDK
   AdminSDK --> FirebaseAuth
   AdminSDK --> Firestore
-  API --> SMTP
-  API --> Streams
+  Routes --> SMTP
+  Routes --> StreamProviders
+  Routes --> TMDB
 ```
 
 ## Main Layers
 
 | Layer | Responsibility |
 | --- | --- |
-| `src/app` | Pages, layouts, API route handlers, admin routes, watch routes. |
-| `src/components` | Shared UI, auth forms, admin tables, movie/TV UI, watch player UI. |
-| `src/hooks` | Client hooks for app behavior and auth. |
-| `src/lib` | Firebase Admin, auth helpers, email, utility functions, app metadata. |
-| `src/services` | TMDB fetch layer and media helpers. |
-| `src/store` | Zustand stores for client state. |
+| `src/app` | App Router pages, layouts, metadata, sitemap, robots, API route handlers. |
+| `src/components` | Shared UI plus movie, TV, actor, auth, watch, profile, contact, and admin components. |
+| `src/hooks` | Client workflow hooks for auth, history, recommendations, and shared behavior. |
+| `src/lib` | Firebase client/admin setup, auth helpers, email, notifications, app metadata, utilities. |
+| `src/services` | TMDB fetch layer, fallbacks, search, details, videos, images, and discovery helpers. |
+| `src/store` | Zustand stores for client-side app state. |
+| `src/types` | Shared TypeScript contracts for TMDB, user, media, and app data. |
+| `public` | Logo, static images, and bundled user avatar assets. |
 
-## Authentication Architecture
-
-CineHub uses Firebase Authentication.
+## Authentication Flow
 
 ```mermaid
 sequenceDiagram
@@ -51,73 +52,109 @@ sequenceDiagram
   participant AdminSDK
   participant Firestore
 
-  User->>Client: Login or register
+  User->>Client: Login, register, or Google login
   Client->>FirebaseAuth: Authenticate
-  FirebaseAuth-->>Client: ID token
-  Client->>API: Send token
+  FirebaseAuth-->>Client: Firebase user and ID token
+  Client->>API: Send ID token/session request
   API->>AdminSDK: Verify token
-  AdminSDK->>Firestore: Create/update user profile
-  API-->>Client: User session data
+  AdminSDK->>Firestore: Create or sync user profile
+  API-->>Client: App user data
 ```
 
-Key points:
+Key rules:
 
-- MySQL and NextAuth are not used.
-- Firebase ID tokens are verified server-side with Firebase Admin.
-- Firestore stores profile, activity, watch, admin, and contact data.
-- Admin pages use server-side checks before rendering protected data.
+- Firebase Authentication is the source of truth for auth.
+- Firebase Admin verifies server-side tokens.
+- Firestore stores app-specific profile and activity data.
+- MySQL, NextAuth, and legacy JWT auth are not used.
+- Admin pages must be protected by server-side checks.
 
-## Data Model Areas
+## Firestore Data Areas
 
-Firestore is used for:
+Firestore stores these app domains:
 
-- Users and profiles
-- Watchlist
-- Watch history
-- Favorites and favorite actors
-- Ratings and reviews
-- Admin activity logs
-- Avatar metadata
-- Source reports
-- Contact messages
+| Domain | Purpose |
+| --- | --- |
+| Users/profiles | Public profile, role, avatar, provider, account metadata. |
+| Watchlist | Saved movies and TV shows. |
+| Watch history | Watched items, resume data, episode labels, progress hints. |
+| Ratings/reviews | User ratings and review data. |
+| Favorite actors | Actor favorites for profile and actor detail flows. |
+| Notifications | Header bell events, read/unread state, source labels, links. |
+| Source reports | Broken/wrong/slow/quality source reports from the player. |
+| Contact messages | Public contact form submissions and admin replies. |
+| Admin logs | Operational activity logs and audit context. |
+| Avatars | Built-in and uploaded avatar metadata. |
 
-TMDB is used for:
+## TMDB Data Flow
 
-- Movie details
-- TV details
-- Credits
-- Images
-- Videos and trailers
-- Similar and trending content
+TMDB provides public media metadata:
+
+- trending, popular, top-rated, upcoming, and on-air lists
+- movie and TV details
+- actor/person detail and combined credits
+- seasons and episodes
+- credits and cast
+- trailers and videos
+- images
+- reviews
+- similar content
+- search results
+
+The service layer should fail softly where possible so the app can keep rendering useful UI even if a TMDB request fails.
 
 ## Watch Source Flow
 
 ```mermaid
 flowchart TD
-  Page["Watch page"]
-  ReleaseCheck["Check release or air date"]
-  Trailer["TMDB trailer fallback"]
-  StreamAPI["Stream API route"]
-  Providers["Provider list"]
-  Player["VideoPlayer"]
-  Report["Source report"]
-  Admin["Admin source reports"]
+  WatchPage["Watch Page"]
+  ReleaseCheck["Release/Air-Date Check"]
+  TrailerFallback["Trailer Fallback"]
+  StreamRoute["Stream API Route"]
+  ProviderRank["TMDB-aware Provider Ranking"]
+  VideoPlayer["Video Player"]
+  SourceMenu["Source Menu"]
+  ReportFlow["Report Source"]
+  AdminReview["Admin Source Reports"]
 
-  Page --> ReleaseCheck
-  ReleaseCheck -->|Not released| Trailer
-  ReleaseCheck -->|Released| StreamAPI
-  StreamAPI --> Providers
-  Providers --> Player
-  Player --> Report
-  Report --> Admin
+  WatchPage --> ReleaseCheck
+  ReleaseCheck -->|Unreleased| TrailerFallback
+  ReleaseCheck -->|Released| StreamRoute
+  StreamRoute --> ProviderRank
+  ProviderRank --> VideoPlayer
+  VideoPlayer --> SourceMenu
+  VideoPlayer --> ReportFlow
+  ReportFlow --> AdminReview
 ```
 
-The watch experience prioritizes correctness:
+Playback principles:
 
-- Use TMDB IDs where possible.
-- Prefer explicit providers before ambiguous title-based providers.
-- Allow users to report broken or wrong sources.
-- Use trailer fallback when content is unreleased.
+- Prefer providers that accept TMDB IDs.
+- Use IMDb IDs when available to reduce wrong-title matches.
+- Deprioritize sources with active reports.
+- Show trailer mode for unreleased titles when TMDB has a trailer.
+- Keep source reporting available from the player.
+
+## Notification Flow
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant API
+  participant AdminSDK
+  participant Firestore
+
+  Client->>API: GET /api/notifications
+  API->>AdminSDK: Verify session
+  AdminSDK->>Firestore: Read notifications
+  API-->>Client: Notifications and unread count
+  Client->>API: PATCH /api/notifications
+  API->>Firestore: Mark one or all as read
+  Client->>API: DELETE /api/notifications
+  API->>Firestore: Delete read notifications
+```
+
+Notification events can come from watchlist activity, source reports, contact workflows, admin events, or system messages.
 
 ## Contact Flow
 
@@ -133,54 +170,89 @@ sequenceDiagram
   Visitor->>ContactPage: Submit contact form
   ContactPage->>API: POST /api/contact
   API->>Firestore: Save message
-  API->>SMTP: Send HTML email
+  API->>SMTP: Send HTML email to owner
   Admin->>API: GET /api/contact
-  Admin->>API: PATCH /api/contact reply
+  Admin->>API: PATCH /api/contact
   API->>SMTP: Send reply email
   API->>Firestore: Mark replied
 ```
 
-## Admin Architecture
+## Admin Flow
 
-Admin features are server-backed:
+Admin starts at Dashboard because it gives the fastest operational overview. From there, the admin can move into analytics or direct work queues.
 
-- Dashboard metrics
-- Analytics
-- User management
-- Avatar management
-- Activity logs
-- Source reports
-- Contact messages
+```mermaid
+flowchart LR
+  Login["Admin Login"]
+  Guard["Server Auth Guard"]
+  Dashboard["Dashboard"]
+  Analytics["Analytics"]
+  Users["User Management"]
+  Reports["Source Reports"]
+  Contact["Contact Messages"]
+  Logs["Activity Logs"]
+  Avatars["User Avatars"]
+  Settings["Settings"]
 
-Admin pages read Firestore through Firebase Admin instead of trusting client-only data.
+  Login --> Guard
+  Guard --> Dashboard
+  Dashboard --> Analytics
+  Dashboard --> Users
+  Dashboard --> Reports
+  Dashboard --> Contact
+  Dashboard --> Logs
+  Dashboard --> Avatars
+  Dashboard --> Settings
+```
+
+Admin pages should:
+
+- read through server-backed APIs where sensitive data is involved
+- paginate long lists
+- avoid horizontal overflow
+- keep mobile/tablet layouts usable
+- expose clear review actions for reports and messages
+
+## SEO And Portfolio Layer
+
+CineHub includes portfolio-friendly SEO support:
+
+- App Router metadata
+- `sitemap.ts`
+- `robots.ts`
+- public app description
+- footer portfolio link
+- project docs and README
+
+Keep `NEXT_PUBLIC_APP_URL` accurate in production so metadata, sitemap, and robots use the right domain.
 
 ## Environment Boundaries
 
 | Variable Type | Example | Exposed To Browser |
 | --- | --- | --- |
-| Public Firebase/TMDB | `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes |
+| Public Firebase | `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes |
+| Public TMDB | `NEXT_PUBLIC_TMDB_API_KEY` | Yes |
 | Firebase Admin | `FIREBASE_PRIVATE_KEY` | No |
 | Contact SMTP | `SMTP_PASS` | No |
 | Admin config | `ADMIN_EMAIL` | No |
 
 ## Security Notes
 
-- Keep server secrets out of Git.
-- Use Vercel Sensitive environment variables for private values.
-- Protect `/admin` with server-side Firebase Admin checks.
-- Keep Firestore rules aligned with app behavior.
-- Validate route handler input before writing to Firestore.
+- Keep `.env.local` out of Git.
+- Use Vercel Sensitive variables for private values.
+- Validate route handler input before Firestore writes.
+- Keep Firestore rules aligned with frontend behavior.
+- Protect admin pages and admin APIs with Firebase Admin checks.
+- Never expose SMTP passwords or Firebase Admin keys in client components.
 
 ## Current Version Focus
 
-Version 2.1.0 focuses on:
+Version 2.11.0 focuses on:
 
-- Firebase-only auth and data flow.
-- Firestore-backed user features.
-- Real admin workflows.
-- Source reporting.
-- Trailer fallback.
-- Unreleased-title trailer actions from detail pages.
-- More realistic watch history and TV episode resume behavior.
-- Server-side contact email.
-- Vercel deployment reliability.
+- smarter notification bell
+- upgraded history
+- profile stats and activity timeline
+- movie/TV detail availability labels
+- trailer-first media sections
+- compact actor cards
+- documented deployment and maintenance flows
