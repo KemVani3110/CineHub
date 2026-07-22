@@ -14,6 +14,30 @@ export interface SourceHealth {
   reasons: string[];
 }
 
+export interface SourceHealthProviderSummary {
+  sourceName: string;
+  totalReports: number;
+  activeReports: number;
+  resolvedReports: number;
+  affectedTitles: number;
+  reasons: string[];
+  risk: "healthy" | "watch" | "high";
+}
+
+export interface SourceHealthSummary {
+  totalReports: number;
+  activeReports: number;
+  resolvedReports: number;
+  affectedSources: number;
+  highRiskSources: number;
+  providers: SourceHealthProviderSummary[];
+  reasons: Array<{ reason: string; count: number }>;
+}
+
+type InternalSourceHealthProviderSummary = SourceHealthProviderSummary & {
+  titleKeys: Set<string>;
+};
+
 type StreamingSourceLike = {
   name: string;
   [key: string]: unknown;
@@ -23,6 +47,10 @@ const ACTIVE_REPORT_STATUSES = new Set(["open", "reviewing"]);
 
 function normalizeSourceName(sourceName: string) {
   return sourceName.trim().toLowerCase();
+}
+
+function displaySourceName(sourceName: string) {
+  return sourceName.trim() || "Unknown source";
 }
 
 function normalizeOptionalNumber(value?: number | string | null) {
@@ -96,6 +124,11 @@ export function applySourceHealth<T extends StreamingSourceLike>(
         healthStatus: health ? "reported" : "healthy",
         reportCount: health?.reportCount || 0,
         reportReasons: health?.reasons || [],
+        healthRisk: health
+          ? health.reportCount >= 2 || health.reasons.some((reason) => reason === "wrong_title" || reason === "wrong_episode")
+            ? "high"
+            : "watch"
+          : "healthy",
         healthMessage: health
           ? `${health.reportCount} active report${health.reportCount > 1 ? "s" : ""}`
           : null,
@@ -110,4 +143,84 @@ export function applySourceHealth<T extends StreamingSourceLike>(
       return a.originalOrder - b.originalOrder;
     })
     .map(({ originalOrder, ...source }) => source);
+}
+
+export function buildSourceHealthSummary(reports: any[]): SourceHealthSummary {
+  const providerMap = new Map<string, InternalSourceHealthProviderSummary>();
+  const reasonMap = new Map<string, number>();
+
+  reports.forEach((report) => {
+    const sourceName = displaySourceName(report.source_name || report.sourceName || "");
+    const sourceKey = normalizeSourceName(sourceName);
+    const status = report.status || "open";
+    const reason = report.reason || "other";
+    const isActive = ACTIVE_REPORT_STATUSES.has(status);
+    const titleKey = [
+      report.media_type || report.mediaType || "movie",
+      report.media_id || report.mediaId || "unknown",
+      report.season_number || report.seasonNumber || "",
+      report.episode_number || report.episodeNumber || "",
+    ].join(":");
+
+    const current: InternalSourceHealthProviderSummary = providerMap.get(sourceKey) || {
+      sourceName,
+      totalReports: 0,
+      activeReports: 0,
+      resolvedReports: 0,
+      affectedTitles: 0,
+      reasons: [],
+      risk: "healthy" as const,
+      titleKeys: new Set<string>(),
+    };
+
+    current.totalReports += 1;
+    if (isActive) current.activeReports += 1;
+    if (status === "resolved") current.resolvedReports += 1;
+    current.titleKeys.add(titleKey);
+    if (reason && !current.reasons.includes(reason)) current.reasons.push(reason);
+
+    providerMap.set(sourceKey, current);
+    reasonMap.set(reason, (reasonMap.get(reason) || 0) + 1);
+  });
+
+  const providers = Array.from(providerMap.values())
+    .map((provider) => {
+      const risk: SourceHealthProviderSummary["risk"] =
+        provider.activeReports >= 3 ||
+        provider.reasons.some((reason) => reason === "wrong_title" || reason === "wrong_episode")
+          ? "high"
+          : provider.activeReports > 0
+            ? "watch"
+            : "healthy";
+
+      return {
+        sourceName: provider.sourceName,
+        totalReports: provider.totalReports,
+        activeReports: provider.activeReports,
+        resolvedReports: provider.resolvedReports,
+        affectedTitles: provider.titleKeys.size,
+        reasons: provider.reasons,
+        risk,
+      };
+    })
+    .sort((a, b) => {
+      if (b.activeReports !== a.activeReports) return b.activeReports - a.activeReports;
+      return b.totalReports - a.totalReports;
+    });
+
+  const activeReports = reports.filter((report) =>
+    ACTIVE_REPORT_STATUSES.has(report.status || "open")
+  ).length;
+
+  return {
+    totalReports: reports.length,
+    activeReports,
+    resolvedReports: reports.filter((report) => report.status === "resolved").length,
+    affectedSources: providers.length,
+    highRiskSources: providers.filter((provider) => provider.risk === "high").length,
+    providers,
+    reasons: Array.from(reasonMap.entries())
+      .map(([reason, count]) => ({ reason, count }))
+      .sort((a, b) => b.count - a.count),
+  };
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Mail, Reply, Send } from "lucide-react";
+import { Download, Mail, Reply, Send } from "lucide-react";
 import { authenticatedFetch } from "@/lib/firebase-auth-api";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,42 @@ function statusClass(status: string) {
   if (status === "replied") return "border-green-500/40 text-green-300";
   if (status === "archived") return "border-slate-500/40 text-slate-300";
   return "border-primary/40 text-primary";
+}
+
+function escapeCsvValue(value: unknown) {
+  const text = String(value ?? "");
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(filename: string, rows: ContactMessage[]) {
+  const headers = [
+    "id",
+    "name",
+    "email",
+    "subject",
+    "message",
+    "status",
+    "email_status",
+    "reply_message",
+    "replied_at",
+    "target_email",
+    "created_at",
+  ];
+  const csv = [
+    headers.join(","),
+    ...rows.map((message) =>
+      headers
+        .map((key) => escapeCsvValue(message[key as keyof ContactMessage]))
+        .join(",")
+    ),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export function ContactMessagesTable({
@@ -129,6 +165,19 @@ export function ContactMessagesTable({
 
   return (
     <>
+      <div className="flex justify-end border-b border-slate-800 p-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => downloadCsv("cinehub-contact-messages.csv", messages)}
+          disabled={!messages.length}
+          className="min-h-10 border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Export CSV
+        </Button>
+      </div>
       <div className="grid gap-4">
         {messages.length ? (
           paginatedMessages.map((message) => (

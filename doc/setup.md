@@ -1,6 +1,6 @@
 # CineHub Setup Guide
 
-This guide explains how to run CineHub v2.11.0 locally. CineHub uses Firebase Authentication, Firestore, Firebase Admin, TMDB, and SMTP email. It does not require MySQL, NextAuth, or legacy JWT environment variables.
+This guide explains how to run CineHub v2.12.0 locally. CineHub uses Firebase Authentication, Firestore, Firebase Admin, TMDB, and SMTP email. It does not require MySQL, NextAuth, or legacy JWT environment variables.
 
 ## Requirements
 
@@ -180,6 +180,7 @@ After the app starts, test:
 - `/watchlist`: add/remove saved titles.
 - `/history`: search, sort, filters, resume.
 - `/profile`: profile stats, avatar picker, security panel.
+- `/api/recommendations/signals`: authenticated rating and favorite actor signals for recommendations.
 - `/contact`: contact form, Firestore save, email send.
 - `/admin`: dashboard, analytics, users, reports, contact inbox, logs, avatars, settings.
 

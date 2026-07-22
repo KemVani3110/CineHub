@@ -2,15 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
+  AlertTriangle,
   Users,
   Activity,
   Star,
   TrendingUp,
   BarChart3,
+  CheckCircle2,
   Shield,
   Clock,
   Eye,
   Flag,
+  Mail,
   User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -37,12 +40,14 @@ async function getStats() {
       ratingsSnapshot,
       watchlistSnapshot,
       sourceReportsSnapshot,
+      contactMessagesSnapshot,
     ] = await Promise.all([
       listAdminUsers(),
       listAdminLogs(),
       adminDb.collection("ratings").get(),
       adminDb.collection("watchlists").get(),
       adminDb.collection("source_reports").get(),
+      adminDb.collection("contact_messages").get(),
     ]);
 
     const ratingValues = ratingsSnapshot.docs
@@ -58,6 +63,14 @@ async function getStats() {
       openSourceReports: sourceReportsSnapshot.docs.filter(
         (doc) => (doc.data().status || "open") === "open"
       ).length,
+      reviewingSourceReports: sourceReportsSnapshot.docs.filter(
+        (doc) => doc.data().status === "reviewing"
+      ).length,
+      openContactMessages: contactMessagesSnapshot.docs.filter((doc) => {
+        const status = doc.data().status || "new";
+        return status === "new" || status === "open" || status === "unread";
+      }).length,
+      totalContactMessages: contactMessagesSnapshot.size,
       averageRating: ratingValues.length
         ? Number(
             (
@@ -76,6 +89,9 @@ async function getStats() {
       totalWatchlist: 0,
       totalSourceReports: 0,
       openSourceReports: 0,
+      reviewingSourceReports: 0,
+      openContactMessages: 0,
+      totalContactMessages: 0,
       averageRating: 0,
     };
   }
@@ -173,6 +189,43 @@ export default async function AdminDashboardPage({
           ((userStats?.active_users || 0) / userStats.total_users) * 100
         )
       : 0;
+  const unresolvedReports = stats.openSourceReports + stats.reviewingSourceReports;
+  const operationalAlerts = [
+    {
+      title: unresolvedReports ? "Playback reports need review" : "Playback reports are clear",
+      detail: unresolvedReports
+        ? `${unresolvedReports} source report(s) are open or being reviewed.`
+        : "No unresolved playback source reports right now.",
+      href: "/admin/source-reports",
+      icon: Flag,
+      urgent: unresolvedReports > 0,
+    },
+    {
+      title: stats.openContactMessages ? "Contact inbox needs reply" : "Contact inbox is clear",
+      detail: stats.openContactMessages
+        ? `${stats.openContactMessages} contact message(s) need attention.`
+        : `${stats.totalContactMessages} total contact message(s), none waiting.`,
+      href: "/admin/contact-messages",
+      icon: Mail,
+      urgent: stats.openContactMessages > 0,
+    },
+    {
+      title: "User activity health",
+      detail: `${activePercentage}% of registered users are active.`,
+      href: "/admin/users",
+      icon: Users,
+      urgent: activePercentage < 50 && userStats.total_users > 0,
+    },
+    {
+      title: "Rating signal",
+      detail: stats.averageRating
+        ? `Average rating is ${stats.averageRating}/5 from ${stats.totalRatings} record(s).`
+        : "No rating signal recorded yet.",
+      href: "/admin/analytics",
+      icon: Star,
+      urgent: false,
+    },
+  ];
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-8">
@@ -217,6 +270,44 @@ export default async function AdminDashboardPage({
           </CardHeader>
         </Card>
       </div>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {operationalAlerts.map((alert) => {
+          const Icon = alert.icon;
+          return (
+            <Link
+              key={alert.title}
+              href={alert.href}
+              className={`group rounded-2xl border p-4 transition-colors hover:bg-slate-900/80 ${
+                alert.urgent
+                  ? "border-amber-500/35 bg-amber-500/10"
+                  : "border-slate-800 bg-slate-950/70"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 gap-3">
+                  <div
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                      alert.urgent ? "bg-amber-500/15" : "bg-primary/10"
+                    }`}
+                  >
+                    <Icon className={`h-5 w-5 ${alert.urgent ? "text-amber-300" : "text-primary"}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-white">{alert.title}</p>
+                    <p className="mt-1 text-sm leading-5 text-slate-400">{alert.detail}</p>
+                  </div>
+                </div>
+                {alert.urgent ? (
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-amber-300" />
+                ) : (
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-300" />
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </section>
 
       {/*  Main Stats Grid */}
       <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">

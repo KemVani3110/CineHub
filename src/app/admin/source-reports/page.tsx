@@ -1,8 +1,10 @@
 import { Metadata } from "next";
-import { AlertTriangle, CheckCircle2, Clock, Flag, type LucideIcon } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Flag, Gauge, ShieldAlert, type LucideIcon } from "lucide-react";
 import { adminDb, toIsoString } from "@/lib/firebase-admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SourceReport, SourceReportsTable } from "@/components/admin/SourceReportsTable";
+import { Badge } from "@/components/ui/badge";
+import { buildSourceHealthSummary } from "@/lib/source-health";
 
 export const metadata: Metadata = {
   title: "Source Reports | CineHub Admin",
@@ -44,6 +46,14 @@ function countByStatus(reports: SourceReport[], status: string) {
   return reports.filter((report) => report.status === status).length;
 }
 
+const reasonLabels: Record<string, string> = {
+  wrong_title: "Wrong title",
+  wrong_episode: "Wrong episode",
+  not_working: "Not working",
+  poor_quality: "Poor quality",
+  other: "Other",
+};
+
 function StatCard({
   title,
   value,
@@ -76,6 +86,8 @@ export default async function SourceReportsPage() {
   const openCount = countByStatus(reports, "open");
   const reviewingCount = countByStatus(reports, "reviewing");
   const resolvedCount = countByStatus(reports, "resolved");
+  const sourceHealth = buildSourceHealthSummary(reports);
+  const topProviders = sourceHealth.providers.slice(0, 5);
 
   return (
     <div className="container mx-auto space-y-8 px-4 py-6">
@@ -119,6 +131,100 @@ export default async function SourceReportsPage() {
           icon={CheckCircle2}
         />
       </div>
+
+      <Card className="overflow-hidden border-slate-700 bg-slate-900">
+        <CardHeader className="border-b border-slate-800">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Gauge className="h-5 w-5 text-primary" />
+                Source Health Monitor
+              </CardTitle>
+              <p className="mt-2 text-sm text-slate-400">
+                Aggregated source reliability from active and historical reports.
+              </p>
+            </div>
+            <Badge
+              variant="outline"
+              className={
+                sourceHealth.highRiskSources
+                  ? "w-fit border-red-500/40 bg-red-500/10 text-red-300"
+                  : "w-fit border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+              }
+            >
+              {sourceHealth.highRiskSources
+                ? `${sourceHealth.highRiskSources} high-risk source(s)`
+                : "No high-risk sources"}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-5 p-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+            {[
+              ["Active reports", sourceHealth.activeReports, "open or reviewing"],
+              ["Affected sources", sourceHealth.affectedSources, "unique provider names"],
+              ["Resolved reports", sourceHealth.resolvedReports, "closed as fixed"],
+            ].map(([label, value, detail]) => (
+              <div key={label} className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>
+                <p className="mt-2 text-3xl font-bold text-white">{Number(value).toLocaleString()}</p>
+                <p className="mt-1 text-sm text-slate-400">{detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            {topProviders.length ? (
+              topProviders.map((provider) => (
+                <div
+                  key={provider.sourceName}
+                  className="rounded-xl border border-slate-800 bg-slate-950/70 p-4"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="truncate font-semibold text-white">{provider.sourceName}</h3>
+                        <Badge
+                          variant="outline"
+                          className={
+                            provider.risk === "high"
+                              ? "border-red-500/40 bg-red-500/10 text-red-300"
+                              : provider.risk === "watch"
+                                ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+                                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                          }
+                        >
+                          {provider.risk === "high" ? (
+                            <ShieldAlert className="h-3 w-3" />
+                          ) : (
+                            <CheckCircle2 className="h-3 w-3" />
+                          )}
+                          {provider.risk}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-400">
+                        {provider.activeReports} active / {provider.totalReports} total reports across{" "}
+                        {provider.affectedTitles} title(s)
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
+                      {provider.reasons.slice(0, 3).map((reason) => (
+                        <Badge key={reason} variant="outline" className="border-slate-700 text-slate-300">
+                          {reasonLabels[reason] || reason}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-700 p-8 text-center text-sm text-slate-400">
+                Source health will appear after users submit reports.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-slate-700 bg-slate-900">
         <CardHeader className="border-b border-slate-800">

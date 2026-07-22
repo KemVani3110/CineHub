@@ -7,7 +7,7 @@
 <h3 align="center">A production-style movie and TV discovery platform built with Next.js, Firebase, Firestore, TMDB, and Vercel.</h3>
 
 <p align="center">
-  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.11.0-14b8a6?style=for-the-badge" /></a>
+  <a href="#"><img alt="Version" src="https://img.shields.io/badge/version-2.12.0-14b8a6?style=for-the-badge" /></a>
   <a href="#"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.19-black?style=for-the-badge&logo=nextdotjs" /></a>
   <a href="#"><img alt="React" src="https://img.shields.io/badge/React-19.1.8-61dafb?style=for-the-badge&logo=react&logoColor=111827" /></a>
   <a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-f59e0b?style=for-the-badge&logo=firebase&logoColor=111827" /></a>
@@ -215,8 +215,16 @@ Full instructions are in [doc/deployment.md](./doc/deployment.md).
 ## Current Version
 
 ```text
-2.11.0
+2.12.0
 ```
+
+Version 2.12.0 adds:
+
+- Admin Source Health Monitor for provider reliability and high-risk source triage
+- smarter recommendations using watchlist, history, ratings, favorite actors, genre taste, and random refresh
+- richer profile insights for average rating, media mix, favorite actors, and activity score
+- practical admin alerts and CSV exports for users, source reports, and contact messages
+- TMDB timeout and lightweight request cache for better stability
 
 Version 2.11.0 adds:
 

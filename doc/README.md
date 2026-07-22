@@ -1,6 +1,6 @@
 # CineHub Documentation Index
 
-This folder contains the main technical documentation for CineHub v2.11.0.
+This folder contains the main technical documentation for CineHub v2.12.0.
 
 ## Read First
 
@@ -15,7 +15,7 @@ This folder contains the main technical documentation for CineHub v2.11.0.
 ## Current App Version
 
 ```text
-2.11.0
+2.12.0
 ```
 
 ## Main Product Areas
@@ -29,6 +29,7 @@ This folder contains the main technical documentation for CineHub v2.11.0.
 - Notification bell.
 - Contact page and email workflow.
 - Admin dashboard, analytics, users, source reports, contact messages, logs, avatars, and settings.
+- Source health monitoring, recommendation signals, profile insights, CSV exports, and TMDB request caching.
 
 ## Environment Groups
 

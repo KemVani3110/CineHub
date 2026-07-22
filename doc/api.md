@@ -1,6 +1,6 @@
 # CineHub API Documentation
 
-This document lists the current Next.js route handlers in CineHub v2.11.0. All routes live under `src/app/api`.
+This document lists the current Next.js route handlers in CineHub v2.12.0. All routes live under `src/app/api`.
 
 ## Auth Routes
 
@@ -67,6 +67,12 @@ Source reports help the player and admin workflows identify broken, wrong, slow,
 | `POST` | `/api/ratings` | Create or update a rating. |
 | `DELETE` | `/api/ratings` | Remove a rating. |
 | `GET` | `/api/reviews` | Get reviews. |
+
+## Recommendation Routes
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/recommendations/signals` | Return authenticated rating and favorite actor signals used by personalized recommendations. |
 
 ## Notification Routes
 

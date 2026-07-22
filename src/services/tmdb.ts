@@ -11,6 +11,7 @@ export const TMDB_IMAGE_BASE_URL = process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL;
 // Create axios instance
 const tmdbApi = axios.create({
   baseURL: TMDB_BASE_URL || 'https://api.themoviedb.org/3',
+  timeout: 12000,
   params: {
     api_key: TMDB_API_KEY,
     language: 'en-US',
@@ -20,6 +21,9 @@ const tmdbApi = axios.create({
     'Accept': 'application/json',
   },
 });
+
+const TMDB_CACHE_TTL_MS = 5 * 60 * 1000;
+const tmdbCache = new Map<string, { expiresAt: number; data: unknown }>();
 
 // Add request interceptor for logging
 tmdbApi.interceptors.request.use(
@@ -90,10 +94,44 @@ function logTmdbFallback(label: string, error: unknown) {
   console.warn(`${label}; using fallback data`, getTmdbErrorDetails(error));
 }
 
+function getCacheKey(url: string, params?: Record<string, unknown>) {
+  return `${url}:${JSON.stringify(params || {})}`;
+}
+
+async function cachedTmdbGet<T>(
+  url: string,
+  options: { params?: Record<string, unknown>; ttlMs?: number } = {}
+) {
+  const key = getCacheKey(url, options.params);
+  const now = Date.now();
+  const cached = tmdbCache.get(key);
+
+  if (cached && cached.expiresAt > now) {
+    return { data: cached.data as T };
+  }
+
+  const response = await tmdbApi.get<T>(url, {
+    params: options.params,
+  });
+
+  tmdbCache.set(key, {
+    data: response.data,
+    expiresAt: now + (options.ttlMs || TMDB_CACHE_TTL_MS),
+  });
+
+  if (tmdbCache.size > 120) {
+    Array.from(tmdbCache.keys())
+      .slice(0, tmdbCache.size - 100)
+      .forEach((cacheItemKey) => tmdbCache.delete(cacheItemKey));
+  }
+
+  return response;
+}
+
 // API functions
 export const fetchMovies = async (listType: TMDBMovieListType = 'popular', page: number = 1): Promise<TMDBResponse<TMDBMovie>> => {
   try {
-    const response = await tmdbApi.get(`/movie/${listType}`, {
+    const response = await cachedTmdbGet<TMDBResponse<TMDBMovie>>(`/movie/${listType}`, {
       params: { page },
     });
     return response.data;
@@ -105,7 +143,7 @@ export const fetchMovies = async (listType: TMDBMovieListType = 'popular', page:
 
 export const fetchTVShows = async (listType: TMDBTVListType = 'popular', page: number = 1): Promise<TMDBResponse<TMDBTVShow>> => {
   try {
-    const response = await tmdbApi.get(`/tv/${listType}`, {
+    const response = await cachedTmdbGet<TMDBResponse<TMDBTVShow>>(`/tv/${listType}`, {
       params: { page },
     });
     return response.data;
@@ -117,7 +155,9 @@ export const fetchTVShows = async (listType: TMDBTVListType = 'popular', page: n
 
 export const fetchGenres = async (type: 'movie' | 'tv'): Promise<TMDBGenre[]> => {
   try {
-    const response = await tmdbApi.get(`/genre/${type}/list`);
+    const response = await cachedTmdbGet<{ genres: TMDBGenre[] }>(`/genre/${type}/list`, {
+      ttlMs: 24 * 60 * 60 * 1000,
+    });
     return response.data.genres;
   } catch (error) {
     logTmdbFallback(`TMDB ${type} genres request failed`, error);
@@ -135,7 +175,7 @@ const emptyListResponse = { page: 1, results: [], total_pages: 0, total_results:
 
 const safeTmdbGet = async <T>(url: string, fallback: T): Promise<T> => {
   try {
-    const response = await tmdbApi.get(url);
+    const response = await cachedTmdbGet<T>(url);
     return response.data;
   } catch (error: any) {
     logTmdbFallback(`Optional TMDB request failed: ${url}`, error);
@@ -145,7 +185,7 @@ const safeTmdbGet = async <T>(url: string, fallback: T): Promise<T> => {
 
 export const fetchMovieDetails = async (movieId: number) => {
   try {
-    const movieDetails = await tmdbApi.get(`/movie/${movieId}`);
+    const movieDetails = await cachedTmdbGet<any>(`/movie/${movieId}`);
     const [credits, videos, reviews, similar] = await Promise.all([
       safeTmdbGet(`/movie/${movieId}/credits`, emptyCredits),
       safeTmdbGet(`/movie/${movieId}/videos`, emptyListResponse),
@@ -168,7 +208,7 @@ export const fetchMovieDetails = async (movieId: number) => {
 
 export const fetchTVShowDetails = async (tvShowId: number) => {
   try {
-    const details = await tmdbApi.get(`/tv/${tvShowId}`);
+    const details = await cachedTmdbGet<any>(`/tv/${tvShowId}`);
     const [credits, videos, reviews, similar] = await Promise.all([
       safeTmdbGet(`/tv/${tvShowId}/credits`, emptyCredits),
       safeTmdbGet(`/tv/${tvShowId}/videos`, emptyListResponse),
@@ -191,7 +231,7 @@ export const fetchTVShowDetails = async (tvShowId: number) => {
 
 export const fetchSeasonDetails = async (tvShowId: number, seasonNumber: number) => {
   try {
-    const { data } = await tmdbApi.get(`/tv/${tvShowId}/season/${seasonNumber}`);
+    const { data } = await cachedTmdbGet<any>(`/tv/${tvShowId}/season/${seasonNumber}`);
     return data;
   } catch (error) {
     console.error('Error fetching season details:', error);
@@ -205,7 +245,7 @@ export const fetchEpisodeVideos = async (
   episodeNumber: number
 ) => {
   try {
-    const { data } = await tmdbApi.get(
+    const { data } = await cachedTmdbGet<any>(
       `/tv/${tvShowId}/season/${seasonNumber}/episode/${episodeNumber}/videos`
     );
     return data;
@@ -217,8 +257,9 @@ export const fetchEpisodeVideos = async (
 
 export const searchMulti = async (query: string, page: number = 1) => {
   try {
-    const { data } = await tmdbApi.get('/search/multi', {
+    const { data } = await cachedTmdbGet<any>('/search/multi', {
       params: { query, page },
+      ttlMs: 60 * 1000,
     });
     return data;
   } catch (error) {
@@ -229,8 +270,9 @@ export const searchMulti = async (query: string, page: number = 1) => {
 
 export const searchMovies = async (query: string, page: number = 1) => {
   try {
-    const { data } = await tmdbApi.get('/search/movie', {
+    const { data } = await cachedTmdbGet<any>('/search/movie', {
       params: { query, page },
+      ttlMs: 60 * 1000,
     });
     return data;
   } catch (error) {
@@ -241,8 +283,9 @@ export const searchMovies = async (query: string, page: number = 1) => {
 
 export const searchTVShows = async (query: string, page: number = 1) => {
   try {
-    const { data } = await tmdbApi.get('/search/tv', {
+    const { data } = await cachedTmdbGet<any>('/search/tv', {
       params: { query, page },
+      ttlMs: 60 * 1000,
     });
     return data;
   } catch (error) {
@@ -253,8 +296,9 @@ export const searchTVShows = async (query: string, page: number = 1) => {
 
 export const searchPeople = async (query: string, page: number = 1) => {
   try {
-    const { data } = await tmdbApi.get('/search/person', {
+    const { data } = await cachedTmdbGet<any>('/search/person', {
       params: { query, page },
+      ttlMs: 60 * 1000,
     });
     return data;
   } catch (error) {
@@ -265,8 +309,8 @@ export const searchPeople = async (query: string, page: number = 1) => {
 
 export const discoverMovies = async (params: Record<string, any> = {}): Promise<TMDBResponse<TMDBMovie>> => {
   try {
-    const response = await tmdbApi.get('/discover/movie', { params });
-    const adjustedItems = response.data.results
+    const response = await cachedTmdbGet<TMDBResponse<TMDBMovie>>('/discover/movie', { params });
+    const adjustedItems = (response.data.results || [])
       .filter((item: TMDBMovie) => item.poster_path)
       .map((item: TMDBMovie) => ({
         ...item,
@@ -285,8 +329,8 @@ export const discoverMovies = async (params: Record<string, any> = {}): Promise<
 
 export const discoverTVShows = async (params: Record<string, any> = {}): Promise<TMDBResponse<TMDBTVShow>> => {
   try {
-    const response = await tmdbApi.get('/discover/tv', { params });
-    const adjustedItems = response.data.results
+    const response = await cachedTmdbGet<TMDBResponse<TMDBTVShow>>('/discover/tv', { params });
+    const adjustedItems = (response.data.results || [])
       .filter((item: TMDBTVShow) => item.poster_path)
       .map((item: TMDBTVShow) => ({
         ...item,
@@ -323,7 +367,7 @@ export async function getActorDetails(id: string) {
 
 export const fetchTrendingMovies = async (page: number = 1): Promise<TMDBResponse<TMDBMovie>> => {
   try {
-    const response = await tmdbApi.get(`/trending/movie/day`, {
+    const response = await cachedTmdbGet<TMDBResponse<TMDBMovie>>(`/trending/movie/day`, {
       params: { page },
     });
     return response.data;
@@ -335,7 +379,7 @@ export const fetchTrendingMovies = async (page: number = 1): Promise<TMDBRespons
 
 export const fetchTrendingTVShows = async (page: number = 1): Promise<TMDBResponse<TMDBTVShow>> => {
   try {
-    const response = await tmdbApi.get(`/trending/tv/day`, {
+    const response = await cachedTmdbGet<TMDBResponse<TMDBTVShow>>(`/trending/tv/day`, {
       params: { page },
     });
     return response.data;

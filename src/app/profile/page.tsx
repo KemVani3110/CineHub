@@ -20,6 +20,7 @@ import {
   CalendarDays,
   Camera,
   Clock3,
+  Film,
   Heart,
   Image as ImageIcon,
   KeyRound,
@@ -28,6 +29,8 @@ import {
   PlayCircle,
   Shield,
   Star,
+  TrendingUp,
+  Tv,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -43,7 +46,22 @@ interface ProfileStats {
   watched: number;
   watchlist: number;
   ratings: number;
+  reviews: number;
   favoriteActors: number;
+  averageRating: number;
+  mediaMix: {
+    watchedMovies: number;
+    watchedTV: number;
+    watchlistMovies: number;
+    watchlistTV: number;
+  };
+  favoriteActorPreview: Array<{
+    actorId: number;
+    name: string;
+    profilePath: string;
+    addedAt: string;
+  }>;
+  activityScore: number;
   recentActivity: Array<{
     id: string;
     type: string;
@@ -103,7 +121,17 @@ export default function ProfilePage() {
     watched: 0,
     watchlist: 0,
     ratings: 0,
+    reviews: 0,
     favoriteActors: 0,
+    averageRating: 0,
+    mediaMix: {
+      watchedMovies: 0,
+      watchedTV: 0,
+      watchlistMovies: 0,
+      watchlistTV: 0,
+    },
+    favoriteActorPreview: [],
+    activityScore: 0,
     recentActivity: [],
   });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -222,6 +250,32 @@ export default function ProfilePage() {
       value: profileStats.favoriteActors,
       icon: Heart,
       href: "/favorite-actors",
+    },
+  ];
+  const insightStats = [
+    {
+      label: "Average rating",
+      value: profileStats.averageRating ? `${profileStats.averageRating}/5` : "No ratings",
+      detail: `${profileStats.ratings} rating(s), ${profileStats.reviews} review(s)`,
+      icon: Star,
+    },
+    {
+      label: "Watched mix",
+      value: `${profileStats.mediaMix.watchedMovies}M / ${profileStats.mediaMix.watchedTV}TV`,
+      detail: "Movies and TV shows in history",
+      icon: Film,
+    },
+    {
+      label: "Saved mix",
+      value: `${profileStats.mediaMix.watchlistMovies}M / ${profileStats.mediaMix.watchlistTV}TV`,
+      detail: "Movies and TV shows in watchlist",
+      icon: Tv,
+    },
+    {
+      label: "Activity score",
+      value: statsLoading ? "..." : `${profileStats.activityScore}/100`,
+      detail: "Based on watching, saving, ratings, reviews, and favorite actors",
+      icon: TrendingUp,
     },
   ];
 
@@ -367,6 +421,84 @@ export default function ProfilePage() {
               </Link>
             );
           })}
+        </section>
+
+        <section className="mb-8 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <Card className="border-[var(--border)]/70 bg-slate-950/55 shadow-xl">
+            <CardContent className="p-5 sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--cinehub-accent)]/12">
+                  <TrendingUp className="h-5 w-5 text-[var(--cinehub-accent)]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Viewing insights</h2>
+                  <p className="text-sm text-[var(--text-sub)]">
+                    A practical snapshot of your CineHub taste.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {insightStats.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.label}
+                      className="rounded-2xl border border-[var(--border)]/60 bg-slate-900/45 p-4"
+                    >
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950/70">
+                        <Icon className="h-5 w-5 text-[var(--cinehub-accent)]" />
+                      </div>
+                      <p className="text-xs uppercase tracking-wider text-[var(--text-sub)]">
+                        {item.label}
+                      </p>
+                      <p className="mt-2 text-lg font-bold text-white">{item.value}</p>
+                      <p className="mt-1 text-xs leading-5 text-[var(--text-sub)]">
+                        {item.detail}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--border)]/70 bg-slate-950/55 shadow-xl">
+            <CardContent className="p-5 sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--cinehub-accent)]/12">
+                  <Heart className="h-5 w-5 text-[var(--cinehub-accent)]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Favorite actors</h2>
+                  <p className="text-sm text-[var(--text-sub)]">
+                    Recent actor signals for recommendations.
+                  </p>
+                </div>
+              </div>
+
+              {profileStats.favoriteActorPreview.length ? (
+                <div className="space-y-3">
+                  {profileStats.favoriteActorPreview.map((actor) => (
+                    <Link
+                      key={actor.actorId}
+                      href={`/actor/${actor.actorId}`}
+                      className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-[var(--border)]/60 bg-slate-900/45 p-3 transition-colors hover:border-[var(--cinehub-accent)]/40 hover:bg-slate-900/75"
+                    >
+                      <span className="truncate font-semibold text-white">{actor.name}</span>
+                      <Badge variant="outline" className="border-[var(--cinehub-accent)]/35 text-[var(--cinehub-accent)]">
+                        View
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[var(--border)]/70 p-8 text-center text-sm text-[var(--text-sub)]">
+                  Favorite actors will appear here after you save actors.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </section>
 
         <section className="mb-8 grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">

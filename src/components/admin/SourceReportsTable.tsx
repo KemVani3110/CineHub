@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Flag, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import { Download, ExternalLink, Flag, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { authenticatedFetch } from "@/lib/firebase-auth-api";
 import { useToast } from "@/components/ui/use-toast";
@@ -81,6 +81,44 @@ function mediaHref(report: SourceReport) {
     return `/watch-tv/${report.media_id}/season/${report.season_number}/episode/${report.episode_number}`;
   }
   return `/tv/${report.media_id}`;
+}
+
+function escapeCsvValue(value: unknown) {
+  const text = String(value ?? "");
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(filename: string, rows: SourceReport[]) {
+  const headers = [
+    "id",
+    "media_type",
+    "media_id",
+    "season_number",
+    "episode_number",
+    "title",
+    "source_name",
+    "source_url",
+    "reason",
+    "status",
+    "notes",
+    "created_at",
+    "updated_at",
+  ];
+  const csv = [
+    headers.join(","),
+    ...rows.map((report) =>
+      headers
+        .map((key) => escapeCsvValue(report[key as keyof SourceReport]))
+        .join(",")
+    ),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export function SourceReportsTable({ reports: initialReports }: { reports: SourceReport[] }) {
@@ -240,6 +278,16 @@ export function SourceReportsTable({ reports: initialReports }: { reports: Sourc
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset filters
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => downloadCsv("cinehub-source-reports.csv", filteredReports)}
+            className="min-h-10 w-full border-slate-700 text-slate-200 hover:bg-slate-800 sm:w-auto"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
           </Button>
         </div>
 

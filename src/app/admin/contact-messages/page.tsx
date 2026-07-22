@@ -107,7 +107,7 @@ export default async function ContactMessagesPage() {
               minhkhoi3110953@gmail.com
             </div>
             <p className="mt-2 text-xs text-slate-400">
-              Contact form opens this email after saving
+              Contact form sends email notifications here
             </p>
           </CardContent>
         </Card>

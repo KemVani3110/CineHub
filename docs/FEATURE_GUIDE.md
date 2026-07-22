@@ -1,11 +1,12 @@
 # CineHub Feature Guide
 
-This guide summarizes the current user-facing and admin-facing behavior for CineHub v2.11.0.
+This guide summarizes the current user-facing and admin-facing behavior for CineHub v2.12.0.
 
 ## Home
 
 - Hero section renders with a stable fallback-backed item so the first screen does not wait for every below-fold request.
 - Recommended section uses user watchlist/history signals when available and trending fallbacks when needed.
+- Recommendations also use high ratings, favorite actors, and genre taste signals when available.
 - Header includes navigation, profile access, and the notification bell.
 - Footer presents the project as a portfolio product and links to owner information.
 
@@ -70,6 +71,14 @@ The History page is backed by `/api/history` and local Zustand state.
 - Shows progress hints so cards feel closer to a real streaming history view.
 - Provides resume actions for previously watched content.
 
+## Recommendations
+
+- Personalization uses watchlist, history, 4-5 star ratings, favorite actors, and genre taste.
+- Already saved or recently watched items are excluded from the visible recommendation list.
+- The refresh button randomizes the current recommendation pool immediately.
+- The automatic refresh cadence keeps recommendations from feeling stale during longer sessions.
+- Trending movies and TV shows fill the list when personal signals are still sparse.
+
 ## Profile
 
 The Profile page reads real profile stats from `/api/profile/stats`.
@@ -79,6 +88,7 @@ The Profile page reads real profile stats from `/api/profile/stats`.
 - Rating count from `ratings`.
 - Favorite actor count from `favorite_actors`.
 - Recent activity timeline from watched, saved, and favorite actor records.
+- Viewing insights show average rating, movie/TV mix, favorite actor preview, and activity score.
 - Account security panel shows provider and password availability.
 - Avatar picker remains connected to the existing avatar API and profile update flow.
 
@@ -131,6 +141,14 @@ Admin UI rules:
 - Avoid horizontal scrolling in normal dashboard cards.
 - Use card-style rows on smaller screens.
 - Keep sidebar navigation readable and easy to scan.
+- Source Health Monitor summarizes provider reliability, active reports, affected titles, and high-risk sources.
+- Users, source reports, and contact messages can be exported as CSV.
+
+## Reliability
+
+- TMDB requests use a short timeout and lightweight in-memory cache.
+- Repeated detail, search, discovery, genre, and trending requests reuse cached data for a few minutes.
+- TMDB failures still fall back to empty or partial data where possible so pages can render.
 
 ## SEO And Portfolio Polish
 

@@ -45,6 +45,7 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  Download,
   Eye,
   Filter,
   Loader2,
@@ -80,6 +81,40 @@ const statusOptions = [
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
 ];
+
+function escapeCsvValue(value: unknown) {
+  const text = String(value ?? "");
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadUsersCsv(filename: string, rows: User[]) {
+  const headers = [
+    "id",
+    "name",
+    "email",
+    "role",
+    "isActive",
+    "emailVerified",
+    "provider",
+    "createdAt",
+    "lastLoginAt",
+  ];
+  const csv = [
+    headers.join(","),
+    ...rows.map((user) =>
+      headers
+        .map((key) => escapeCsvValue(user[key as keyof User]))
+        .join(",")
+    ),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 export function UserManagement({
   users: propUsers,
@@ -462,15 +497,26 @@ export function UserManagement({
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={refreshUsers}
-            disabled={refreshing}
-            className="min-h-11 w-full border-slate-700 text-slate-200 hover:bg-slate-900 lg:w-auto"
-          >
-            <RefreshCw className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")} />
-            {refreshing ? "Refreshing..." : "Refresh users"}
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => downloadUsersCsv("cinehub-users.csv", filteredUsers)}
+              disabled={!filteredUsers.length}
+              className="min-h-11 w-full border-slate-700 text-slate-200 hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50 lg:w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
+            <Button
+              variant="outline"
+              onClick={refreshUsers}
+              disabled={refreshing}
+              className="min-h-11 w-full border-slate-700 text-slate-200 hover:bg-slate-900 lg:w-auto"
+            >
+              <RefreshCw className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")} />
+              {refreshing ? "Refreshing..." : "Refresh users"}
+            </Button>
+          </div>
         </div>
       </section>
 
